@@ -179,7 +179,7 @@ $$X \sim t_\nu$$
 
 ## Comparación Visual
 
-![Distribuciones de probabilidad](images/distribuciones_comparacion.png)
+![Distribuciones de probabilidad]({{ '/05_probabilidad/images/distribuciones_comparacion.png' | url }})
 
 *Nota: Esta imagen se genera automáticamente al ejecutar `lab_probabilidad.py`*
 

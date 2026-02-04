@@ -215,7 +215,7 @@ $$\hat{\alpha} = \frac{\bar{X}^2}{\overline{X^2} - \bar{X}^2}, \quad \hat{\beta}
 
 ## Visualización: Verosimilitud
 
-![Función de verosimilitud](images/likelihood_example.png)
+![Función de verosimilitud]({{ '/05_probabilidad/images/likelihood_example.png' | url }})
 
 *Nota: Esta imagen se genera automáticamente al ejecutar `lab_probabilidad.py`*
 

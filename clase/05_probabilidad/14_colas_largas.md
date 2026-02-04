@@ -78,7 +78,7 @@ $$\kappa = \frac{\max_{i \leq n} X_i}{\sum_{i=1}^n X_i}$$
 
 ## Ejemplos del Mundo Real
 
-![Extremos importan](images/extremos_importan.png)
+![Extremos importan]({{ '/05_probabilidad/images/extremos_importan.png' | url }})
 
 *En fat tails, el top 10% puede contribuir >50% del total. En thin tails, la contribución es más uniforme.*
 
@@ -177,7 +177,7 @@ Cuando $1 < \alpha \leq 2$:
 - La distribución límite es una **distribución estable** asimétrica
 - Los intervalos de confianza basados en normalidad son **incorrectos**
 
-![Convergencia: Normal vs Pareto](images/convergencia_fattail.png)
+![Convergencia: Normal vs Pareto]({{ '/05_probabilidad/images/convergencia_fattail.png' | url }})
 
 *Las gráficas muestran que Pareto α=3 (varianza finita) converge rápido y limpiamente, mientras que Pareto α=1.5 y α=2 (varianza infinita) convergen eventualmente pero con mucha más volatilidad y lentitud.*
 
@@ -226,7 +226,7 @@ Para distribuciones fat-tailed con $1 < \alpha \leq 2$:
 - La convergencia es tan lenta que en la práctica es como si no convergiera
 - Y aún con millones de datos, una nueva observación extrema puede cambiar todo
 
-![Una observación cambia todo](images/una_observacion_cambia_todo.png)
+![Una observación cambia todo]({{ '/05_probabilidad/images/una_observacion_cambia_todo.png' | url }})
 
 *En fat tails, añadir UNA sola observación puede cambiar drásticamente el promedio. Este es el efecto de los "cisnes negros".*
 
@@ -358,7 +358,7 @@ Compara los cuantiles de tus datos con los cuantiles normales.
 
 Calcula $\kappa$ y observa cómo escala con $n$.
 
-![Kappa de Taleb](images/kappa_taleb.png)
+![Kappa de Taleb]({{ '/05_probabilidad/images/kappa_taleb.png' | url }})
 
 *El criterio κ mide concentración: κ alto = una observación domina el total.*
 
@@ -368,7 +368,7 @@ $$\hat{\alpha} = \left(\frac{1}{k}\sum_{i=1}^k \log\frac{X_{(n-i+1)}}{X_{(n-k)}}
 
 donde $X_{(i)}$ son las estadísticas de orden.
 
-![Diagnósticos de fat tails](images/fattail_diagnostics.png)
+![Diagnósticos de fat tails]({{ '/05_probabilidad/images/fattail_diagnostics.png' | url }})
 
 *Nota: Esta imagen se genera automáticamente al ejecutar `lab_probabilidad.py`*
 
@@ -388,7 +388,7 @@ donde $X_{(i)}$ son las estadísticas de orden.
 - El promedio es engañoso
 - Los extremos dominan
 
-![Mediocristán vs Extremistán](images/mediocristán_extremistan.png)
+![Mediocristán vs Extremistán]({{ '/05_probabilidad/images/mediocristán_extremistan.png' | url }})
 
 *Comparación de convergencia del promedio: en Mediocristán converge, en Extremistán es inestable.*
 

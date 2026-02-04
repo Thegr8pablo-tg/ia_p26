@@ -49,7 +49,7 @@ Si lanzas una moneda justa muchas veces:
 - Con $n = 100$: típicamente entre 0.4 y 0.6
 - Con $n = 10,000$: muy cerca de 0.5
 
-![Convergencia LGN](images/lgn_convergencia.png)
+![Convergencia LGN]({{ '/05_probabilidad/images/lgn_convergencia.png' | url }})
 
 *Nota: Esta imagen se genera automáticamente al ejecutar `lab_probabilidad.py`*
 
@@ -86,7 +86,7 @@ $$S_n = \sum_{i=1}^n X_i \xrightarrow{d} \mathcal{N}(n\mu, n\sigma^2)$$
 
 ### Visualización
 
-![Demostración TLC](images/tlc_demo.png)
+![Demostración TLC]({{ '/05_probabilidad/images/tlc_demo.png' | url }})
 
 *Nota: Esta imagen se genera automáticamente al ejecutar `lab_probabilidad.py`*
 
@@ -206,7 +206,7 @@ En la siguiente sección veremos **colas largas (fat tails)**: distribuciones do
 - El TLC no aplica
 - ¡Y son más comunes de lo que crees en el mundo real!
 
-![Convergencia normal vs fat tail](images/tlc_vs_fattail.png)
+![Convergencia normal vs fat tail]({{ '/05_probabilidad/images/tlc_vs_fattail.png' | url }})
 
 *Nota: Esta imagen se genera automáticamente al ejecutar `lab_probabilidad.py`*
 
