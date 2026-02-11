@@ -1,0 +1,14 @@
+services:
+  tournament:
+    build: .
+    command: python tournament.py
+    volumes:
+      - ./results:/app/results
+      - ./data:/app/data
+
+  experiment:
+    build: .
+    command: python experiment.py --strategy random --num-games 20 --verbose
+    volumes:
+      - ./results:/app/results
+      - ./data:/app/data
