@@ -8,17 +8,34 @@ En IA, casi todo se reduce a optimizar: minimizar una pérdida, maximizar una ut
 
 Este módulo enseña el **lenguaje** de la optimización — cómo formular problemas, entender el paisaje de soluciones, y usar herramientas computacionales para resolverlos.
 
-## Contenido
+## Flujo de trabajo: lee y haz
 
-| Sección | Tema | Idea clave |
-|:------:|------|-----------|
-| 7.1 | [Formulación matemática](01_formulacion.md) | Los 3 componentes: objetivo, variables, restricciones |
-| 7.2 | [Paisaje y conceptos](02_paisaje_y_conceptos.md) | Mínimos, máximos, puntos silla, convexidad |
-| 7.3 | [Algoritmos (intuiciones)](03_algoritmos.md) | Gradiente, Lagrange, simplex, metaheurísticas |
-| 7.4 | [Ejemplos en Python](04_ejemplos_python.md) | scipy.optimize en acción |
-| Lab | [Laboratorio de imágenes](lab_optimization.py) | Genera todas las visualizaciones |
-| Notebook 1 | [Formulación y paisaje](notebooks/01_formulacion_y_paisaje.ipynb) | Interactivo: formula y visualiza |
-| Notebook 2 | [Algoritmos y código](notebooks/02_algoritmos_y_codigo.ipynb) | Interactivo: GD, scipy, LP |
+El módulo alterna entre **lectura** (notas) y **práctica** (notebooks). Sigue este orden:
+
+| Paso | Actividad | Material |
+|:----:|-----------|----------|
+| 1 | **Lee** 7.1: Formulación + regularización | [Notas](01_formulacion.md) |
+| 2 | **Haz** Función objetivo + producción LP | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sonder-art/ia_p26/blob/main/clase/07_optimization/notebooks/01_formulacion_y_paisaje.ipynb) NB1 Sec 1-2, 7-8 |
+| 3 | **Lee** 7.2: Paisaje + convexidad + opt. entera | [Notas](02_paisaje_y_conceptos.md) |
+| 4 | **Haz** Visualiza 1D, 2D, cuerdas de convexidad | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sonder-art/ia_p26/blob/main/clase/07_optimization/notebooks/01_formulacion_y_paisaje.ipynb) NB1 Sec 3-6 |
+| 5 | **Lee** 7.3: GD + convergencia + SGD | [Notas](03_algoritmos.md) (primera mitad) |
+| 6 | **Haz** GD, learning rates, SGD vs batch | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sonder-art/ia_p26/blob/main/clase/07_optimization/notebooks/02_algoritmos_y_codigo.ipynb) NB2 Sec 1-4, SGD |
+| 7 | **Lee** 7.3: Newton/BFGS + Lagrange + Simplex | [Notas](03_algoritmos.md) (segunda mitad) |
+| 8 | **Haz** Rosenbrock vs L-BFGS-B, Lagrange, linprog | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sonder-art/ia_p26/blob/main/clase/07_optimization/notebooks/02_algoritmos_y_codigo.ipynb) NB2 Sec 4-9 |
+| 9 | **Lee** 7.4: scipy reference + autodiff | [Notas](04_ejemplos_python.md) |
+| 10 | **Haz** Autodiff + capstone | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sonder-art/ia_p26/blob/main/clase/07_optimization/notebooks/02_algoritmos_y_codigo.ipynb) NB2 Sec autodiff, 10 |
+
+## Materiales
+
+| Tipo | Archivo | Descripción |
+|:----:|---------|-------------|
+| Notas | [7.1 Formulación](01_formulacion.md) | Objetivo, variables, restricciones, regularización |
+| Notas | [7.2 Paisaje y conceptos](02_paisaje_y_conceptos.md) | Mínimos, puntos silla, convexidad, opt. entera |
+| Notas | [7.3 Algoritmos](03_algoritmos.md) | GD, convergencia, SGD, Newton, Lagrange, simplex |
+| Notas | [7.4 scipy reference](04_ejemplos_python.md) | Cheat sheet de scipy.optimize + autodiff |
+| Notebook | [NB1: Formulación y paisaje](notebooks/01_formulacion_y_paisaje.ipynb) | Interactivo: formula y visualiza |
+| Notebook | [NB2: Algoritmos y código](notebooks/02_algoritmos_y_codigo.ipynb) | Interactivo: GD, SGD, scipy, LP, autodiff |
+| Lab | [lab_optimization.py](lab_optimization.py) | Genera todas las visualizaciones |
 
 ## Cómo correr el lab (para imágenes)
 
@@ -27,15 +44,6 @@ cd clase/07_optimization
 python lab_optimization.py
 ```
 
-Esto genera imágenes en `images/` que se usan en las notas.
-
-## Notebooks interactivos
-
-Los notebooks están diseñados para ejecutarse en Google Colab:
-
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sonder-art/ia_p26/blob/main/clase/07_optimization/notebooks/01_formulacion_y_paisaje.ipynb) **Formulación y paisaje** — formula problemas y visualiza superficies
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sonder-art/ia_p26/blob/main/clase/07_optimization/notebooks/02_algoritmos_y_codigo.ipynb) **Algoritmos y código** — descenso de gradiente, scipy, programación lineal
-
 ## Objetivos de aprendizaje
 
 Al terminar este módulo podrás:
@@ -43,9 +51,9 @@ Al terminar este módulo podrás:
 1. **Formular** un problema de optimización: identificar objetivo $f(x)$, variables de decisión $x$, y restricciones.
 2. **Distinguir** entre mínimos locales, globales, puntos silla, y entender por qué importa.
 3. **Explicar** qué es convexidad y por qué simplifica la optimización ("todo mínimo local es global").
-4. **Describir** intuitivamente cómo funcionan descenso de gradiente, multiplicadores de Lagrange y el método simplex.
+4. **Describir** intuitivamente cómo funcionan descenso de gradiente, SGD, métodos de segundo orden, multiplicadores de Lagrange y el método simplex.
 5. **Resolver** problemas de optimización en Python usando `scipy.optimize`.
-6. **Conectar** estos conceptos con el entrenamiento de modelos de ML.
+6. **Conectar** estos conceptos con el entrenamiento de modelos de ML (regularización, autodiff, SGD/Adam).
 
 ---
 

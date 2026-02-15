@@ -1,122 +1,125 @@
 ---
-title: "Ejemplos de optimización en Python"
+title: "scipy.optimize — referencia rápida"
 ---
 
-# Ejemplos de optimización en Python
+# scipy.optimize — referencia rápida
 
-Ahora ponemos todo en práctica con código. Usamos `scipy.optimize`, la biblioteca estándar de Python para optimización numérica.
+Esta sección es tu **cheat sheet** de `scipy.optimize`. Cada patrón muestra el snippet mínimo para resolver un tipo de problema. Los notebooks tienen versiones interactivas con visualización.
 
 ---
 
-## Ejemplo 1: Minimización 1D
-
-Minimizamos $f(x) = (x-3)^2 + 2\sin(5x)$ — una función con varios mínimos locales.
+## Patrón 1: Minimización 1D — `minimize_scalar`
 
 ```python
 from scipy.optimize import minimize_scalar
 
 f = lambda x: (x - 3)**2 + 2 * np.sin(5 * x)
-
 result = minimize_scalar(f, bounds=(0, 6), method="bounded")
-print(f"Mínimo en x = {result.x:.4f}, f(x) = {result.fun:.4f}")
+# result.x → mínimo,  result.fun → f(mínimo)
 ```
 
 ![Minimización 1D con scipy]({{ '/07_optimization/images/minimize_1d.png' | url }})
 
-**Nota:** `minimize_scalar` con `method="bounded"` busca en un intervalo. Puede encontrar un mínimo **local**, no necesariamente el global. Prueba diferentes intervalos para verificar.
+`method="bounded"` busca en un intervalo. Puede encontrar un mínimo **local** — prueba diferentes intervalos.
 
 ---
 
-## Ejemplo 2: Descenso de gradiente desde cero
-
-Implementamos GD en 10 líneas para la función de Rosenbrock $f(x,y) = (1-x)^2 + 100(y-x^2)^2$.
+## Patrón 2: Minimización multidimensional — `minimize`
 
 ```python
-import numpy as np
+from scipy.optimize import minimize
 
-def gradient_descent(grad_f, x0, lr=0.001, n_steps=5000):
-    """Descenso de gradiente básico. Retorna la trayectoria."""
-    trajectory = [x0.copy()]
-    x = x0.copy()
-    for _ in range(n_steps):
-        x = x - lr * grad_f(x)
-        trajectory.append(x.copy())
-    return np.array(trajectory)
-
-# Gradiente de Rosenbrock
-grad_rosen = lambda x: np.array([
-    -2 * (1 - x[0]) - 400 * x[0] * (x[1] - x[0]**2),
-    200 * (x[1] - x[0]**2),
-])
-
-traj = gradient_descent(grad_rosen, np.array([-1.5, 2.0]))
-print(f"Final: ({traj[-1, 0]:.4f}, {traj[-1, 1]:.4f})")
-print(f"Óptimo real: (1, 1)")
+rosenbrock = lambda x: (1 - x[0])**2 + 100 * (x[1] - x[0]**2)**2
+result = minimize(rosenbrock, x0=[-1.5, 2.0], method="L-BFGS-B")
+# result.x → solución,  result.nfev → evaluaciones de f
 ```
 
 ![GD en Rosenbrock]({{ '/07_optimization/images/gd_rosenbrock.png' | url }})
 
-Observa que GD avanza lento por el "valle banana" de Rosenbrock. Algoritmos más sofisticados (como L-BFGS o Adam) manejan esto mucho mejor.
+L-BFGS-B es el default para problemas sin restricciones — usa curvatura aproximada (ver [métodos de segundo orden](03_algoritmos.md)).
 
 ---
 
-## Ejemplo 3: Optimización con restricciones
+## Patrón 3: Restricciones de igualdad
 
-Resolvemos el problema de producción del [Ejemplo 1 de formulación](01_formulacion.md):
+```python
+f = lambda x: x[0]**2 + x[1]**2
+constraint = {"type": "eq", "fun": lambda x: x[0] + x[1] - 1}
 
-$$\max \, 5x_1 + 4x_2 \quad \text{s.t.} \quad 6x_1 + 4x_2 \leq 24, \quad x_1 + 2x_2 \leq 6, \quad x_1, x_2 \geq 0$$
+result = minimize(f, x0=[0.0, 0.0], constraints=constraint)
+# result.x → (0.5, 0.5) — coincide con Lagrange analítico
+```
 
-Con `scipy.optimize.linprog` (que **minimiza**, así que negamos el objetivo):
+---
+
+## Patrón 4: Restricciones de desigualdad + cotas
+
+```python
+f = lambda x: 2*x[0]**2 + 3*x[1]**2 + x[0]*x[1]
+
+constraints = [{"type": "ineq", "fun": lambda x: x[0] + x[1] - 10}]  # x1+x2 >= 10
+bounds = [(0, None), (0, None)]  # x1, x2 >= 0
+
+result = minimize(f, x0=[5.0, 5.0], constraints=constraints, bounds=bounds)
+```
+
+Nota: `"ineq"` en scipy significa $\text{fun}(x) \geq 0$.
+
+---
+
+## Patrón 5: Programación lineal — `linprog`
 
 ```python
 from scipy.optimize import linprog
 
-c = [-5, -4]             # min -5x1 - 4x2 (equivale a max 5x1 + 4x2)
-A_ub = [[6, 4], [1, 2]]  # restricciones de desigualdad
+c = [-5, -4]              # min -c^T x  (linprog solo minimiza)
+A_ub = [[6, 4], [1, 2]]   # Ax <= b
 b_ub = [24, 6]
-bounds = [(0, None), (0, None)]  # x1, x2 >= 0
+bounds = [(0, None), (0, None)]
 
 result = linprog(c, A_ub=A_ub, b_ub=b_ub, bounds=bounds, method="highs")
-print(f"Solución: x1={result.x[0]:.2f}, x2={result.x[1]:.2f}")
-print(f"Ganancia máxima: {-result.fun:.2f}")
-```
-
-Salida:
-```
-Solución: x1=3.00, x2=1.50
-Ganancia máxima: 21.00
+# -result.fun → ganancia máxima
 ```
 
 ![Solución LP con scipy]({{ '/07_optimization/images/linprog_feasible.png' | url }})
 
 ---
 
-## Ejemplo 4: Lagrange verificado con Python
+## Diferenciación automática (autodiff)
 
-Resolvemos $\min \, x^2 + y^2$ sujeto a $x + y = 1$ **por Lagrange** y verificamos con `scipy.optimize.minimize`.
+En las notas y notebooks anteriores calculamos gradientes **a mano**. Eso funciona para funciones simples, pero no escala a modelos con millones de parámetros.
 
-**A mano** (ver [sección de Lagrange](03_algoritmos.md)): la solución es $(x^*, y^*) = (1/2, 1/2)$.
+### Tres formas de obtener gradientes
 
-**Con scipy:**
+| Método | Exacto | Costo | Escala |
+|--------|--------|-------|--------|
+| A mano (derivadas analíticas) | Sí | Esfuerzo humano | No |
+| Diferencias finitas: $\frac{f(x+h) - f(x)}{h}$ | Aprox. | $O(n)$ evaluaciones | Mal |
+| **Autodiff** (backpropagation) | Sí | ~1 evaluación de $f$ | Millones de params |
+
+### Ejemplo: Rosenbrock con PyTorch
 
 ```python
-from scipy.optimize import minimize
+import torch
 
-f = lambda x: x[0]**2 + x[1]**2
-constraint = {"type": "eq", "fun": lambda x: x[0] + x[1] - 1}
+def rosenbrock_torch(xy):
+    x, y = xy[0], xy[1]
+    return (1 - x)**2 + 100 * (y - x**2)**2
 
-result = minimize(f, x0=[0.0, 0.0], constraints=constraint)
-print(f"Solución: ({result.x[0]:.4f}, {result.x[1]:.4f})")
-print(f"f(x*) = {result.fun:.4f}")
+xy = torch.tensor([-1.5, 2.0], requires_grad=True)
+loss = rosenbrock_torch(xy)
+loss.backward()                # <-- aquí ocurre la magia
+print(xy.grad)                 # gradiente exacto, calculado automáticamente
 ```
 
-Salida:
-```
-Solución: (0.5000, 0.5000)
-f(x*) = 0.5000
-```
+Esto es exactamente lo que hace `loss.backward()` en cada iteración de entrenamiento de una red neuronal. Autodiff hace que GD sea práctico para modelos reales.
 
-Coincide con la solución analítica.
+> **Notebook — Abre NB2, Sección autodiff**
+> [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sonder-art/ia_p26/blob/main/clase/07_optimization/notebooks/02_algoritmos_y_codigo.ipynb)
+>
+> 1. Ejecuta el ejemplo de autodiff con PyTorch en Rosenbrock.
+> 2. Compara el gradiente de `.backward()` con el gradiente analítico que calculamos a mano.
+> 3. ¿Coinciden? Esa es la magia de autodiff: exacto sin esfuerzo.
 
 ---
 
@@ -124,12 +127,14 @@ Coincide con la solución analítica.
 
 Cada vez que entrenas un modelo de ML, estás resolviendo un problema de optimización:
 
-| Modelo | Función objetivo | Variables | Restricciones |
-|--------|-----------------|-----------|---------------|
-| Regresión lineal | $\sum(y_i - w^T x_i)^2$ | $w$ | Ninguna |
-| Regresión logística | $\sum \log(1 + e^{-y_i w^T x_i})$ | $w$ | Ninguna |
-| SVM | $\frac{1}{2}\|w\|^2$ | $w, b$ | $y_i(w^T x_i + b) \geq 1$ |
-| Red neuronal | $\mathcal{L}(\theta; X, Y)$ | $\theta$ (millones) | Ninguna (típicamente) |
+| Modelo | Función objetivo | Variables | Restricciones | Algoritmo |
+|--------|-----------------|-----------|---------------|-----------|
+| Regresión lineal | $\sum(y_i - w^T x_i)^2$ | $w$ | Ninguna | Solución cerrada |
+| Ridge (L2) | $\sum(y_i - w^T x_i)^2 + \lambda\|w\|^2$ | $w$ | Equiv. $\|w\|^2 \leq t$ | Solución cerrada |
+| Lasso (L1) | $\sum(y_i - w^T x_i)^2 + \lambda\|w\|_1$ | $w$ | Equiv. $\|w\|_1 \leq t$ | Coord. descent |
+| Regresión logística | $\sum \log(1 + e^{-y_i w^T x_i})$ | $w$ | Ninguna | L-BFGS / SGD |
+| SVM | $\frac{1}{2}\|w\|^2$ | $w, b$ | $y_i(w^T x_i + b) \geq 1$ | QP (SMO) |
+| Red neuronal | $\mathcal{L}(\theta; X, Y)$ | $\theta$ (millones) | Ninguna (típicamente) | SGD / Adam |
 
 Cuando llamas `model.fit()` en scikit-learn o `loss.backward()` en PyTorch, estás ejecutando un algoritmo de optimización.
 
@@ -181,6 +186,13 @@ print(f"x1={result.x[0]:.4f}, x2={result.x[1]:.4f}, f={result.fun:.4f}")
 </details>
 
 :::
+
+> **Notebook — Abre NB2, Sección 10: Capstone**
+> [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sonder-art/ia_p26/blob/main/clase/07_optimization/notebooks/02_algoritmos_y_codigo.ipynb)
+>
+> 1. Escribe tus valores analíticos de $x_1^*$ y $x_2^*$.
+> 2. Verifica con scipy que coinciden.
+> 3. Visualiza la solución en los contornos de $f$ con la restricción.
 
 ---
 

@@ -77,6 +77,13 @@ Por convención, la mayoría de los textos y software usan **minimización**. Si
 | **Dificultad** | Generalmente más fácil | Más difícil (hay que respetar la región factible) |
 | **Algoritmos típicos** | Descenso de gradiente | Simplex, puntos interiores, Lagrange |
 
+> **Notebook — Abre NB1, Sección 2: Función objetivo**
+> [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sonder-art/ia_p26/blob/main/clase/07_optimization/notebooks/01_formulacion_y_paisaje.ipynb)
+>
+> 1. Completa la función `ganancia()` y verifica con el assert.
+> 2. Cambia los precios a \$7 y \$2 — ¿cómo cambia la ganancia?
+> 3. ¿Qué pasa si un producto tiene ganancia negativa?
+
 ---
 
 ## Ejemplos
@@ -160,6 +167,41 @@ donde $y_i \in \{-1, +1\}$ es la etiqueta de clase.
 - **Restricciones**: cada punto debe estar del lado correcto del margen.
 
 :::
+
+:::example{title="Ejemplo 4: Regularización — ajuste vs simplicidad"}
+
+¿Qué pasa si el modelo de mínimos cuadrados (Ejemplo 2) sobreajusta? Añadimos un **término de penalización** que castiga pesos grandes:
+
+**Ridge regression** (penalización L2):
+
+$$\min_w \|y - Xw\|^2 + \lambda \|w\|^2$$
+
+**Lasso** (penalización L1):
+
+$$\min_w \|y - Xw\|^2 + \lambda \|w\|_1$$
+
+El hiperparámetro $\lambda \geq 0$ es la "perilla" que controla el balance entre **ajuste a los datos** (primer término) y **simplicidad del modelo** (segundo término):
+- $\lambda = 0$: mínimos cuadrados ordinarios (sin regularización)
+- $\lambda \to \infty$: todos los pesos se van a cero
+
+**¿Por qué dos penalizaciones?**
+- **L2 (Ridge)**: pesos pequeños pero no cero — regularización suave
+- **L1 (Lasso)**: muchos pesos exactamente cero — **selección de variables** automática
+
+**Conexión con restricciones:** Ridge es equivalente a un problema con restricción:
+
+$$\min_w \|y - Xw\|^2 \quad \text{s.t.} \quad \|w\|^2 \leq t$$
+
+Es decir, regularizar es optimizar sobre una **bola** en el espacio de parámetros. El $\lambda$ del Lagrangiano controla el radio $t$. Esta dualidad entre penalización y restricción aparece constantemente en optimización y ML.
+
+:::
+
+> **Notebook — Abre NB1, Sección 8: Producción LP**
+> [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/sonder-art/ia_p26/blob/main/clase/07_optimization/notebooks/01_formulacion_y_paisaje.ipynb)
+>
+> 1. Escribe las matrices $c$, $A$, $b$ como arrays de numpy.
+> 2. Verifica que $x = (2, 1)$ es factible.
+> 3. Encuentra $x = (3, 1.5)$ y confirma que es la solución óptima.
 
 ---
 

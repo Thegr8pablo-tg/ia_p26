@@ -440,6 +440,55 @@ def plot_linprog_feasible():
     _save(fig, "linprog_feasible.png")
 
 
+# -----------------------------------------------------------------------------
+# 9) SGD vs Batch GD convergence
+# -----------------------------------------------------------------------------
+
+
+def plot_sgd_vs_gd():
+    """Convergence curves comparing batch GD and SGD on linear regression."""
+    # Synthetic data: y = 2x + 1 + noise
+    N = 200
+    X_data = np.random.randn(N, 1)
+    y_data = 2 * X_data[:, 0] + 1 + 0.5 * np.random.randn(N)
+    X_aug = np.hstack([X_data, np.ones((N, 1))])
+
+    mse = lambda w: np.mean((y_data - X_aug @ w) ** 2)
+    grad_full = lambda w: -2 / N * X_aug.T @ (y_data - X_aug @ w)
+
+    def grad_sgd(w, batch_size=32):
+        idx = np.random.choice(N, batch_size, replace=False)
+        return -2 / batch_size * X_aug[idx].T @ (y_data[idx] - X_aug[idx] @ w)
+
+    w0 = np.array([0.0, 0.0])
+    lr, n_steps = 0.05, 150
+
+    # Batch GD
+    losses_gd = []
+    w = w0.copy()
+    for _ in range(n_steps):
+        losses_gd.append(mse(w))
+        w = w - lr * grad_full(w)
+
+    # SGD (batch_size=32)
+    losses_sgd = []
+    w = w0.copy()
+    for _ in range(n_steps):
+        losses_sgd.append(mse(w))
+        w = w - lr * grad_sgd(w, batch_size=32)
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(losses_gd, linewidth=2, color=COLORS["blue"], label="Batch GD (N=200)")
+    ax.plot(losses_sgd, linewidth=1.5, color=COLORS["red"], alpha=0.8,
+            label="SGD (batch=32)")
+    ax.set_xlabel("Iteración")
+    ax.set_ylabel("MSE Loss")
+    ax.set_title("SGD vs Batch GD en regresión lineal")
+    ax.legend()
+    ax.set_yscale("log")
+    _save(fig, "sgd_vs_gd.png")
+
+
 # =============================================================================
 # Main
 # =============================================================================
@@ -455,6 +504,7 @@ def main():
     plot_minimize_1d()
     plot_linear_programming_2d()
     plot_linprog_feasible()
+    plot_sgd_vs_gd()
     print(f"\n✓ Todas las imágenes generadas en {IMAGES_DIR}")
 
 
