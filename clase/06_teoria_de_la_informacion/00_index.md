@@ -31,7 +31,7 @@ Este módulo va **despacio** y construye todo paso a paso: empezamos con intuici
 | 6.7 | [Información mutua y ML](07_informacion_mutua_y_ml.md) | “Cuánto me dice $Y$ sobre $X$” y por qué importa |
 | Lab | [Laboratorio en Python](lab_informacion.py) | Generar imágenes/experimentos para clase |
 | Ejercicios | [Capstone Wordle/Password](ejercicios/00_index.md) | Culminación acumulativa con priors + entropía |
-| Proyecto | [Proyecto Wordle](wordle/00_index.md) | Aplica todo: diseña y compara estrategias |
+| Proyecto | [Proyecto Wordle](08_wordle/00_index.md) | Aplica todo: diseña y compara estrategias |
 
 ## Cómo correr el lab (para imágenes)
 
