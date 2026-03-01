@@ -227,7 +227,16 @@ En todos estos casos, necesitas estimar $P(Y \mid do(X))$ a partir de datos obse
 
 Volvamos a Berkeley. ¿Hay discriminación por género en las admisiones?
 
-Como vimos en las [estructuras causales](01_estructuras_causales.md#la-paradoja-de-simpson), la selectividad del departamento actúa como un confounder (fork) — influye tanto en quiénes aplican como en la tasa de admisión. Adoptando esa interpretación, el departamento es la variable que debemos ajustar. Aplicamos la fórmula de ajuste:
+Como vimos en las [estructuras causales](01_estructuras_causales.md#la-paradoja-de-simpson), la paradoja admite dos interpretaciones causales. Adoptamos la **interpretación fork**: la selectividad del departamento actúa como confounder — influye tanto en quiénes aplican como en la tasa de admisión.
+
+```mermaid
+graph TD
+    D(("Departamento<br/>(selectividad)")) -->|"las mujeres aplican más<br/>a deptos. competitivos"| G(("Género<br/>(composición)"))
+    D -->|"deptos. competitivos<br/>admiten menos"| A(("Admisión"))
+    G -.->|"¿discriminación?"| A
+```
+
+El camino espurio es $\text{Género} \leftarrow \text{Depto} \rightarrow \text{Admisión}$: la selectividad del departamento genera una correlación entre género y admisión aunque no haya discriminación. Para bloquear ese camino, ajustamos por Departamento:
 
 $$P(\text{adm} \mid do(\text{género} = \text{mujer})) = \sum_d P(\text{adm} \mid \text{mujer}, D = d) \cdot P(D = d)$$
 
