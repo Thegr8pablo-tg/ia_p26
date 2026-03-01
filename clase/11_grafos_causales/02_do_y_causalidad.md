@@ -289,27 +289,116 @@ Este diagnóstico es una **condición necesaria**, no suficiente. Si los residuo
 
 ## DoWhy: inferencia causal en Python
 
-[DoWhy](https://www.pywhy.org/dowhy/) es una librería de código abierto (Microsoft Research) diseñada para inferencia causal. Implementa las ideas que vimos en este módulo de manera programática:
+[DoWhy](https://www.pywhy.org/dowhy/) es una librería de código abierto (Microsoft Research) diseñada para inferencia causal. Implementa las ideas que vimos en este módulo de manera programática.
 
-1. **Modelar:** defines el DAG causal como un grafo dirigido
-2. **Identificar:** DoWhy aplica automáticamente el criterio backdoor para determinar qué variables ajustar
-3. **Estimar:** calcula $P(Y \mid do(X))$ usando el método de ajuste apropiado
-4. **Refutar:** valida la robustez del estimado con pruebas de sensibilidad
+### El algoritmo paso a paso
+
+DoWhy sigue un pipeline de 4 pasos. Los dos primeros son **puramente gráficos** (operan sobre el DAG, no tocan los datos). Los últimos dos son **estadísticos** (usan los datos).
+
+#### Paso 1: Modelar — definir el DAG
+
+Se construye un grafo dirigido acíclico con las relaciones causales conocidas. Cada arista $A \rightarrow B$ significa "$A$ causa directamente $B$". Este grafo **no sale de los datos** — es conocimiento del dominio.
 
 ```python
 import networkx as nx
-from dowhy import CausalModel
-
 grafo = nx.DiGraph([("Z", "X"), ("Z", "Y"), ("X", "Y")])
-modelo = CausalModel(data=df, treatment="X", outcome="Y", graph=grafo)
-identificado = modelo.identify_effect()    # encuentra backdoor: ajustar por Z
+```
+
+#### Paso 2: Identificar — el criterio backdoor
+
+Este es el paso clave. DoWhy recorre el grafo y aplica el **criterio backdoor** para determinar qué variables ajustar. El algoritmo funciona así:
+
+**Entrada:** DAG, tratamiento $X$, resultado $Y$
+
+1. **Enumerar caminos**: encontrar todos los caminos entre $X$ e $Y$ en el grafo (ignorando la dirección de las flechas)
+
+2. **Clasificar caminos**:
+   - **Caminos causales** (frontdoor): van de $X$ a $Y$ siguiendo las flechas. Estos son el efecto que queremos medir — **no los bloqueamos**.
+   - **Caminos espurios** (backdoor): llegan a $X$ por detrás (hay una flecha *entrando* a $X$). Estos crean correlación espuria — **sí los bloqueamos**.
+
+3. **Encontrar un conjunto de ajuste** $S$: buscar variables que bloqueen **todos** los caminos backdoor sin abrir caminos nuevos. Las reglas son:
+   - Condicionar en un **no-collider** en un camino lo **bloquea** (bien para caminos espurios)
+   - Condicionar en un **collider** en un camino lo **abre** (mal — crea correlación nueva)
+   - Por lo tanto: ajustar por confounders (forks) ✓, **nunca** ajustar por colliders ✗
+
+```
+Ejemplo con nuestro DAG:  Z → X,  Z → Y,  X → Y
+
+Caminos entre X e Y:
+  1. X → Y                    (causal — no tocar)
+  2. X ← Z → Y                (backdoor — Z es confounder)
+
+Camino 2 es espurio. ¿Cómo bloquearlo?
+  → Condicionar en Z (no-collider en el camino) → BLOQUEADO ✓
+
+Resultado: S = {Z}
+```
+
+4. **Construir la fórmula de ajuste**: una vez identificado $S$, la fórmula es:
+
+$$P(Y \mid do(X = x)) = \sum_s P(Y \mid X = x, S = s) \cdot P(S = s)$$
+
+```python
+identificado = modelo.identify_effect()  # encuentra S = {Z}
+```
+
+#### Paso 3: Estimar — calcular el efecto
+
+Con el conjunto de ajuste $S$ identificado, DoWhy calcula $P(Y \mid do(X))$ usando un estimador estadístico. Con `"backdoor.linear_regression"`, internamente hace una regresión múltiple $Y \sim X + S$ y reporta el coeficiente de $X$.
+
+```python
 estimacion = modelo.estimate_effect(identificado, method_name="backdoor.linear_regression")
 ```
 
-En el [notebook práctico](notebooks/causal_intro.ipynb) usamos DoWhy para estimar el efecto causal en datos sintéticos y comparar con la estimación manual.
+#### Paso 4: Refutar — validar robustez
+
+DoWhy ofrece pruebas de sensibilidad para verificar si el resultado es robusto:
+- **Placebo treatment**: reemplazar $X$ por ruido aleatorio. Si el efecto "causal" persiste, algo está mal.
+- **Random common cause**: agregar un confounder aleatorio. Si el efecto cambia mucho, el modelo puede ser frágil.
+
+Nosotros usamos los pasos 1–3. En el [notebook práctico](notebooks/causal_intro.ipynb) implementamos todo el pipeline y comparamos con la estimación manual.
+
+### Resumen del algoritmo
+
+```
+┌─────────────┐     ┌──────────────────┐     ┌────────────┐     ┌──────────┐
+│  1. MODELAR │────▶│  2. IDENTIFICAR  │────▶│ 3. ESTIMAR │────▶│4. REFUTAR│
+│  (DAG)      │     │  (criterio       │     │ (regresión │     │(placebo, │
+│             │     │   backdoor)      │     │  ajustada) │     │ robustez)│
+│ Solo grafo, │     │  Solo grafo,     │     │ Datos +    │     │ Datos    │
+│ no datos    │     │  no datos        │     │ fórmula    │     │          │
+└─────────────┘     └──────────────────┘     └────────────┘     └──────────┘
+```
+
+### ¿En qué se diferencia de redes bayesianas?
+
+En el [módulo de redes bayesianas](../10_redes_bayesianas/01_probabilidad_y_grafos.md) vimos un algoritmo que también usa un DAG: **eliminación de variables**. Ambos algoritmos comparten estructura (un DAG + datos), pero resuelven problemas fundamentalmente distintos.
+
+| | Redes Bayesianas | Grafos Causales (DoWhy) |
+|---|---|---|
+| **Pregunta** | $P(Y \mid X = x)$ — ¿qué predigo de $Y$ si *observo* $X$? | $P(Y \mid do(X = x))$ — ¿qué pasa con $Y$ si *intervengo* en $X$? |
+| **Qué significa una flecha** | Dependencia condicional directa. Se puede invertir si la factorización se mantiene. | **Mecanismo causal**. La dirección importa: invertirla cambia el significado. |
+| **Qué hace el algoritmo con el grafo** | **Factorizar** la conjunta: $P(X_1, \ldots, X_n) = \prod_i P(X_i \mid \text{padres}(X_i))$, luego **marginalizar** variables ocultas (eliminación de variables) | **Identificar** qué ajustar: recorrer caminos, clasificarlos (causal/backdoor), encontrar el conjunto de ajuste $S$ (criterio backdoor) |
+| **Operación central** | Suma-producto: multiplicar factores y marginalizar | Cirugía de grafos: cortar flechas entrantes a $X$ para obtener el grafo mutilado |
+| **Complejidad** | Depende del **treewidth** $w$: $O(n \cdot d^{w+1})$ | Depende del número de **caminos** entre $X$ e $Y$ (típicamente manejable) |
+| **Los datos** | Se usan para **inferir** (calcular probabilidades posteriores) | Se usan para **estimar** (calcular el efecto causal una vez identificado) |
+
+**La diferencia clave en una línea:** la red bayesiana responde *"¿qué predigo?"* — el grafo causal responde *"¿qué pasa si intervengo?"*.
+
+:::example{title="Mismo DAG, preguntas distintas"}
+Considera el DAG: Lluvia → Piso mojado → Resbalón.
+
+- **Red bayesiana:** Si observo un resbalón ($\text{Resbalón} = \text{sí}$), ¿cuál es la probabilidad de que haya llovido? → Usa eliminación de variables para calcular $P(\text{Lluvia} \mid \text{Resbalón})$.
+
+- **Grafo causal:** Si *intervengo* y mojo el piso con una manguera ($do(\text{Piso} = \text{mojado})$), ¿aumenta la probabilidad de resbalón? → Usa cirugía de grafos: corta la flecha Lluvia → Piso, aplica fórmula de ajuste. Resultado: sí, mojar el piso causa resbalones independientemente de la lluvia.
+
+La red bayesiana y el grafo causal usan el **mismo DAG** pero responden preguntas diferentes. La red bayesiana propaga evidencia; el grafo causal simula intervenciones.
+:::
+
+Ambos algoritmos usan **d-separación** para razonar sobre independencias condicionales en el grafo. La diferencia es *para qué*: la red bayesiana la usa para optimizar la inferencia (evitar cálculos innecesarios); el grafo causal la usa para identificar qué variables ajustar (criterio backdoor).
 
 **Referencias:**
-- [Documentación oficial](https://www.pywhy.org/dowhy/)
+- [Documentación oficial de DoWhy](https://www.pywhy.org/dowhy/)
 - [Tutorial introductorio](https://www.pywhy.org/dowhy/main/getting_started/intro.html)
 - [Repositorio en GitHub](https://github.com/py-why/dowhy)
 
