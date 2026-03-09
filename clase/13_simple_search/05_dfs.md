@@ -26,6 +26,52 @@ La estrategia es directa: imagina que estás explorando un laberinto. DFS dice: 
 
 DFS **va tan profundo como puede** en una rama antes de considerar ramas alternativas. El resultado: puede encontrar la solución rápido si está en la rama que elige primero, o puede explorar muchos caminos muertos antes de encontrarla si eligió mal. Pero su gran ventaja es la **memoria**: solo necesita recordar el camino actual, no todo el grafo explorado hasta el momento.
 
+:::example{title="¿Qué es exactamente «backtracking»?"}
+
+El término **backtracking** describe un ciclo de tres pasos que DFS repite continuamente:
+
+1. **Tomar una decisión** — elige un vecino y avanza hacia él.
+2. **Explorar hasta el fondo** — sigue tomando decisiones hasta que encuentras la meta *o* detectas que no hay salida.
+3. **Deshacer y volver** — si fallaste, *retrocede* (*backtrack*) al punto donde tomaste la última decisión y elige la siguiente opción disponible.
+
+**Ejemplo concreto: buscar una sala en un edificio desconocido.**
+
+Llegas a un edificio nuevo buscando la sala 204. No tienes mapa. Solo puedes entrar por un pasillo a la vez.
+
+```
+Edificio (vista de planta):
+
+  Entrada
+     │
+  Pasillo A ──── Pasillo B ──── Sala 101 (callejón sin salida)
+     │
+  Pasillo C ──── Sala 204  ← meta
+     │
+  Sala 300 (callejón sin salida)
+```
+
+Así funciona DFS con backtracking:
+
+```
+Decisión 1: tomas el Pasillo A.
+Decisión 2: desde A, eliges Pasillo B.
+Decisión 3: desde B, llegas a Sala 101. No es la 204 y no hay más salidas.
+
+  → BACKTRACK: vuelves al Pasillo B. No quedan opciones. Vuelves al Pasillo A.
+
+Decisión 4: desde A, ahora eliges Pasillo C (el único que no probaste).
+Decisión 5: desde C, llegas a Sala 204. ¡Encontrada!
+```
+
+En cada retroceso **deshiciste exactamente una decisión** — no tiraste todo el recorrido, solo volviste un paso atrás. Eso es backtracking: la memoria solo guarda el camino que estás explorando en este momento, no todos los caminos posibles.
+
+El punto clave: **"backtrack" no es un algoritmo separado — es simplemente DFS aplicado a un espacio de decisiones.** El retroceso ocurre naturalmente cuando la pila hace `pop()` de un nodo sin salida: automáticamente volvemos al nodo padre, que tiene otros vecinos sin explorar.
+
+En la versión iterativa esto es literal — un `pop()` de la pila. En la versión recursiva lo hace Python por nosotros: cuando una llamada recursiva devuelve `None` (fallo), la función anterior sigue con el siguiente vecino en su `for`.
+
+**¿Por qué DFS es natural para backtracking?** Porque mantiene exactamente la información que necesitas: el camino activo desde el inicio hasta el nodo actual. BFS, en cambio, tiene muchos caminos parciales en vuelo simultáneamente — es mucho más difícil «deshacer» una decisión.
+:::
+
 ---
 
 ## 2. En lenguaje natural
@@ -484,44 +530,71 @@ Recordatorio de notación: $b$ = factor de ramificación (vecinos por nodo), $d$
 
 ## ¿DFS o BFS? Cómo elegir
 
-La elección entre DFS y BFS no es arbitraria — cada uno está diseñado para un tipo de pregunta distinto. Aquí está la guía práctica.
+La elección no es arbitraria — depende de lo que sabes sobre tu problema antes de buscar. Hay tres dimensiones que importan: **lo que necesitas** (¿camino más corto?), **lo que sabes** (¿cuán profunda está la solución? ¿cuántas conexiones tiene cada nodo?), y **los recursos disponibles** (¿cuánta RAM tienes?).
 
-### Usa BFS cuando la pregunta es: *"¿cuál es el camino más corto?"*
+### Señales de que debes usar BFS
 
-BFS garantiza encontrar el camino con el menor número de pasos. Si eso es lo que necesitas, no hay discusión.
+**Usa BFS cuando necesitas el camino más corto Y tu problema tiene estas características:**
 
-| Problema real | ¿Por qué BFS? |
+| Señal del problema | ¿Por qué favorece BFS? |
 |---|---|
-| **GPS / mapas**: encontrar la ruta con menos intersecciones entre dos puntos | BFS encuentra el camino de menor número de aristas — cada intersección es un nodo |
-| **6 grados de separación**: ¿cuántas conexiones separan a dos personas en LinkedIn? | BFS da la distancia exacta desde un nodo a todos los demás |
-| **Videojuego**: ¿cuál es el mínimo de movimientos para resolver un puzzle? | BFS expande nivel a nivel — el primero que llega a la meta lo hace en el mínimo de pasos |
-| **Flood fill en Paint**: colorear todos los píxeles conectados del mismo color | BFS expande la región como una onda — garantiza alcanzar todos los píxeles conectados |
+| **$d$ es pequeño o lo conoces** (ej. "la solución tiene 5 pasos") | $O(b^d)$ en memoria es manejable — la cola no explota |
+| **$b$ es moderado** (pocos vecinos por nodo, ej. $b \leq 6$) | La cola crece lentamente nivel a nivel |
+| **La solución probablemente está cerca del inicio** | BFS llega antes — no pierde tiempo bajando lejos |
+| **Tienes RAM suficiente** (puedes guardar todo un nivel) | El costo de memoria de BFS no es un problema práctico |
+| **El grafo es ancho y poco profundo** | BFS procesa todos los niveles cercanos de forma natural |
 
-La limitación de BFS es la **memoria**: tiene que guardar en la cola todos los nodos del nivel actual. Para grafos muy profundos o con factor de ramificación alto, esto se vuelve impracticable.
+**Ejemplos concretos donde BFS es la elección correcta:**
 
-### Usa DFS cuando la pregunta es: *"¿existe algún camino?"* o *"¿cuáles son todos los X?"*
+| Problema real | $b$ aprox. | $d$ aprox. | ¿Por qué BFS? |
+|---|:---:|:---:|---|
+| Camino mínimo en un laberinto de cuadrícula 20×20 | 4 | ≤ 40 | $b^d = 4^{40}$... pero en práctica $d$ es mucho menor porque el laberinto está acotado |
+| Grados de separación en una red social local | 50–150 | 3–6 | $d$ pequeño — "6 grados" funciona porque $d \leq 6$ incluso con $b$ alto |
+| Flood fill en una imagen pequeña | 4 | ≤ imagen | BFS visita todos los píxeles conectados nivel a nivel |
+| Movimientos mínimos para resolver un puzzle de 8 piezas | 3 | ≤ 31 | $d$ acotado y conocido — BFS explora en el mínimo garantizado |
 
-DFS no garantiza el camino más corto, pero usa mucha menos memoria y es la herramienta natural para exploración exhaustiva y backtracking.
+**Señales de alerta — evita BFS si:**
+- $d$ es desconocido y potencialmente grande ($d > 20$ con $b > 5$ ya son millones de nodos en cola)
+- $b$ es grande y $d$ no es trivialmente pequeño — $10^{10}$ nodos a $d=10, b=10$
+- La memoria es un recurso limitado (servidores pequeños, dispositivos embebidos)
 
-| Problema real | ¿Por qué DFS? |
+### Señales de que debes usar DFS
+
+**Usa DFS cuando no te importa la longitud del camino, o cuando necesitas explorar exhaustivamente:**
+
+| Señal del problema | ¿Por qué favorece DFS? |
 |---|---|
-| **`find` / `os.walk`**: listar todos los archivos dentro de una carpeta recursivamente | DFS recorre ramas completas antes de pasar a la siguiente — agrupa por directorio |
-| **Resolver Sudoku**: probar un número, continuar, y deshacer si hay contradicción | DFS con backtracking — cuando falla, hace `pop` y prueba el siguiente valor |
-| **Orden de instalación de paquetes**: instalar dependencias antes que el paquete que las necesita | DFS da el orden topológico natural — los nodos sin dependencias se procesan primero |
-| **Detectar ciclos**: ¿hay dependencias circulares en un proyecto? | DFS detecta si un nodo aparece en su propio camino activo |
-| **Componentes conexas**: ¿cuántos grupos de ciudades están conectados entre sí? | DFS desde cada nodo no visitado descubre exactamente su componente |
+| **No necesitas el camino más corto** — cualquier solución sirve | DFS puede encontrar una respuesta rápido sin explorar todos los niveles |
+| **El grafo es muy profundo** ($m$ grande) y la solución está lejos | DFS baja directamente — no pierde tiempo en niveles superficiales |
+| **Necesitas explorar todas las ramas** (backtracking) | DFS visita exhaustivamente una rama antes de retroceder — natural para puzzles |
+| **La RAM es escasa** y $b \times m$ cabe pero $b^d$ no | $O(bm)$ de DFS es lineal — siempre cabe si el grafo tiene profundidad finita |
+| **Quieres agrupar resultados por rama** (ej. todos los archivos de un directorio) | DFS completa una rama entera antes de pasar a la siguiente |
+| **No hay ciclos infinitos** (grafo finito + conjunto explorado activo) | DFS es completo en este caso |
 
-La limitación de DFS es que **no es óptimo**: puede encontrar un camino largo antes que uno corto, simplemente por el orden en que elige los vecinos.
+**Ejemplos concretos donde DFS es la elección correcta:**
+
+| Problema real | $b$ aprox. | $m$ aprox. | ¿Por qué DFS? |
+|---|:---:|:---:|---|
+| Resolver Sudoku por backtracking | 9 | 81 | No importa en qué orden se llena — DFS prueba opciones y retrocede al fallar |
+| Listar archivos en árbol de directorios | 10–100 | 10–20 | Agrupar por directorio es natural con DFS; BFS daría archivos mezclados de todos los niveles |
+| Detectar ciclos en grafo de dependencias | variable | variable | DFS puede marcar si un nodo está en el camino activo — BFS no tiene esa noción |
+| Generar permutaciones o combinaciones | $n$ | $n$ | Exploración completa de cada rama antes de la siguiente |
+| Encontrar componentes conexas | variable | variable | DFS desde nodo no visitado completa exactamente una componente |
+
+**Señales de alerta — evita DFS si:**
+- Necesitas el camino más corto — DFS puede devolver una ruta arbitrariamente larga
+- El grafo puede tener ramas infinitas sin conjunto explorado — DFS se perderá
+- $m \gg d$ y la solución está cerca de la raíz — DFS puede tardar mucho bajando por ramas equivocadas
 
 ### La regla de oro
 
 ```
-¿Necesitas el camino MÁS CORTO?          → BFS
-¿Necesitas CUALQUIER camino / explorar TODO?  → DFS
-¿Necesitas ambas cosas con poca memoria?      → IDDFS (siguiente sección)
+¿Conoces d y es pequeño? ¿Tienes RAM? ¿Necesitas camino corto? → BFS
+¿No importa la longitud? ¿Necesitas backtracking? ¿RAM limitada? → DFS
+¿Necesitas camino corto pero d es grande/desconocido/RAM escasa? → IDDFS
 ```
 
-Si tienes dudas, pregúntate: *"¿me importaría que el camino encontrado tenga más pasos de los necesarios?"* Si la respuesta es sí, usa BFS. Si no, DFS es suficiente y más eficiente en memoria.
+La pregunta clave es: *"¿qué sé sobre mi problema antes de empezar a buscar?"* Si sabes que la solución está cerca, BFS es eficiente. Si no sabes dónde está o no necesitas la óptima, DFS gasta menos memoria. Si necesitas lo mejor de ambos mundos, IDDFS — próxima sección.
 
 ---
 

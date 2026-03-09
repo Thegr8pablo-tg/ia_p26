@@ -503,37 +503,114 @@ Tres observaciones clave:
 
 ## 14. ¿Cuándo usar cada algoritmo?
 
-La elección depende de dos preguntas: *¿necesito el camino más corto?* y *¿tengo suficiente memoria?*
+La elección depende de lo que **sabes sobre tu problema antes de buscar**: cuánto mide $d$, cuánto mide $b$, cuánta memoria tienes, y si necesitas la solución óptima. El siguiente árbol de decisión te lleva a la respuesta correcta.
 
 ```
-¿Necesitas el camino MÁS CORTO?
-├── No  → DFS   (más rápido en práctica, menos memoria, backtracking)
-└── Sí  → ¿Tienes memoria suficiente?
-          ├── Sí  → BFS   (simple, directo, no re-expande nodos)
-          └── No  → IDDFS (garantías de BFS, memoria de DFS)
+┌─────────────────────────────────────────────────────────────┐
+│          ¿Necesitas el camino MÁS CORTO?                    │
+└───────┬──────────────────────────────┬──────────────────────┘
+        │ No                           │ Sí
+        ▼                              ▼
+┌───────────────────┐      ┌───────────────────────────────────┐
+│       DFS         │      │  ¿Sabes que d es pequeño          │
+│                   │      │  Y tienes RAM suficiente?         │
+│ backtracking,     │      └──────────┬────────────────────────┘
+│ exploración,      │                 │ Sí                │ No
+│ componentes,      │                 ▼                   ▼
+│ orden topológico  │         ┌──────────────┐  ┌─────────────────┐
+└───────────────────┘         │     BFS      │  │     IDDFS       │
+                              │              │  │                 │
+                              │ simple,      │  │ d desconocido,  │
+                              │ sin overhead │  │ RAM limitada,   │
+                              │ de pasadas   │  │ b grande        │
+                              └──────────────┘  └─────────────────┘
 ```
+
+### Tabla de señales por dimensión
+
+Antes de elegir, caracteriza tu problema según estas dimensiones:
+
+| Dimensión | Favorece BFS | Favorece DFS | Favorece IDDFS |
+|---|---|---|---|
+| **¿Necesitas camino óptimo?** | Sí, siempre | No importa | Sí, siempre |
+| **¿Conoces $d$?** | Sí, y es pequeño | No necesitas saberlo | No, o es grande/variable |
+| **Factor de ramificación $b$** | Pequeño–moderado ($b \leq 6$) | Cualquiera | Grande ($b \geq 10$) — overhead $b/(b-1) \approx 1$ |
+| **Profundidad de solución $d$** | Pequeña ($b^d$ cabe en RAM) | No importa (no usas BFS) | Grande o desconocida |
+| **Profundidad máxima $m$** | Irrelevante (BFS se detiene en $d$) | Debe ser finita | Irrelevante (IDDFS se detiene en $d$) |
+| **Memoria disponible** | Alta — $O(b^d)$ cabe | Baja — solo necesita $O(bm)$ | Baja — solo necesita $O(bd)$ |
+| **¿Tiempo límite?** | No es útil parar a la mitad | No aplica | Sí — puedes parar entre pasadas y tener resultado parcial |
+| **¿Necesitas explorar todo?** | Sí (alcanzabilidad) | Sí (componentes, ciclos, backtracking) | No — para al encontrar la solución |
 
 ### Usa BFS cuando:
 
-- Necesitas el **camino más corto** garantizado y la memoria no es problema.
-- El grafo es **poco profundo** — si $d$ es pequeño, $O(b^d)$ es manejable.
-- Quieres una implementación **simple** sin el overhead del bucle de IDDFS.
-- **Ejemplos reales**: camino mínimo en un laberinto de videojuego ($d$ pequeño), grados de separación en LinkedIn, flood fill en una imagen pequeña.
+**Lo que sabes del problema señala hacia BFS:**
+- Sabes o puedes estimar que **$d$ es pequeño** — y confirmas que $b^d$ cabe en memoria.
+- El grafo tiene **pocas conexiones por nodo** ($b$ pequeño) — la cola crece despacio.
+- La solución está **cerca del inicio** — BFS la encuentra enseguida sin explorar ramas profundas.
+- Tienes **suficiente RAM** — la complejidad de memoria $O(b^d)$ no es un obstáculo.
+- Quieres una implementación **directa**, sin el overhead del bucle de IDDFS.
+
+**Ejemplos concretos:**
+
+| Problema | $b$ | $d$ | ¿Por qué BFS? |
+|---|:---:|:---:|---|
+| Ruta mínima en laberinto 50×50 | 4 | ≤ 100 | $d$ acotado por el tamaño del laberinto; $b^d$ manejable con explorado set |
+| Grados de separación (red local, 1000 personas) | 10–50 | 3–4 | $d$ es pequeño — redes densas tienen diámetros pequeños |
+| Mínimo de movimientos en puzzle 8-piezas | 3 | ≤ 31 | $d$ conocido y pequeño; BFS garantiza encontrar la solución en exactamente 31 movimientos |
+| Flood fill (imagen 512×512) | 4 | ≤ 512² | Nodos son píxeles — el "grafo" es grande pero BFS lo procesa con una cola que nunca supera el nivel actual |
+
+**Señales de alerta para BFS:**
+- $b > 10$ y $d > 6$: la cola supera millones de nodos — probablemente necesitas IDDFS
+- $d$ es desconocido y potencialmente grande: IDDFS es más apropiado
+- Dispositivo con RAM limitada: ni BFS ni DFS con d grande
 
 ### Usa DFS cuando:
 
-- **No te importa** si el camino es el más corto — solo necesitas cualquier solución.
-- El grafo es **profundo** y la solución probablemente está lejos del inicio.
-- Necesitas explorar **todas** las ramas posibles (backtracking: Sudoku, N-reinas, permutaciones).
-- La memoria es limitada y sabes que DFS no se perderá en ramas infinitas.
-- **Ejemplos reales**: resolver un Sudoku probando valores, listar todos los archivos en un directorio, detectar ciclos en dependencias de paquetes.
+**Lo que sabes del problema señala hacia DFS:**
+- **No necesitas el camino más corto** — solo existencia, o exploración completa.
+- La solución probablemente está **profunda** — DFS llega lejos sin explorar todos los niveles superficiales.
+- Necesitas **backtracking** — probar opciones, deshacer al fallar, explorar sistemáticamente.
+- La **RAM es escasa** — $O(bm)$ siempre cabe mientras el grafo sea finito.
+- Quieres **agrupar resultados por rama** — componentes conexas, árbol de dependencias, árbol de directorios.
+- Sabes que el grafo es **finito y tiene conjunto explorado** — DFS no entrará en bucles infinitos.
+
+**Ejemplos concretos:**
+
+| Problema | $b$ | $m$ | ¿Por qué DFS? |
+|---|:---:|:---:|---|
+| Sudoku (9×9) | 9 | 81 | Backtracking necesario; no existe "camino más corto" entre configuraciones |
+| Árbol de directorios (10 niveles, 50 entradas/dir) | 50 | 10 | $O(bm) = 500$ entradas en pila — trivial; BFS requeriría $50^{10}$ |
+| Encontrar componentes conexas en grafo de 10,000 nodos | variable | variable | DFS completa cada componente en una pasada; solo necesita el conjunto visitado |
+| N-reinas (N=12) | 12 | 12 | Exploración exhaustiva de todas las colocaciones; DFS con backtracking es la implementación canónica |
+
+**Señales de alerta para DFS:**
+- Necesitas el camino más corto: DFS puede devolver uno arbitrariamente largo
+- El grafo tiene ramas infinitas (sin conjunto explorado): DFS puede no terminar
+- La solución está muy cerca del inicio y tienes memoria suficiente: BFS encontrará la solución más rápido
 
 ### Usa IDDFS cuando:
 
-- Necesitas el **camino más corto** (como BFS) pero la memoria es un problema real.
-- **No sabes de antemano** cuán profunda está la solución — IDDFS prueba todas las profundidades.
-- El **factor de ramificación es grande** — con $b$ grande, el overhead del 48% de IDDFS es insignificante frente al ahorro en memoria.
-- **Ejemplos reales**: puzzles de tiles ($d$ hasta 80, $b \approx 3$), motores de juegos con control de tiempo, búsqueda en espacios de estados grandes donde BFS no cabe en RAM.
+**Lo que sabes del problema señala hacia IDDFS:**
+- **Necesitas el camino más corto**, pero también se cumple alguna de estas condiciones:
+  - **No sabes $d$** — IDDFS prueba automáticamente $d = 0, 1, 2, \ldots$
+  - **$b^d$ excede tu RAM disponible** — la cola de BFS no cabe
+  - **$b$ es grande** — el overhead de IDDFS es pequeño: con $b = 10$, solo un 11% más de trabajo que BFS
+- Quieres poder **parar entre pasadas** y obtener el mejor resultado hasta ese momento (útil en motores de juego con límite de tiempo).
+- El espacio de estados es **masivo** — imposible guardar la frontera completa en memoria.
+
+**Ejemplos concretos:**
+
+| Problema | $b$ | $d$ | ¿Por qué IDDFS? |
+|---|:---:|:---:|---|
+| Puzzle 15 piezas | 3 | ≤ 80 | $b^d = 3^{80} \approx 10^{38}$ nodos en BFS — imposible; IDDFS necesita solo $O(b \cdot d) = 240$ nodos en pila |
+| Cubo de Rubik (simplificado) | 18 | ≤ 20 | $18^{20} \approx 10^{25}$ nodos en BFS; IDDFS: $18 \times 20 = 360$ nodos en pila |
+| Motor de ajedrez con límite de tiempo | 35 | hasta 10 | IDDFS permite devolver el mejor movimiento a profundidad $k$ si el tiempo se acaba antes de llegar a $k+1$ |
+| Planificación de rutas en grafo grande desconocido | variable | desconocido | $d$ no se conoce a priori — IDDFS es la única opción entre BFS/DFS que es óptima sin conocer $d$ |
+
+**Señales de alerta para IDDFS:**
+- $b = 1$ (lista lineal): el overhead de re-exploración es 100% — BFS es igual de eficiente en memoria
+- $b = 2$ y $d$ grande: overhead ≈ 100% — considera si BFS cabe en memoria antes de descartarlo
+- Ya sabes exactamente $d$ y BFS cabe en memoria: BFS es más simple y sin overhead
 
 ---
 
