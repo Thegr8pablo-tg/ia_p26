@@ -19,6 +19,10 @@ Alpha-beta es minimax con una observación sencilla: **no necesitas explorar ram
 
 Esta sección construye el concepto desde cero con dos ejemplos concretos antes de introducir cualquier fórmula.
 
+> **Nota sobre los valores en los ejemplos.** En Nim usamos utilidades terminales $\{+1, -1\}$ donde el signo indicaba directamente quién gana: $+1$ = MAX gana, $-1$ = MIN gana. Aquí usamos enteros arbitrarios (3, 5, 8, …) para que α y β sean valores concretos y distintos, lo que hace más visible cómo funciona la ventana $[\alpha, \beta]$.
+>
+> La convención es **exactamente la misma**: cada valor es siempre la utilidad de MAX. El juego sigue siendo de suma cero — MIN minimiza esa misma cantidad, lo que equivale a maximizar la suya propia. Valores más altos siguen siendo mejores para MAX y peores para MIN. La única diferencia con Nim es que el rango no está restringido a $\pm 1$; puede ser cualquier entero que devuelva la función de evaluación.
+
 ---
 
 ## 1. Ejemplo A: α-cutoff — MAX ya tiene algo mejor
