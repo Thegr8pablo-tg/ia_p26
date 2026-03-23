@@ -115,6 +115,15 @@ Esta acción significa: "mover el bloque B desde la mesa hacia encima del bloque
 - La lista add captura lo nuevo (B ahora está sobre C).
 - La lista delete captura lo que ya no es cierto (B ya no está en la mesa, C ya no está libre).
 
+> **¿Por qué necesitamos $\text{On}(B, \text{Mesa})$ en las precondiciones?**
+> Uno podría pensar que basta con $\text{Clear}(B)$ y $\text{Clear}(C)$: si B está libre, se puede mover sin importar *dónde* esté. Físicamente eso es cierto — pero en STRIPS las precondiciones no solo verifican si la acción es *posible*, sino que aseguran que la **lista delete** va a limpiar la proposición correcta.
+>
+> La lista delete de $\text{MoverDesdeMesa}(B, C)$ elimina $\text{On}(B, \text{Mesa})$. Si B estuviera en realidad sobre A (no sobre la mesa), pasarían dos cosas malas:
+> 1. La lista delete intenta eliminar $\text{On}(B, \text{Mesa})$ que no existe — inofensivo pero incorrecto.
+> 2. $\text{On}(B, A)$ **sobrevive** porque nadie la elimina. El estado resultante dice que B está sobre A **y** sobre C al mismo tiempo — un estado inconsistente.
+>
+> STRIPS no tiene un verificador de consistencia — confía en que las definiciones de las acciones mantengan estados válidos. La precondición $\text{On}(B, \text{Mesa})$ garantiza que la acción solo se ejecute en el contexto correcto para que su lista delete haga la limpieza adecuada.
+
 ---
 
 ## 3. Aplicar una acción: transición de estado paso a paso
@@ -209,6 +218,8 @@ Mover(X, Y, Z)
 
 **Restricción**: X, Y y Z deben ser bloques diferentes. Y y Z **no** pueden ser Mesa (para eso están los otros esquemas).
 
+> **¿Por qué no necesitamos $\text{On}(Y, \text{Mesa})$ ni $\text{On}(Z, \text{Mesa})$ en las precondiciones?** Porque la acción no mueve ni a Y ni a Z — solo mueve a X. Lo único que le importa de Y es que X está encima (para eliminar $\text{On}(X, Y)$ y liberar Y). Lo único que le importa de Z es que está libre (para poner X encima). Dónde descansa Y (¿en la mesa? ¿sobre otro bloque?) y dónde descansa Z son irrelevantes — la acción no toca esas relaciones. En STRIPS, cada proposición en las precondiciones existe porque la lista add o la lista delete la necesita. Si la acción no modifica una relación, no necesita verificarla.
+
 ### Esquema 2: MoverAMesa(X, Y)
 
 *Mover el bloque X desde el bloque Y hacia la mesa.*
@@ -254,6 +265,21 @@ MoverDesdeMesa(X, Z)
                      X ya no en     Z ya no
                      la mesa        está libre
 ```
+
+### ¿Por qué tres esquemas y no uno solo?
+
+Una pregunta natural: si un bloque libre se puede mover sin importar dónde esté (en la mesa o sobre otro bloque), ¿por qué no tener un solo esquema genérico $\text{Move}(X, \text{Destino})$ con una precondición tipo "B está en la mesa **o** B está sobre algún bloque"?
+
+La razón es una **limitación del lenguaje STRIPS**: las precondiciones son una **conjunción** (un conjunto de proposiciones que deben ser **todas** verdaderas). No existe la disyunción (OR) en las precondiciones. No podemos escribir $\text{On}(B, \text{Mesa}) \lor \text{On}(B, A)$ como precondición.
+
+Los tres esquemas son la forma en que STRIPS resuelve esta limitación: **enumera cada caso como una acción separada**. Cuando el planificador hace búsqueda hacia adelante, prueba las 18 acciones concretas contra el estado actual, y las precondiciones filtran automáticamente cuáles aplican:
+
+- Si B está en la mesa → $\text{MoverDesdeMesa}(B, C)$ es aplicable, $\text{Mover}(B, A, C)$ no lo es.
+- Si B está sobre A → $\text{Mover}(B, A, C)$ es aplicable, $\text{MoverDesdeMesa}(B, C)$ no lo es.
+
+El planificador no necesita "saber" cuál usar — prueba todas y la física (las precondiciones) filtra las incorrectas.
+
+> **Nota**: el lenguaje **ADL** (Action Description Language, Pednault 1989) extiende STRIPS con precondiciones disyuntivas, negación, efectos condicionales y cuantificadores. En ADL *sí* podríamos escribir un solo esquema genérico. Pero STRIPS, por su simplicidad, sigue siendo la base pedagógica y práctica de la planificación clásica.
 
 ---
 

@@ -103,6 +103,16 @@ El algoritmo paso a paso:
 
 5. **Repetir** hasta encontrar la meta o agotar la frontera (no hay plan posible).
 
+### Orden de expansión: ¿quién entra primero a la frontera?
+
+Hay un detalle sutil pero importante. En el paso 4, el algoritmo recorre las acciones aplicables en **algún orden** y va agregando los estados sucesores a la frontera. Ese orden depende de cómo están almacenadas las acciones en la lista `acciones` — es decir, del orden en que fueron generadas al definir el dominio. La primera acción aplicable que se prueba genera el primer sucesor que entra a la frontera, la segunda genera el segundo, etc.
+
+Como BFS usa una cola FIFO (el primero que entra es el primero que sale), **el orden de enumeración de las acciones determina el orden en que se exploran los estados dentro de una misma capa**. Si cambiáramos el orden de la lista de acciones (por ejemplo, poner MoverDesdeMesa(C,B) antes que MoverDesdeMesa(A,B)), los mismos 13 estados se explorarían en un orden diferente.
+
+¿Afecta esto la corrección del algoritmo? **No.** BFS sigue siendo completo y óptimo (en número de pasos) sin importar el orden de enumeración. Todos los estados de la capa $k$ se exploran antes que cualquier estado de la capa $k+1$. Lo único que cambia es *cuál* de los estados dentro de la misma capa se visita primero — pero como todos están a la misma distancia del inicio, el resultado es igualmente óptimo.
+
+> **Contraste con A\***: en A\* (módulo 14), el orden **no** es arbitrario — la cola de prioridad ordena por $f(s) = g(s) + h(s)$. El planificador elige primero el estado más prometedor según la heurística, no el que fue generado primero. Esa es la diferencia entre búsqueda ciega (BFS/DFS) y búsqueda informada (A\*).
+
 ---
 
 ## 3. Las funciones auxiliares
@@ -423,6 +433,8 @@ $$s = \{\ \text{On}(A,\text{Mesa}),\ \text{On}(B,\text{Mesa}),\ \text{On}(C,\tex
 ---
 
 **Paso 2** — Sacar: `A/B, C` (A sobre B, C en la mesa)
+
+> **¿Por qué sale `A/B, C` y no otro estado?** En el paso 1, las 6 acciones MoverDesdeMesa se recorrieron en el orden de la lista de acciones. La primera aplicable fue MoverDesdeMesa(A,B), así que `A/B, C` fue el primer sucesor en entrar a la cola FIFO, y por lo tanto es el primero en salir. Si las acciones estuvieran en otro orden — por ejemplo, si MoverDesdeMesa(C,B) fuera la primera — saldría otro estado aquí. Pero el resultado final del BFS sería el mismo: plan óptimo de 2 pasos.
 
 $$s = \{\ \text{On}(A,B),\ \text{On}(B,\text{Mesa}),\ \text{On}(C,\text{Mesa}),\ \text{Clear}(A),\ \text{Clear}(C)\ \}$$
 
