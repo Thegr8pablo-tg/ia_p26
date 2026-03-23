@@ -171,7 +171,21 @@ Añadimos las precondiciones de $a$. Ahora necesitamos que estas proposiciones s
 
 **Resultado:** el nuevo subobjetivo $g' = \text{regress}(g, a)$ responde la pregunta: "¿qué debe ser verdad en el mundo para que, al ejecutar $a$, obtengamos todo lo que $g$ pide?"
 
-> **Observación:** La regresión es la operación inversa de la aplicación de acciones. En forward search, `aplicar(s, a) = (s - Del(a)) ∪ Add(a)` va del estado actual al siguiente. En backward search, `regress(g, a) = (g - Add(a)) ∪ Pre(a)` va del subobjetivo actual al anterior. Nota la simetría: Add y Pre intercambian roles con Del y Add.
+### Comparación: aplicar (forward) vs regresar (backward)
+
+La regresión es la **operación espejo** de la aplicación de acciones que usamos en forward search. Recordemos ambas fórmulas lado a lado:
+
+| | **Forward:** aplicar acción | **Backward:** regresar acción |
+|---|---|---|
+| **Fórmula** | $s' = (s - \text{Del}(a)) \cup \text{Add}(a)$ | $g' = (g - \text{Add}(a)) \cup \text{Pre}(a)$ |
+| **Entrada** | Estado completo $s$ | Subobjetivo $g$ |
+| **Salida** | Nuevo estado completo $s'$ | Nuevo subobjetivo $g'$ |
+| **Paso 1: quitar** | Quitar lo que la acción **destruye** (Del) | Quitar lo que la acción **produce** (Add) |
+| **Paso 2: agregar** | Agregar lo que la acción **produce** (Add) | Agregar lo que la acción **requiere** (Pre) |
+| **Pregunta** | "¿Cómo queda el mundo *después* de $a$?" | "¿Qué debe ser verdad *antes* de $a$?" |
+| **Dirección** | $s \xrightarrow{a} s'$ (avanza hacia $G$) | $g \xleftarrow{a} g'$ (retrocede hacia $s_0$) |
+
+La simetría es casi perfecta: donde forward usa Del y Add, backward usa Add y Pre. La lógica es la misma — en forward quitamos lo que $a$ destruye y agregamos lo que produce; en backward quitamos lo que $a$ ya se encargará de producir y agregamos lo que $a$ necesita para poder ejecutarse.
 
 En resumen, la regresión responde una pregunta sencilla: **"si quiero que $g$ sea verdad *después* de ejecutar $a$, ¿qué necesita ser verdad *antes*?"**. Lo que $a$ produce (Add) ya no necesito pedirlo — $a$ se encargará. Pero lo que $a$ requiere (Pre), ahora tengo que pedirlo yo.
 
