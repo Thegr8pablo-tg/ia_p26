@@ -6,7 +6,7 @@ Uso:
     cd clase/16_planificacion_clasica
     python3 lab_planificacion.py
 
-Genera 13 imágenes en:
+Genera 15 imágenes en:
     clase/16_planificacion_clasica/images/
 
 Dependencias: numpy, matplotlib
@@ -1405,11 +1405,295 @@ def plot_forward_vs_backward_branching():
 
 
 # ---------------------------------------------------------------------------
+# Plot 14 – Forward apply vs backward regress (same action, two perspectives)
+# ---------------------------------------------------------------------------
+
+def plot_apply_vs_regress():
+    """Side-by-side: apply(s0, a) forward vs regress(G, a) backward for the
+    same action MoverDesdeMesa(A,B), showing which propositions are removed
+    and which are added in each case."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 9))
+
+    def _draw_prop_box(ax, cx, cy, props, title, border_col, fill_col,
+                       removed=None, added=None, w=3.8, h_per_line=0.45):
+        """Draw a box with a list of propositions, marking removed/added."""
+        removed = removed or set()
+        added = added or set()
+        n = len(props)
+        h = max(n * h_per_line + 0.6, 2.0)
+
+        rect = mpatches.FancyBboxPatch(
+            (cx - w / 2, cy - h / 2), w, h,
+            boxstyle="round,pad=0.12", facecolor=fill_col,
+            edgecolor=border_col, linewidth=2.0)
+        ax.add_patch(rect)
+
+        ax.text(cx, cy + h / 2 + 0.25, title, ha="center", fontsize=10,
+                fontweight="bold", color=border_col)
+
+        y_start = cy + h / 2 - 0.45
+        for i, p in enumerate(props):
+            y = y_start - i * h_per_line
+            if p in removed:
+                ax.text(cx, y, p, ha="center", va="center", fontsize=8.5,
+                        fontfamily="monospace", color=COLORS["red"],
+                        fontstyle="italic",
+                        path_effects=[pe.withStroke(linewidth=0, foreground="none")])
+                # Strikethrough line
+                tw = len(p) * 0.065
+                ax.plot([cx - tw, cx + tw], [y, y],
+                        color=COLORS["red"], linewidth=1.5, alpha=0.7)
+                ax.text(cx + tw + 0.15, y, "[del]", ha="left", va="center",
+                        fontsize=6, color=COLORS["red"])
+            elif p in added:
+                ax.text(cx, y, p, ha="center", va="center", fontsize=8.5,
+                        fontfamily="monospace", color=COLORS["green"],
+                        fontweight="bold")
+                ax.text(cx + len(p) * 0.065 + 0.15, y, "[+]", ha="left",
+                        va="center", fontsize=7, fontweight="bold",
+                        color=COLORS["green"])
+            else:
+                ax.text(cx, y, p, ha="center", va="center", fontsize=8.5,
+                        fontfamily="monospace", color=COLORS["dark"])
+        return h
+
+    # --- Left panel: FORWARD apply(s0, MoverDesdeMesa(A,B)) ---
+    ax1.set_xlim(-0.5, 10.5)
+    ax1.set_ylim(-1.5, 9)
+    ax1.set_aspect("equal")
+    ax1.axis("off")
+    ax1.set_title("FORWARD:  aplicar($s_0$, MoverDesdeMesa(A,B))",
+                   fontsize=11, fontweight="bold", color=COLORS["blue"], pad=12)
+
+    s0_props = ["On(A,Mesa)", "On(B,Mesa)", "On(C,Mesa)",
+                "Clear(A)", "Clear(B)", "Clear(C)"]
+    s0_removed = {"On(A,Mesa)", "Clear(B)"}
+
+    _draw_prop_box(ax1, 2.5, 6.0, s0_props, "Estado $s_0$",
+                   COLORS["blue"], "#E3F2FD", removed=s0_removed)
+
+    # Arrow down
+    ax1.annotate("", xy=(5.0, 5.0), xytext=(5.0, 5.8),
+                 arrowprops=dict(arrowstyle="-|>", lw=2.5, color=COLORS["blue"]))
+    ax1.text(5.0, 5.5, "Paso 1\n$s - \\mathrm{Del}(a)$", ha="center",
+             fontsize=9, color=COLORS["blue"],
+             bbox=dict(boxstyle="round,pad=0.2", facecolor="white",
+                       edgecolor=COLORS["blue"], linewidth=1))
+
+    # Intermediate
+    s_mid = ["On(B,Mesa)", "On(C,Mesa)", "Clear(A)", "Clear(C)"]
+    _draw_prop_box(ax1, 7.5, 6.0, s_mid, "después de quitar Del",
+                   COLORS["gray"], "#F5F5F5")
+
+    # Arrow down
+    ax1.annotate("", xy=(5.0, 2.8), xytext=(5.0, 3.6),
+                 arrowprops=dict(arrowstyle="-|>", lw=2.5, color=COLORS["green"]))
+    ax1.text(5.0, 3.3, "Paso 2\n$\\cup\\ \\mathrm{Add}(a)$", ha="center",
+             fontsize=9, color=COLORS["green"],
+             bbox=dict(boxstyle="round,pad=0.2", facecolor="white",
+                       edgecolor=COLORS["green"], linewidth=1))
+
+    # Result
+    s_prime = ["On(A,B)", "On(B,Mesa)", "On(C,Mesa)", "Clear(A)", "Clear(C)"]
+    _draw_prop_box(ax1, 5.0, 1.0, s_prime, "Estado $s'$",
+                   COLORS["green"], "#E8F5E9", added={"On(A,B)"})
+
+    # Action box
+    ax1.text(5.0, 8.3, "Acción: MoverDesdeMesa(A,B)", ha="center", fontsize=10,
+             fontweight="bold", color=COLORS["dark"],
+             bbox=dict(boxstyle="round,pad=0.3", facecolor="#FFF9C4",
+                       edgecolor=COLORS["orange"], linewidth=1.5))
+
+    # Formula summary
+    ax1.text(5.0, -1.0,
+             "$s' = (s_0 - \\mathrm{Del}) \\cup \\mathrm{Add}$",
+             ha="center", fontsize=11, color=COLORS["blue"],
+             bbox=dict(boxstyle="round,pad=0.3", facecolor="#E3F2FD",
+                       edgecolor=COLORS["blue"], linewidth=1.5))
+
+    # --- Right panel: BACKWARD regress(G, MoverDesdeMesa(A,B)) ---
+    ax2.set_xlim(-0.5, 10.5)
+    ax2.set_ylim(-1.5, 9)
+    ax2.set_aspect("equal")
+    ax2.axis("off")
+    ax2.set_title("BACKWARD:  regress($G$, MoverDesdeMesa(A,B))",
+                   fontsize=11, fontweight="bold", color=COLORS["orange"], pad=12)
+
+    g_props = ["On(A,B)", "On(B,C)", "On(C,Mesa)", "Clear(A)"]
+    g_removed = {"On(A,B)"}
+
+    _draw_prop_box(ax2, 2.5, 6.0, g_props, "Subobjetivo $G$",
+                   COLORS["orange"], "#FFF3E0", removed=g_removed)
+
+    # Arrow down
+    ax2.annotate("", xy=(5.0, 5.0), xytext=(5.0, 5.8),
+                 arrowprops=dict(arrowstyle="-|>", lw=2.5, color=COLORS["orange"]))
+    ax2.text(5.0, 5.5, "Paso 1\n$g - \\mathrm{Add}(a)$", ha="center",
+             fontsize=9, color=COLORS["orange"],
+             bbox=dict(boxstyle="round,pad=0.2", facecolor="white",
+                       edgecolor=COLORS["orange"], linewidth=1))
+
+    # Intermediate
+    g_mid = ["On(B,C)", "On(C,Mesa)", "Clear(A)"]
+    _draw_prop_box(ax2, 7.5, 6.0, g_mid, "después de quitar Add",
+                   COLORS["gray"], "#F5F5F5")
+
+    # Arrow down
+    ax2.annotate("", xy=(5.0, 2.8), xytext=(5.0, 3.6),
+                 arrowprops=dict(arrowstyle="-|>", lw=2.5, color=COLORS["green"]))
+    ax2.text(5.0, 3.3, "Paso 2\n$\\cup\\ \\mathrm{Pre}(a)$", ha="center",
+             fontsize=9, color=COLORS["green"],
+             bbox=dict(boxstyle="round,pad=0.2", facecolor="white",
+                       edgecolor=COLORS["green"], linewidth=1))
+
+    # Result
+    g_prime = ["On(A,Mesa)", "On(B,C)", "On(C,Mesa)", "Clear(A)", "Clear(B)"]
+    _draw_prop_box(ax2, 5.0, 1.0, g_prime, "Subobjetivo $g'$",
+                   COLORS["teal"], "#E0F2F1", added={"On(A,Mesa)", "Clear(B)"})
+
+    # Action box
+    ax2.text(5.0, 8.3, "Acción: MoverDesdeMesa(A,B)", ha="center", fontsize=10,
+             fontweight="bold", color=COLORS["dark"],
+             bbox=dict(boxstyle="round,pad=0.3", facecolor="#FFF9C4",
+                       edgecolor=COLORS["orange"], linewidth=1.5))
+
+    # Formula summary
+    ax2.text(5.0, -1.0,
+             "$g' = (G - \\mathrm{Add}) \\cup \\mathrm{Pre}$",
+             ha="center", fontsize=11, color=COLORS["orange"],
+             bbox=dict(boxstyle="round,pad=0.3", facecolor="#FFF3E0",
+                       edgecolor=COLORS["orange"], linewidth=1.5))
+
+    fig.suptitle("Misma acción, dos perspectivas: aplicar (forward) vs regresar (backward)",
+                 fontsize=13, fontweight="bold", y=1.0)
+    fig.tight_layout()
+    _save(fig, "14_apply_vs_regress.png")
+
+
+# ---------------------------------------------------------------------------
+# Plot 15 – Algorithm flowchart: forward vs backward side by side
+# ---------------------------------------------------------------------------
+
+def plot_algorithm_flowchart():
+    """Side-by-side flowchart comparing FORWARD-PLANNING and BACKWARD-PLANNING,
+    highlighting the 3 substitution points [D1/D2/D3] vs [B1/B2/B3]."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 11))
+
+    def _flowchart(ax, title, color, steps):
+        """Draw a vertical flowchart.
+        steps: list of (label, shape, tag) where shape is 'box', 'diamond',
+        or 'roundbox', and tag is e.g. '[D1]' or None.
+        """
+        ax.set_xlim(-1, 11)
+        ax.set_ylim(-0.5, 14)
+        ax.set_aspect("equal")
+        ax.axis("off")
+        ax.set_title(title, fontsize=13, fontweight="bold", color=color, pad=15)
+
+        cx = 5.0
+        y_positions = []
+        n = len(steps)
+
+        for i, (label, shape, tag) in enumerate(steps):
+            y = 12.5 - i * 2.0
+            y_positions.append(y)
+            w, h = 4.2, 1.1
+
+            if shape == "diamond":
+                diamond = plt.Polygon(
+                    [(cx, y + h / 2 + 0.15), (cx + w / 2, y),
+                     (cx, y - h / 2 - 0.15), (cx - w / 2, y)],
+                    facecolor="#FFF9C4", edgecolor=COLORS["orange"],
+                    linewidth=2, zorder=2)
+                ax.add_patch(diamond)
+            elif shape == "roundbox":
+                rect = mpatches.FancyBboxPatch(
+                    (cx - w / 2, y - h / 2), w, h,
+                    boxstyle="round,pad=0.12", facecolor="#E8F5E9",
+                    edgecolor=COLORS["green"], linewidth=2, zorder=2)
+                ax.add_patch(rect)
+            else:
+                fill = "#E3F2FD" if "[" not in (tag or "") else "#FFEBEE"
+                border = color if "[" not in (tag or "") else COLORS["red"]
+                if tag:
+                    fill = "#FFEBEE"
+                    border = COLORS["red"]
+                rect = mpatches.FancyBboxPatch(
+                    (cx - w / 2, y - h / 2), w, h,
+                    boxstyle="round,pad=0.12", facecolor=fill,
+                    edgecolor=border, linewidth=2, zorder=2)
+                ax.add_patch(rect)
+
+            ax.text(cx, y, label, ha="center", va="center", fontsize=8.5,
+                    fontweight="bold" if tag else "normal",
+                    color=COLORS["dark"], zorder=3)
+
+            if tag:
+                ax.text(cx + w / 2 + 0.15, y, tag, ha="left", va="center",
+                        fontsize=10, fontweight="bold", color=COLORS["red"],
+                        zorder=3)
+
+            # Arrow to next
+            if i < n - 1:
+                next_shape = steps[i + 1][1]
+                y_end = 12.5 - (i + 1) * 2.0
+                tip_y = y_end + (h / 2 + 0.15 if next_shape == "diamond"
+                                 else h / 2)
+                ax.annotate("", xy=(cx, tip_y), xytext=(cx, y - h / 2),
+                            arrowprops=dict(arrowstyle="-|>", lw=1.5,
+                                            color=COLORS["gray"]))
+
+    # Forward steps
+    forward_steps = [
+        ("frontera ← { $s_0$ }", "box", "[D1]"),
+        ("$s$ ← frontera.pop()", "box", None),
+        ("¿$G \\subseteq s$ ?", "diamond", "[D2]"),
+        ("Para cada $a$:\n¿Pre($a$) $\\subseteq s$ ?", "box", None),
+        ("$s' = (s - \\mathrm{Del}) \\cup \\mathrm{Add}$", "box", "[D3]"),
+        ("agregar $s'$ a frontera", "box", None),
+        ("PLAN encontrado", "roundbox", None),
+    ]
+
+    # Backward steps
+    backward_steps = [
+        ("frontera ← { $G$ }", "box", "[B1]"),
+        ("$g$ ← frontera.pop()", "box", None),
+        ("¿$g \\subseteq s_0$ ?", "diamond", "[B2]"),
+        ("Para cada $a$:\n¿Add($a$) $\\cap\\ g \\neq \\emptyset$ ?\n"
+         "¿Del($a$) $\\cap\\ g = \\emptyset$ ?", "box", None),
+        ("$g' = (g - \\mathrm{Add}) \\cup \\mathrm{Pre}$", "box", "[B3]"),
+        ("agregar $g'$ a frontera", "box", None),
+        ("PLAN encontrado", "roundbox", None),
+    ]
+
+    _flowchart(ax1, "FORWARD-PLANNING", COLORS["blue"], forward_steps)
+    _flowchart(ax2, "BACKWARD-PLANNING", COLORS["orange"], backward_steps)
+
+    # Add "Sí" label for diamond -> PLAN (special branch)
+    for ax_i in (ax1, ax2):
+        diamond_y = 12.5 - 2 * 2.0  # step index 2
+        plan_y = 12.5 - 6 * 2.0     # step index 6
+        ax_i.annotate(
+            "", xy=(8.5, plan_y), xytext=(7.1, diamond_y),
+            arrowprops=dict(arrowstyle="-|>", lw=1.5, color=COLORS["green"],
+                            connectionstyle="arc3,rad=-0.3"))
+        ax_i.text(8.8, (diamond_y + plan_y) / 2, "Sí", fontsize=10,
+                  fontweight="bold", color=COLORS["green"])
+        ax_i.text(3.2, diamond_y - 0.8, "No",
+                  fontsize=10, fontweight="bold", color=COLORS["gray"])
+
+    fig.suptitle("Algoritmos lado a lado: las 3 diferencias marcadas en rojo",
+                 fontsize=13, fontweight="bold", y=0.98)
+    fig.tight_layout()
+    _save(fig, "15_algorithm_flowchart.png")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
 def main():
-    """Generate all 13 images for module 16 (Planificación Clásica)."""
+    """Generate all 15 images for module 16 (Planificación Clásica)."""
     plot_search_vs_planning()         # 01
     plot_blocks_world_states()        # 02
     plot_strips_action_anatomy()      # 03
@@ -1423,6 +1707,8 @@ def main():
     plot_forward_vs_backward()        # 11
     plot_regression_trace()           # 12
     plot_forward_vs_backward_branching()  # 13
+    plot_apply_vs_regress()           # 14
+    plot_algorithm_flowchart()        # 15
 
 
 if __name__ == "__main__":

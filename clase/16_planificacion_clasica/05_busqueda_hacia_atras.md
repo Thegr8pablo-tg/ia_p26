@@ -187,6 +187,12 @@ La regresión es la **operación espejo** de la aplicación de acciones que usam
 
 La simetría es casi perfecta: donde forward usa Del y Add, backward usa Add y Pre. La lógica es la misma — en forward quitamos lo que $a$ destruye y agregamos lo que produce; en backward quitamos lo que $a$ ya se encargará de producir y agregamos lo que $a$ necesita para poder ejecutarse.
 
+La siguiente figura muestra ambas operaciones aplicadas a la **misma acción** MoverDesdeMesa(A,B), una desde $s_0$ (forward) y otra desde $G$ (backward). Observa cómo en cada caso se quitan y agregan proposiciones distintas, pero la estructura de los dos pasos es idéntica.
+
+![Aplicar vs regresar]({{ '/16_planificacion_clasica/images/14_apply_vs_regress.png' | url }})
+
+**Cómo leer la figura:** a la izquierda, forward aplica MoverDesdeMesa(A,B) al estado $s_0$ — elimina On(A,Mesa) y Clear(B) (tachados en rojo), luego agrega On(A,B) (marcado en verde). A la derecha, backward regresa la misma acción desde $G$ — elimina On(A,B) del subobjetivo (ya no hace falta pedirlo), luego agrega las precondiciones On(A,Mesa) y Clear(B) (marcados en verde). La misma acción, pero cada dirección quita y agrega cosas diferentes.
+
 En resumen, la regresión responde una pregunta sencilla: **"si quiero que $g$ sea verdad *después* de ejecutar $a$, ¿qué necesita ser verdad *antes*?"**. Lo que $a$ produce (Add) ya no necesito pedirlo — $a$ se encargará. Pero lo que $a$ requiere (Pre), ahora tengo que pedirlo yo.
 
 **Ejemplo completo.** Subobjetivo $g = \{\text{On}(A,B),\ \text{On}(B,C),\ \text{On}(C,\text{Mesa}),\ \text{Clear}(A)\}$. Acción $a = \text{MoverDesdeMesa}(A,B)$:
@@ -465,6 +471,12 @@ function BACKWARD-PLANNING(problema):
 | **Transición** | $s' = (s - \text{Del}) \cup \text{Add}$ | $g' = (g - \text{Add}) \cup \text{Pre}$ |
 
 > **Observación:** Tanto forward como backward planning son instancias de `GENERIC-SEARCH`. La estructura del algoritmo es idéntica — lo que cambia es qué representan los nodos (estados vs subobjetivos), qué significa "meta", y cómo se generan los vecinos.
+
+La siguiente figura muestra ambos algoritmos como diagramas de flujo lado a lado. Las cajas en rojo marcan exactamente las tres líneas que cambian — el resto de la estructura es idéntico.
+
+![Algoritmos lado a lado]({{ '/16_planificacion_clasica/images/15_algorithm_flowchart.png' | url }})
+
+**Cómo leer la figura:** sigue el flujo de arriba a abajo en cada columna. Las cajas con borde rojo y etiquetas [D1]/[D2]/[D3] (forward) y [B1]/[B2]/[B3] (backward) son las únicas diferencias. Todo lo demás — la estructura del ciclo, la frontera, el mapa de padres, la detección de duplicados — es exactamente `GENERIC-SEARCH`.
 
 ---
 
