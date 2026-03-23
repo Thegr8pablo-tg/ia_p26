@@ -19,6 +19,7 @@ En los módulos 13 y 14 resolvimos problemas donde un agente busca un camino en 
 | 16.2 | [STRIPS](02_strips.md) | Proposiciones, acciones (pre/add/delete), espacio de estados |
 | 16.3 | [Búsqueda hacia adelante](03_busqueda_hacia_adelante.md) | Forward search = generic search + STRIPS, traza completa |
 | 16.4 | [Heurísticas para planificación](04_heuristicas_planificacion.md) | Relajación: ignorar listas delete, conexión con A* |
+| 16.5 | [Búsqueda hacia atrás](05_busqueda_hacia_atras.md) | Regresión, subobjetivos, forward vs backward |
 
 ---
 
@@ -31,8 +32,9 @@ En los módulos 13 y 14 resolvimos problemas donde un agente busca un camino en 
 | 3 | [Notebook 01 — STRIPS y estados](notebooks/01_strips_y_estados.ipynb) | <a href="https://colab.research.google.com/github/sonder-art/ia_p26/blob/main/clase/16_planificacion_clasica/notebooks/01_strips_y_estados.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a> | Representar estados y acciones en Python, generar espacio de estados |
 | 4 | [16.3 Búsqueda hacia adelante](03_busqueda_hacia_adelante.md) | — | Forward search, traza BFS completa en Blocks World |
 | 5 | [16.4 Heurísticas](04_heuristicas_planificacion.md) | — | Relajación, conexión con A* |
-| 6 | [Notebook 02 — Planificación forward](notebooks/02_planificacion_forward.ipynb) | <a href="https://colab.research.google.com/github/sonder-art/ia_p26/blob/main/clase/16_planificacion_clasica/notebooks/02_planificacion_forward.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a> | Implementar BFS y A* forward, comparar nodos expandidos |
-| 7 | Notebook de aplicación | — | Dominio logístico: camiones, paquetes, ciudades |
+| 6 | [16.5 Búsqueda hacia atrás](05_busqueda_hacia_atras.md) | — | Regresión, subobjetivos, forward vs backward |
+| 7 | [Notebook 02 — Planificación forward y backward](notebooks/02_planificacion_forward.ipynb) | <a href="https://colab.research.google.com/github/sonder-art/ia_p26/blob/main/clase/16_planificacion_clasica/notebooks/02_planificacion_forward.ipynb" target="_blank"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a> | Implementar BFS y A* forward, backward planner, comparar |
+| 8 | Notebook de aplicación | — | Dominio logístico: camiones, paquetes, ciudades |
 
 ### Notebook de aplicación
 
@@ -53,6 +55,8 @@ Al terminar este módulo podrás:
 5. **Trazar** la ejecución de BFS en un problema de Blocks World paso a paso, mostrando frontera, explorados y plan encontrado
 6. **Explicar** la heurística de relajación (ignorar listas delete) y por qué es admisible
 7. **Conectar** la planificación con A* del módulo 14: forward search + heurística relajada = planificador FF
+8. **Definir** acciones relevantes y consistentes, aplicar la fórmula de regresión, y trazar la búsqueda hacia atrás
+9. **Comparar** forward vs backward search: cuándo conviene cada dirección según el factor de ramificación
 
 ---
 
@@ -70,11 +74,14 @@ Al terminar este módulo podrás:
 ```mermaid
 graph TD
     A["Módulo 13: GENERIC-SEARCH"] --> B["Forward Planning: mismo algoritmo, 3 líneas cambian"]
+    A --> I["Backward Planning: GENERIC-SEARCH con regresión"]
     C["Módulo 14: Relajación → h(n)"] --> D["Ignorar Delete Lists → heurística admisible"]
     E["Módulo 14: A*"] --> F["Forward Planning + A* = planificador FF"]
     B --> G["Blocks World: 13 estados, traza completa"]
+    I --> J["Subobjetivos, acciones relevantes, regresión"]
     D --> F
     G --> H["Escalar a dominios grandes: logística, robótica"]
+    J --> H
     F --> H
 ```
 

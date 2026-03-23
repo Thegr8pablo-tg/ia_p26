@@ -6,7 +6,7 @@ Uso:
     cd clase/16_planificacion_clasica
     python3 lab_planificacion.py
 
-Genera 10 imágenes en:
+Genera 13 imágenes en:
     clase/16_planificacion_clasica/images/
 
 Dependencias: numpy, matplotlib
@@ -1124,11 +1124,292 @@ def plot_relaxed_problem():
 
 
 # ---------------------------------------------------------------------------
+# Plot 11 – Forward vs backward search direction
+# ---------------------------------------------------------------------------
+
+def plot_forward_vs_backward():
+    """Side-by-side diagram showing forward (s0→G) vs backward (G→s0) search."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+    all_actions = _make_blocks_world_actions()
+    s0 = frozenset({
+        "On(A,Mesa)", "On(B,Mesa)", "On(C,Mesa)",
+        "Clear(A)", "Clear(B)", "Clear(C)",
+    })
+    goal = frozenset({
+        "On(A,B)", "On(B,C)", "On(C,Mesa)", "Clear(A)",
+    })
+
+    # ── Left panel: Forward ──────────────────────────────────────────────
+    ax1.set_xlim(-0.5, 10.5)
+    ax1.set_ylim(-0.5, 6)
+    ax1.set_aspect("equal")
+    ax1.axis("off")
+    ax1.set_title("Búsqueda hacia adelante (forward)", fontsize=13,
+                   fontweight="bold", color=COLORS["blue"])
+
+    # Draw s0
+    _draw_blocks(ax1, s0, 1.5, 0.5, block_w=0.5, block_h=0.35,
+                 highlight_border=COLORS["green"])
+    ax1.text(1.5, 0.1, "$s_0$", ha="center", fontsize=12, fontweight="bold",
+             color=COLORS["green"])
+
+    # Draw goal
+    _draw_blocks(ax1, goal, 8.5, 0.5, block_w=0.5, block_h=0.35,
+                 highlight_border=COLORS["orange"])
+    ax1.text(8.5, 0.1, "$G$", ha="center", fontsize=12, fontweight="bold",
+             color=COLORS["orange"])
+
+    # Arrow s0 -> G
+    ax1.annotate("", xy=(6.8, 1.2), xytext=(3.2, 1.2),
+                 arrowprops=dict(arrowstyle="-|>", lw=3, color=COLORS["blue"],
+                                 connectionstyle="arc3,rad=0.15"))
+    ax1.text(5.0, 2.0, "Aplica acciones\n(Pre ⊆ s)", ha="center", fontsize=10,
+             color=COLORS["blue"], fontstyle="italic")
+
+    # Intermediate state bubble
+    ax1.text(5.0, 1.2, "estados\ncompletos", ha="center", va="center",
+             fontsize=9, color=COLORS["dark"],
+             bbox=dict(boxstyle="round,pad=0.4", facecolor=COLORS["light"],
+                       edgecolor=COLORS["blue"], linewidth=1.5))
+
+    # Labels
+    ax1.text(5.0, 4.5, "Pregunta: ¿qué puedo hacer desde aquí?",
+             ha="center", fontsize=10, fontweight="bold", color=COLORS["dark"])
+    ax1.text(5.0, 3.8, "Termina cuando:  $G \\subseteq s$",
+             ha="center", fontsize=10, color=COLORS["dark"])
+
+    # ── Right panel: Backward ────────────────────────────────────────────
+    ax2.set_xlim(-0.5, 10.5)
+    ax2.set_ylim(-0.5, 6)
+    ax2.set_aspect("equal")
+    ax2.axis("off")
+    ax2.set_title("Búsqueda hacia atrás (backward)", fontsize=13,
+                   fontweight="bold", color=COLORS["orange"])
+
+    # Draw s0
+    _draw_blocks(ax2, s0, 1.5, 0.5, block_w=0.5, block_h=0.35,
+                 highlight_border=COLORS["green"])
+    ax2.text(1.5, 0.1, "$s_0$", ha="center", fontsize=12, fontweight="bold",
+             color=COLORS["green"])
+
+    # Draw goal
+    _draw_blocks(ax2, goal, 8.5, 0.5, block_w=0.5, block_h=0.35,
+                 highlight_border=COLORS["orange"])
+    ax2.text(8.5, 0.1, "$G$", ha="center", fontsize=12, fontweight="bold",
+             color=COLORS["orange"])
+
+    # Arrow G -> s0
+    ax2.annotate("", xy=(3.2, 1.2), xytext=(6.8, 1.2),
+                 arrowprops=dict(arrowstyle="-|>", lw=3, color=COLORS["orange"],
+                                 connectionstyle="arc3,rad=0.15"))
+    ax2.text(5.0, 2.0, "Regresión\n(g − Add) ∪ Pre", ha="center", fontsize=10,
+             color=COLORS["orange"], fontstyle="italic")
+
+    # Intermediate subgoal bubble
+    ax2.text(5.0, 1.2, "sub-\nobjetivos", ha="center", va="center",
+             fontsize=9, color=COLORS["dark"],
+             bbox=dict(boxstyle="round,pad=0.4", facecolor="#FFF3E0",
+                       edgecolor=COLORS["orange"], linewidth=1.5))
+
+    # Labels
+    ax2.text(5.0, 4.5, "Pregunta: ¿qué acción pudo producir esto?",
+             ha="center", fontsize=10, fontweight="bold", color=COLORS["dark"])
+    ax2.text(5.0, 3.8, "Termina cuando:  $g \\subseteq s_0$",
+             ha="center", fontsize=10, color=COLORS["dark"])
+
+    fig.suptitle("Dos direcciones de búsqueda en planificación",
+                 fontsize=14, fontweight="bold", y=1.0)
+    fig.tight_layout()
+    _save(fig, "11_forward_vs_backward.png")
+
+
+# ---------------------------------------------------------------------------
+# Plot 12 – Regression trace on Blocks World
+# ---------------------------------------------------------------------------
+
+def plot_regression_trace():
+    """Show the 2-step regression from G back to s0 in Blocks World."""
+    fig, ax = plt.subplots(1, 1, figsize=(14, 7))
+    ax.set_xlim(-0.5, 14)
+    ax.set_ylim(-1, 7.5)
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+    # Define the three subgoals
+    g0_props = "{ On(A,B), On(B,C),\n  On(C,Mesa), Clear(A) }"
+    g1_props = "{ On(A,Mesa), On(B,C),\n  On(C,Mesa), Clear(A),\n  Clear(B) }"
+    g2_props = "{ On(A,Mesa), On(B,Mesa),\n  On(C,Mesa), Clear(A),\n  Clear(B), Clear(C) }"
+
+    subgoals = [
+        ("$g_0 = G$", g0_props, 11.5, 3.5, COLORS["orange"], "#FFF3E0"),
+        ("$g_1$", g1_props, 6.5, 3.5, COLORS["purple"], "#F3E5F5"),
+        ("$g_2 = s_0$", g2_props, 1.5, 3.5, COLORS["green"], "#E8F5E9"),
+    ]
+
+    box_w, box_h = 4.0, 2.8
+
+    for label, props, cx, cy, border_col, fill_col in subgoals:
+        # Box
+        rect = mpatches.FancyBboxPatch(
+            (cx - box_w / 2, cy - box_h / 2), box_w, box_h,
+            boxstyle="round,pad=0.15", facecolor=fill_col,
+            edgecolor=border_col, linewidth=2.5,
+        )
+        ax.add_patch(rect)
+
+        # Label above
+        ax.text(cx, cy + box_h / 2 + 0.3, label, ha="center", fontsize=13,
+                fontweight="bold", color=border_col)
+
+        # Props inside
+        ax.text(cx, cy, props, ha="center", va="center", fontsize=9,
+                fontfamily="monospace", color=COLORS["dark"])
+
+    # Arrow from g0 to g1 (regression direction: right to left)
+    ax.annotate("", xy=(8.7, 3.5), xytext=(9.3, 3.5),
+                arrowprops=dict(arrowstyle="-|>", lw=2.5, color=COLORS["orange"]))
+    ax.text(9.0, 5.5, "MoverDesdeMesa(A,B)", ha="center", fontsize=11,
+            fontweight="bold", color=COLORS["dark"],
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="#FFF3E0",
+                      edgecolor=COLORS["orange"], linewidth=1.5))
+    ax.annotate("", xy=(9.0, 5.1), xytext=(9.0, 4.2),
+                arrowprops=dict(arrowstyle="-", lw=1, color=COLORS["gray"],
+                                linestyle="--"))
+
+    # Arrow from g1 to g2
+    ax.annotate("", xy=(3.7, 3.5), xytext=(4.3, 3.5),
+                arrowprops=dict(arrowstyle="-|>", lw=2.5, color=COLORS["orange"]))
+    ax.text(4.0, 5.5, "MoverDesdeMesa(B,C)", ha="center", fontsize=11,
+            fontweight="bold", color=COLORS["dark"],
+            bbox=dict(boxstyle="round,pad=0.3", facecolor="#F3E5F5",
+                      edgecolor=COLORS["purple"], linewidth=1.5))
+    ax.annotate("", xy=(4.0, 5.1), xytext=(4.0, 4.2),
+                arrowprops=dict(arrowstyle="-", lw=1, color=COLORS["gray"],
+                                linestyle="--"))
+
+    # Title and direction label
+    ax.text(7.0, 7.0, "Regresión: de la meta $G$ al estado inicial $s_0$",
+            ha="center", fontsize=14, fontweight="bold", color=COLORS["dark"])
+
+    # Direction arrow at bottom
+    ax.annotate("", xy=(2.5, -0.3), xytext=(11.0, -0.3),
+                arrowprops=dict(arrowstyle="-|>", lw=2, color=COLORS["orange"],
+                                linestyle="--"))
+    ax.text(6.75, -0.7, "dirección de regresión", ha="center", fontsize=10,
+            color=COLORS["orange"], fontstyle="italic")
+
+    # Execution direction at bottom
+    ax.annotate("", xy=(11.0, -0.3), xytext=(2.5, -0.3),
+                arrowprops=dict(arrowstyle="-|>", lw=2, color=COLORS["blue"],
+                                linestyle="-"))
+    ax.text(6.75, 0.1, "dirección de ejecución del plan →",
+            ha="center", fontsize=9, color=COLORS["blue"], fontstyle="italic")
+
+    # Check mark on g2
+    ax.text(1.5, 1.7, "$g_2 \\subseteq s_0$  ✓", ha="center", fontsize=12,
+            fontweight="bold", color=COLORS["green"])
+
+    fig.tight_layout()
+    _save(fig, "12_regression_trace.png")
+
+
+# ---------------------------------------------------------------------------
+# Plot 13 – Forward vs backward branching factor
+# ---------------------------------------------------------------------------
+
+def plot_forward_vs_backward_branching():
+    """Tree diagrams showing forward (wide) vs backward (narrow) branching."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 7))
+
+    def _draw_tree(ax, levels, title, color, direction_label):
+        """Draw a schematic search tree.
+        levels: list of (num_nodes, y_position) tuples from top to bottom.
+        """
+        ax.set_xlim(-1, 11)
+        ax.set_ylim(-0.5, 8.5)
+        ax.set_aspect("equal")
+        ax.axis("off")
+        ax.set_title(title, fontsize=13, fontweight="bold", color=color)
+
+        prev_positions = None
+        for i, (n_nodes, y) in enumerate(levels):
+            # Distribute nodes evenly
+            if n_nodes == 1:
+                positions = [5.0]
+            else:
+                margin = 0.5
+                positions = [margin + j * (10 - 2 * margin) / (n_nodes - 1)
+                             for j in range(n_nodes)]
+
+            # Draw edges from previous level
+            if prev_positions is not None:
+                for px in prev_positions:
+                    for cx in positions:
+                        ax.plot([px, cx], [prev_y, y], color=COLORS["gray"],
+                                linewidth=0.5, alpha=0.4, zorder=1)
+
+            # Draw nodes
+            node_r = 0.2
+            for x in positions:
+                circle = plt.Circle((x, y), node_r, facecolor=color,
+                                    edgecolor="white", linewidth=1.5, zorder=2,
+                                    alpha=0.7)
+                ax.add_patch(circle)
+
+            prev_positions = positions
+            prev_y = y
+
+        # Labels
+        ax.text(5.0, levels[0][1] + 0.6, direction_label, ha="center",
+                fontsize=10, fontstyle="italic", color=COLORS["dark"])
+
+    # Forward: wide branching from s0
+    forward_levels = [
+        (1, 7.5),    # s0
+        (6, 6.0),    # 6 MoverDesdeMesa from initial
+        (6, 4.5),    # ~3 per state, some duplicates
+        (6, 3.0),    # towers (dead ends mostly)
+    ]
+    _draw_tree(ax1, forward_levels, "Forward: factor de ramificación alto",
+               COLORS["blue"], "desde $s_0$: 6 acciones aplicables")
+
+    ax1.text(5.0, 7.9, "$s_0$", ha="center", fontsize=12, fontweight="bold",
+             color=COLORS["green"])
+    ax1.text(5.0, 2.2, "…muchos nodos antes de llegar a $G$",
+             ha="center", fontsize=9, color=COLORS["gray"], fontstyle="italic")
+
+    # Backward: narrow branching from G
+    backward_levels = [
+        (1, 7.5),    # G
+        (3, 6.0),    # few relevant actions
+        (3, 4.5),    # still few
+        (1, 3.0),    # reaches s0
+    ]
+    _draw_tree(ax2, backward_levels, "Backward: factor de ramificación bajo",
+               COLORS["orange"], "desde $G$: 2-3 acciones relevantes")
+
+    ax2.text(5.0, 7.9, "$G$", ha="center", fontsize=12, fontweight="bold",
+             color=COLORS["orange"])
+    ax2.text(5.0, 2.2, "…llega a $s_0$ explorando menos nodos",
+             ha="center", fontsize=9, color=COLORS["gray"], fontstyle="italic")
+
+    # Checkmark at bottom of backward tree
+    ax2.text(5.0, 2.6, "$s_0$ ✓", ha="center", fontsize=11, fontweight="bold",
+             color=COLORS["green"])
+
+    fig.suptitle("Factor de ramificación: forward (amplio) vs backward (angosto)",
+                 fontsize=14, fontweight="bold", y=1.0)
+    fig.tight_layout()
+    _save(fig, "13_forward_vs_backward_branching.png")
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
 def main():
-    """Generate all 10 images for module 16 (Planificación Clásica)."""
+    """Generate all 13 images for module 16 (Planificación Clásica)."""
     plot_search_vs_planning()         # 01
     plot_blocks_world_states()        # 02
     plot_strips_action_anatomy()      # 03
@@ -1139,6 +1420,9 @@ def main():
     plot_plan_found()                 # 08
     plot_state_space_explosion()      # 09
     plot_relaxed_problem()            # 10
+    plot_forward_vs_backward()        # 11
+    plot_regression_trace()           # 12
+    plot_forward_vs_backward_branching()  # 13
 
 
 if __name__ == "__main__":

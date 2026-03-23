@@ -457,4 +457,4 @@ Lo que cambia es el **lenguaje de representación** (nodos vs proposiciones vs c
 
 ---
 
-**Siguiente:** [Volver al índice →](00_index.md)
+**Siguiente:** [Búsqueda hacia atrás →](05_busqueda_hacia_atras.md)
