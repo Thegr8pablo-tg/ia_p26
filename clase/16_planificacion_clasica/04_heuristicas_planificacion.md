@@ -102,9 +102,9 @@ El **costo** del plan es su longitud $k$ (número de acciones). El plan **óptim
 
 ### La restricción que eliminamos
 
-La transición de STRIPS tiene dos operaciones: **agregar** proposiciones nuevas y **eliminar** proposiciones viejas:
+La transición de STRIPS tiene dos operaciones: **eliminar** proposiciones viejas y **agregar** proposiciones nuevas:
 
-$$s' = (s \underbrace{- \text{Del}(a)}_{\text{eliminar}}) \cup \underbrace{\text{Add}(a)}_{\text{agregar}}$$
+$$s' = (\underset{\text{eliminar}}{s - \text{Del}(a)}) \cup \underset{\text{agregar}}{\text{Add}(a)}$$
 
 La lista delete es la parte que hace difícil la planificación. Es lo que obliga a deshacer pasos, reorganizar bloques intermedios, y planificar con cuidado el orden de las acciones.
 
