@@ -17,7 +17,27 @@ title: "Búsqueda hacia atrás"
 
 Hasta ahora hemos construido planes buscando **hacia adelante**: partimos del estado inicial $s_0$, aplicamos acciones, y avanzamos hasta alcanzar la meta $G$. Esa dirección es natural — imita cómo ejecutamos acciones en el mundo real. Pero no es la única dirección posible.
 
-La **búsqueda hacia atrás** (*backward search* o *regression*) hace exactamente lo contrario: parte de la meta $G$ y pregunta "¿qué acción pudo haber producido esta situación?", retrocediendo paso a paso hasta llegar al estado inicial $s_0$. Si logra conectar la meta con el inicio, el plan se lee en orden inverso.
+La **búsqueda hacia atrás** (*backward search* o *regression*) hace exactamente lo contrario: parte de la meta $G$ y pregunta "¿qué acción pudo haber producido esta situación?", retrocediendo paso a paso hasta llegar al estado inicial $s_0$. Al recorrer la cadena de padres desde $s_0$ hacia $G$, las acciones se leen directamente en orden de ejecución.
+
+### El panorama general
+
+Vamos a construir un **árbol de búsqueda donde la raíz es la meta** $G$. Cada nodo del árbol no es un estado completo del mundo, sino un **subobjetivo**: un conjunto de proposiciones que *necesitamos* que sean verdaderas. En cada nodo preguntamos: "¿qué acción, ejecutada justo antes, podría haber producido este subobjetivo?". Cada respuesta genera un nuevo subobjetivo hijo — lo que necesitaba ser verdad *antes* de esa acción.
+
+```
+                        G                          ← raíz: la meta
+                     ╱     ╲
+              acción a₁    acción a₂               ← acciones que producen algo de G
+               ╱               ╲
+             g₁                 g₂                 ← subobjetivos: ¿qué debe cumplirse antes?
+           ╱    ╲                 ╲
+       acción a₃  acción a₄     acción a₅
+        ╱            ╲               ╲
+      g₃              g₄             g₅
+       ⋮               ⋮              ⋮
+      g_k ⊆ s₀  ← ÉXITO: s₀ ya satisface todo lo que pedimos, no necesitamos más acciones
+```
+
+La búsqueda termina cuando encontramos un subobjetivo $g_k$ que está **completamente contenido en $s_0$** — es decir, todo lo que $g_k$ pide ya es verdad en el estado inicial. En ese momento, el camino desde $g_k$ hasta la raíz $G$ nos da el plan: las acciones a lo largo de ese camino, leídas desde $g_k$ hacia $G$, son exactamente las acciones a ejecutar en orden.
 
 Esta sección explica la idea, la formaliza, la ejecuta paso a paso en Blocks World, y la compara con la búsqueda hacia adelante.
 
@@ -46,7 +66,7 @@ La búsqueda hacia atrás funciona igual: en vez de explorar todas las acciones 
 
 ![Forward vs backward search]({{ '/16_planificacion_clasica/images/11_forward_vs_backward.png' | url }})
 
-**Cómo leer la figura:** dos flechas muestran las direcciones de búsqueda. La flecha azul va de $s_0$ a $G$ (forward). La flecha naranja va de $G$ a $s_0$ (backward).
+**Cómo leer la figura:** a la izquierda, la búsqueda forward parte de $s_0$ (los tres bloques en la mesa) y aplica acciones hacia adelante, generando **estados completos** en cada paso hasta alcanzar $G$. A la derecha, la búsqueda backward parte de $G$ (la torre A-B-C) y aplica **regresión** hacia atrás, generando **subobjetivos** (descripciones parciales del mundo) hasta llegar a algo que $s_0$ satisface. Nota la diferencia: los nodos forward son estados completos (cajas con borde sólido), los nodos backward son subobjetivos (cajas con borde punteado).
 
 ### Subobjetivos, no estados completos
 
@@ -61,6 +81,12 @@ Por ejemplo, la meta $G = \{\text{On}(A,B), \text{On}(B,C), \text{On}(C,\text{Me
 ---
 
 ## 2. Definición formal — acciones relevantes y regresión
+
+Ya tenemos la intuición: construimos un árbol desde $G$ hacia atrás, y cada nodo es un subobjetivo. Ahora necesitamos formalizar tres cosas:
+
+1. **¿Qué acciones podemos usar en cada paso?** → acciones *relevantes* (contribuyen algo) y *consistentes* (no destruyen nada).
+2. **¿Cómo calculamos el nuevo subobjetivo?** → la fórmula de *regresión*.
+3. **¿Cuándo terminamos?** → cuando el subobjetivo está contenido en $s_0$.
 
 ### 2.1 Subobjetivos (estados parciales)
 
@@ -119,6 +145,10 @@ Aquí la acción MoverDesdeMesa(A,B) coloca A encima de B, lo cual produce $\tex
 
 > **Observación:** La condición de consistencia filtra acciones que serían "un paso adelante, un paso atrás". Sin esta condición, la búsqueda podría generar subobjetivos imposibles de satisfacer.
 
+> **¿Y si necesito esa acción inconsistente?** Que una acción sea inconsistente con un subobjetivo *particular* no significa que la búsqueda la descarte para siempre. La consistencia es un filtro **local**: prohíbe usar la acción como paso *inmediatamente anterior* a ese subobjetivo específico. Pero la misma acción puede ser perfectamente relevante y consistente para otro subobjetivo en otra rama del árbol.
+>
+> Por ejemplo, si $g = \{\text{On}(A,B),\ \text{Clear}(B)\}$ y MoverDesdeMesa(A,B) es inconsistente aquí (borra Clear(B)), eso simplemente indica que esa combinación de requisitos no puede lograrse de golpe con esa acción. El BFS sigue explorando otras ramas, y si existe una solución que usa MoverDesdeMesa(A,B) en otro punto del plan, la encontrará. El algoritmo sigue siendo **completo**: si existe un plan, lo encontrará.
+
 ### 2.4 La fórmula de regresión
 
 Ahora viene el corazón de la búsqueda hacia atrás. Dado un subobjetivo $g$ y una acción $a$ que es relevante y consistente, la **regresión** produce un nuevo subobjetivo:
@@ -142,6 +172,8 @@ Añadimos las precondiciones de $a$. Ahora necesitamos que estas proposiciones s
 **Resultado:** el nuevo subobjetivo $g' = \text{regress}(g, a)$ responde la pregunta: "¿qué debe ser verdad en el mundo para que, al ejecutar $a$, obtengamos todo lo que $g$ pide?"
 
 > **Observación:** La regresión es la operación inversa de la aplicación de acciones. En forward search, `aplicar(s, a) = (s - Del(a)) ∪ Add(a)` va del estado actual al siguiente. En backward search, `regress(g, a) = (g - Add(a)) ∪ Pre(a)` va del subobjetivo actual al anterior. Nota la simetría: Add y Pre intercambian roles con Del y Add.
+
+En resumen, la regresión responde una pregunta sencilla: **"si quiero que $g$ sea verdad *después* de ejecutar $a$, ¿qué necesita ser verdad *antes*?"**. Lo que $a$ produce (Add) ya no necesito pedirlo — $a$ se encargará. Pero lo que $a$ requiere (Pre), ahora tengo que pedirlo yo.
 
 **Ejemplo completo.** Subobjetivo $g = \{\text{On}(A,B),\ \text{On}(B,C),\ \text{On}(C,\text{Mesa}),\ \text{Clear}(A)\}$. Acción $a = \text{MoverDesdeMesa}(A,B)$:
 
@@ -171,9 +203,19 @@ El nuevo subobjetivo dice: "necesito que A esté en la mesa, B esté sobre C, C 
 
 ## 3. Ejemplo paso a paso — regresión en Blocks World
 
-Usamos el mismo ejemplo de toda la sección: estado inicial $s_0 = \{\text{On}(A,\text{Mesa}),\ \text{On}(B,\text{Mesa}),\ \text{On}(C,\text{Mesa}),\ \text{Clear}(A),\ \text{Clear}(B),\ \text{Clear}(C)\}$, meta $G = \{\text{On}(A,B),\ \text{On}(B,C),\ \text{On}(C,\text{Mesa}),\ \text{Clear}(A)\}$.
+Usamos el mismo ejemplo de toda la sección: tres bloques todos en la mesa, queremos apilarlos A sobre B sobre C.
 
-La búsqueda parte de la meta y retrocede hasta alcanzar el estado inicial.
+- **Estado inicial:** $s_0 = \{\text{On}(A,\text{Mesa}),\ \text{On}(B,\text{Mesa}),\ \text{On}(C,\text{Mesa}),\ \text{Clear}(A),\ \text{Clear}(B),\ \text{Clear}(C)\}$
+- **Meta:** $G = \{\text{On}(A,B),\ \text{On}(B,C),\ \text{On}(C,\text{Mesa}),\ \text{Clear}(A)\}$
+
+Vamos a construir el árbol de búsqueda hacia atrás. Empezamos con $G$ como raíz, evaluamos qué acciones son relevantes y consistentes, calculamos la regresión para cada una, y repetimos hasta que algún subobjetivo esté contenido en $s_0$.
+
+```
+Paso 0:   frontera = { G }     explorado = { }
+Paso 1:   expandir G  →  generar g₁, g₂, g₃, ...  (uno por cada acción relevante y consistente)
+Paso 2:   expandir g₁ →  generar g₄, g₅, ...
+          ...hasta encontrar g_k ⊆ s₀
+```
 
 ### Paso 1 de regresión
 
@@ -344,7 +386,7 @@ Meta G ⊆ estado final? Sí ✓
 
 ![Traza de regresión en Blocks World]({{ '/16_planificacion_clasica/images/12_regression_trace.png' | url }})
 
-**Cómo leer la figura:** cada caja representa un subobjetivo (no un estado completo). Las flechas van de $G$ hacia $s_0$ indicando la dirección de la regresión. La acción asociada a cada flecha es la que "explica" la transición.
+**Cómo leer la figura:** la búsqueda va de **derecha a izquierda** (dirección de regresión, flechas naranjas): partimos de $g_0 = G$ (derecha), regresamos con MoverDesdeMesa(A,B) para obtener $g_1$ (centro), y luego con MoverDesdeMesa(B,C) para obtener $g_2$ (izquierda). El plan se ejecuta de **izquierda a derecha** (dirección de ejecución, flecha gris): primero MoverDesdeMesa(B,C) desde $s_0$, luego MoverDesdeMesa(A,B). Nota que $g_2 = s_0$ — el subobjetivo final coincide exactamente con el estado inicial, así que la búsqueda termina.
 
 ---
 
@@ -428,7 +470,7 @@ En backward search, el factor de ramificación es el número de acciones **relev
 
 ![Forward vs backward branching]({{ '/16_planificacion_clasica/images/13_forward_vs_backward_branching.png' | url }})
 
-**Cómo leer la figura:** a la izquierda, el árbol forward (amplio cerca de $s_0$, angosto cerca de $G$). A la derecha, el árbol backward (angosto cerca de $G$, amplio cerca de $s_0$). Cuando la meta es específica, backward explora menos nodos.
+**Cómo leer la figura:** a la izquierda, el árbol forward crece desde $s_0$ (arriba) hacia $G$ (abajo). Cerca de $s_0$ hay muchas acciones aplicables (6 en nuestro ejemplo), así que el árbol es muy ancho al inicio y se va angostando. A la derecha, el árbol backward crece desde $G$ (arriba) hacia $s_0$ (abajo). Cerca de $G$, solo unas pocas acciones son relevantes y consistentes (2–3), así que el árbol empieza angosto. Cuando la meta es específica y el estado inicial tiene muchas acciones posibles, backward explora muchos menos nodos que forward.
 
 ### Ejemplo concreto
 
