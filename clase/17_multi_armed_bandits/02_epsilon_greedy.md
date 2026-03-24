@@ -130,17 +130,23 @@ En cada ronda, hay dos formas de jalar un brazo subóptimo $i$:
 1. **Exploración** (prob. $\varepsilon$): elegimos uniformemente entre $K$ brazos, así que jalamos $i$ con probabilidad $\varepsilon / K$
 2. **Explotación** (prob. $1 - \varepsilon$): jalamos $i$ solo si tiene la mejor estimación, es decir, $\hat{\mu}_i \geq \hat{\mu}_j$ para todo $j$. Esto ocurre por errores de estimación temprana
 
-El segundo caso se vuelve improbable conforme acumulamos datos (las estimaciones convergen a las medias reales). Eventualmente, solo jalamos brazos subóptimos por exploración. Por lo tanto, el número esperado de pulls del brazo $i$ se puede acotar:
+El segundo caso se vuelve improbable conforme acumulamos datos (las estimaciones convergen a las medias reales). Eventualmente, solo jalamos brazos subóptimos por exploración. Contemos cada contribución por separado.
 
-$$\mathbb{E}[N_i(T)] \leq \frac{\varepsilon T}{K} + \frac{c_i}{\varepsilon}$$
+**Pulls por exploración**: en $T$ rondas, exploramos $\varepsilon T$ veces en expectativa. Cada vez, elegimos entre $K$ brazos uniformemente, así que el brazo $i$ recibe $\varepsilon T / K$ pulls por exploración.
 
-El primer término $\frac{\varepsilon T}{K}$ son los pulls por exploración ciega (proporcional a $T$, nunca para). El segundo término $\frac{c_i}{\varepsilon}$ viene de las rondas iniciales donde la estimación del brazo $i$ es incorrectamente alta — con $\varepsilon$ más pequeño, explotamos más, y si explotamos un brazo malo por error, tardamos más en corregir (porque exploramos menos). La constante $c_i$ depende de $\Delta_i$.
+**Pulls por explotación errónea**: explotamos el brazo $i$ (subóptimo) cuando $\hat{\mu}_i \geq \hat{\mu}_{i^{∗}}$, es decir, cuando nuestra estimación de $i$ es mayor que la del brazo óptimo. ¿Cuántas rondas puede durar este error? La media muestral $\hat{\mu}_i$ converge a $\mu_i$ con velocidad $\sim 1/\sqrt{N_i}$ (por la ley de grandes números). Para que el error persista necesitamos que la fluctuación cubra la brecha $\Delta_i$, lo que requiere aproximadamente $N_i \lesssim 1/\Delta_i^2$ observaciones del brazo $i$. Pero estas observaciones de $i$ solo llegan cuando lo jalamos — y lo jalamos por exploración con frecuencia $\varepsilon/K$ por ronda. Así que necesitamos del orden de $\frac{1}{\Delta_i^2} \cdot \frac{K}{\varepsilon}$ rondas para acumular suficientes datos de $i$ y corregir el error. Después de eso, la explotación errónea de $i$ esencialmente se detiene.
 
-Sustituyendo en la descomposición del regret y sumando sobre todos los brazos subóptimos:
+Juntando ambas contribuciones:
 
-$$\mathbb{E}[R_T] = \sum_{i:\Delta_i > 0} \Delta_i \cdot \mathbb{E}[N_i(T)] = O\left(\varepsilon T \cdot \bar{\Delta} + \frac{\sum_i c_i \Delta_i}{\varepsilon}\right) = O\left(\varepsilon T + \frac{K}{\varepsilon}\right)$$
+$$\mathbb{E}[N_i(T)] \leq \underbrace{\frac{\varepsilon T}{K}}_{\text{exploración ciega}} + \underbrace{\frac{K}{\varepsilon \Delta_i^2}}_{\text{explotación errónea}}$$
 
-donde $\bar{\Delta} = \frac{1}{K}\sum_i \Delta_i$ es la brecha promedio.
+Sustituyendo en la descomposición del regret $R_T = \sum_i \Delta_i \cdot N_i(T)$ y sumando sobre los brazos subóptimos:
+
+$$\mathbb{E}[R_T] = \sum_{i:\Delta_i > 0} \Delta_i \cdot \mathbb{E}[N_i(T)] \leq \sum_{i:\Delta_i > 0} \Delta_i \left(\frac{\varepsilon T}{K} + \frac{K}{\varepsilon \Delta_i^2}\right) = \underbrace{\varepsilon T \cdot \frac{\sum_i \Delta_i}{K}}_{\text{costo de explorar para siempre}} + \underbrace{\frac{K \sum_i 1/\Delta_i}{\varepsilon}}_{\text{costo de errores iniciales}}$$
+
+Ambos sumandos son constantes respecto a $T$ y $\varepsilon$ respectivamente, así que en notación asintótica:
+
+$$\mathbb{E}[R_T] = O\left(\varepsilon T + \frac{K}{\varepsilon}\right)$$
 
 **Nota sobre notación**: $R_T$ (mayúscula) es el regret acumulado total hasta la ronda $T$, definido en la sección 17.1. Es la misma $R_T = \sum_{t=1}^{T}(\mu^{∗} - \mu_{A_t})$ que vimos antes. La $\mathbb{E}$ denota el valor esperado sobre la aleatoriedad de las recompensas y las decisiones del algoritmo.
 
