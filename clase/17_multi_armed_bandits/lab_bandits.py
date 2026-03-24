@@ -6,7 +6,7 @@ Uso:
     cd clase/17_multi_armed_bandits
     python3 lab_bandits.py
 
-Genera 25 imágenes en:
+Genera 26 imágenes en:
     clase/17_multi_armed_bandits/images/
 
 Dependencias: numpy, matplotlib, scipy
@@ -341,6 +341,72 @@ def _run_multi(runner, mus, T, n_runs, reward_type="bernoulli", sigma=1.5,
 # ---------------------------------------------------------------------------
 # Section 01 figures
 # ---------------------------------------------------------------------------
+
+def plot_26_reward_distributions():
+    """Side-by-side comparison of common reward distributions for bandits."""
+    fig, axes = plt.subplots(1, 4, figsize=(16, 4))
+
+    # --- Bernoulli ---
+    ax = axes[0]
+    p = 0.7
+    ax.bar([0, 1], [1 - p, p], color=[COLORS["red"], COLORS["blue"]],
+           width=0.5, edgecolor=COLORS["dark"], linewidth=1.2)
+    ax.set_xticks([0, 1])
+    ax.set_xticklabels(["0 (fracaso)", "1 (éxito)"], fontsize=9)
+    ax.set_ylabel("Probabilidad", fontsize=10)
+    ax.set_title("Bernoulli($p=0.7$)", fontsize=12, fontweight="bold")
+    ax.set_ylim(0, 1.0)
+    ax.text(0.5, 0.85, "$r \\in \\{0, 1\\}$", ha="center", fontsize=10,
+            transform=ax.transAxes, color=COLORS["gray"])
+
+    # --- Gaussian ---
+    ax = axes[1]
+    x = np.linspace(-3, 7, 300)
+    mu, sigma = 2.0, 1.5
+    y = stats.norm.pdf(x, mu, sigma)
+    ax.plot(x, y, color=COLORS["blue"], linewidth=2.5)
+    ax.fill_between(x, y, alpha=0.2, color=COLORS["blue"])
+    ax.axvline(mu, color=COLORS["dark"], linestyle="--", alpha=0.6, linewidth=1)
+    ax.set_title(f"Normal($\\mu={mu},\\sigma={sigma}$)", fontsize=12,
+                 fontweight="bold")
+    ax.set_xlabel("$r$", fontsize=10)
+    ax.text(0.5, 0.85, "$r \\in (-\\infty, \\infty)$", ha="center", fontsize=10,
+            transform=ax.transAxes, color=COLORS["gray"])
+
+    # --- Poisson ---
+    ax = axes[2]
+    lam = 3.0
+    k = np.arange(0, 12)
+    pmf = stats.poisson.pmf(k, lam)
+    ax.bar(k, pmf, color=COLORS["green"], edgecolor=COLORS["dark"],
+           linewidth=0.8, width=0.7)
+    ax.axvline(lam, color=COLORS["dark"], linestyle="--", alpha=0.6, linewidth=1)
+    ax.set_title(f"Poisson($\\lambda={lam:.0f}$)", fontsize=12,
+                 fontweight="bold")
+    ax.set_xlabel("$r$", fontsize=10)
+    ax.text(0.5, 0.85, "$r \\in \\{0,1,2,\\ldots\\}$", ha="center", fontsize=10,
+            transform=ax.transAxes, color=COLORS["gray"])
+
+    # --- Exponential ---
+    ax = axes[3]
+    rate = 0.5
+    x = np.linspace(0, 8, 300)
+    y = stats.expon.pdf(x, scale=1 / rate)
+    ax.plot(x, y, color=COLORS["orange"], linewidth=2.5)
+    ax.fill_between(x, y, alpha=0.2, color=COLORS["orange"])
+    ax.axvline(1 / rate, color=COLORS["dark"], linestyle="--", alpha=0.6,
+               linewidth=1)
+    ax.set_title(f"Exponencial($\\lambda={rate}$)", fontsize=12,
+                 fontweight="bold")
+    ax.set_xlabel("$r$", fontsize=10)
+    ax.text(0.5, 0.85, "$r \\in [0, \\infty)$", ha="center", fontsize=10,
+            transform=ax.transAxes, color=COLORS["gray"])
+
+    fig.suptitle("Distribuciones de recompensa comunes en bandidos",
+                 fontsize=14, fontweight="bold", y=1.04)
+    fig.tight_layout()
+    _save(fig, "26_reward_distributions.png")
+
 
 def plot_01_slot_machines():
     """Three slot machines with hidden probabilities."""
@@ -1446,6 +1512,7 @@ def main():
 
     # Section 01
     plot_01_slot_machines()
+    plot_26_reward_distributions()
     plot_02_gaussian_densities()
     plot_03_explore_exploit_spectrum()
     plot_04_pure_strategies()
@@ -1483,7 +1550,7 @@ def main():
     plot_24_ab_testing()
     plot_25_variant_taxonomy()
 
-    print(f"\n✓  Todas las {25} figuras generadas en {IMAGES_DIR}/")
+    print(f"\n✓  Todas las {26} figuras generadas en {IMAGES_DIR}/")
 
 
 if __name__ == "__main__":

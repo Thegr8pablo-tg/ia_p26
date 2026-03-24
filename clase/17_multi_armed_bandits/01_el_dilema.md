@@ -64,6 +64,52 @@ El brazo **óptimo** es $i^{∗} = \arg\max_i \mu_i$, con media $\mu^{∗} = \mu
 
 ---
 
+## Distribuciones de recompensa
+
+La definición dice que cada brazo tiene una distribución $\nu_i$, pero no dice **qué tipo** de distribución. Este es un punto clave: la teoría de bandidos funciona con cualquier distribución, y la elección afecta tanto la naturaleza de las recompensas como la dificultad del problema.
+
+![Distribuciones de recompensa comunes]({{ '/17_multi_armed_bandits/images/26_reward_distributions.png' | url }})
+
+### Bernoulli: éxito o fracaso
+
+La distribución más simple para bandidos. Cada pull da $r \in \{0, 1\}$:
+
+$$r \sim \text{Bernoulli}(p) \implies P(r=1) = p, \quad P(r=0) = 1-p$$
+
+La media es $\mu_i = p_i$. Este es el modelo natural para situaciones de **sí/no**: ¿hizo clic el usuario?, ¿se curó el paciente?, ¿ganó la máquina tragamonedas?
+
+Bernoulli tiene una propiedad especial: la media $p$ determina completamente la distribución. Esto hace que la cota de Lai-Robbins se exprese directamente en términos de las medias (ver más abajo).
+
+### Normal: recompensas continuas
+
+Cada pull da un valor real $r \in (-\infty, \infty)$:
+
+$$r \sim \mathcal{N}(\mu, \sigma^2)$$
+
+Aquí la media $\mu_i$ es lo que queremos estimar, pero la varianza $\sigma^2$ controla cuánto **ruido** hay. Con $\sigma$ grande, las distribuciones de brazos distintos se solapan mucho → se necesitan más muestras para distinguirlos.
+
+Este modelo es natural para recompensas como ingresos, tiempos de respuesta o puntuaciones.
+
+### Otras distribuciones
+
+El marco de bandidos funciona con cualquier distribución paramétrica con media finita:
+
+| Distribución | Soporte | Parámetro(s) | Ejemplo de uso |
+|:---:|:---:|:---:|:---:|
+| Bernoulli | $\{0, 1\}$ | $p$ | Clics, conversiones, diagnósticos |
+| Normal | $(-\infty, \infty)$ | $\mu, \sigma^2$ | Ingresos, ratings, señales |
+| Poisson | $\{0, 1, 2, \ldots\}$ | $\lambda$ | Conteos de eventos (visitas, fallos) |
+| Exponencial | $[0, \infty)$ | $\lambda$ | Tiempos de espera, duración de sesión |
+
+La elección de distribución importa por dos razones:
+
+1. **Algoritmos paramétricos** como Thompson Sampling requieren un modelo conjugado específico para cada familia (veremos Beta-Bernoulli y Normal-Normal en la sección 4)
+2. **La cota inferior de Lai-Robbins** depende de la divergencia KL entre distribuciones, que cambia según la familia. Bernoulli y Normal con misma diferencia de medias $\Delta$ tienen KL distintas → la dificultad del problema cambia
+
+En este módulo usamos Bernoulli y Normal como problemas canónicos porque cubren los dos casos fundamentales (discreto binario y continuo) y porque tienen conjugados analíticos. Los algoritmos no-paramétricos como ε-greedy y UCB1 funcionan igual sin importar la distribución.
+
+---
+
 ## Dos problemas canónicos
 
 Usaremos dos problemas estándar a lo largo de todo el módulo, jugando el mismo papel que Nim(1,2) en el Módulo 15:
@@ -72,7 +118,7 @@ Usaremos dos problemas estándar a lo largo de todo el módulo, jugando el mismo
 
 ![Tres máquinas tragamonedas]({{ '/17_multi_armed_bandits/images/01_slot_machines.png' | url }})
 
-- **3 brazos** con recompensas $r \in \{0, 1\}$ (éxito o fracaso)
+- **3 brazos** con recompensas Bernoulli: $r \in \{0, 1\}$ (éxito o fracaso)
 - Probabilidades de éxito: $\mu_A = 0.3$, $\mu_B = 0.5$, $\mu_C = 0.7$
 - Brazo óptimo: C ($\mu^{∗} = 0.7$)
 - Brechas (gaps): $\Delta_A = 0.7 - 0.3 = 0.4$, $\Delta_B = 0.7 - 0.5 = 0.2$, $\Delta_C = 0$
@@ -83,7 +129,7 @@ Usaremos dos problemas estándar a lo largo de todo el módulo, jugando el mismo
 
 ![Distribuciones gaussianas]({{ '/17_multi_armed_bandits/images/02_gaussian_densities.png' | url }})
 
-- **3 brazos** con recompensas $r \sim \mathcal{N}(\mu_i, \sigma^2)$
+- **3 brazos** con recompensas normales: $r \sim \mathcal{N}(\mu_i, \sigma^2)$
 - Medias: $\mu_A = 1.0$, $\mu_B = 2.0$, $\mu_C = 3.0$, con $\sigma = 1.5$ compartida
 - Brazo óptimo: C ($\mu^{∗} = 3.0$)
 - Brechas: $\Delta_A = 2.0$, $\Delta_B = 1.0$
