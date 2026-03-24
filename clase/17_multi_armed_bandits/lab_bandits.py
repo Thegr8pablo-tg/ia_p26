@@ -424,8 +424,8 @@ def plot_02_gaussian_densities():
 
 def plot_03_explore_exploit_spectrum():
     """Conceptual exploration-exploitation spectrum."""
-    fig, ax = plt.subplots(figsize=(12, 4))
-    ax.set_xlim(0, 10)
+    fig, ax = plt.subplots(figsize=(13, 4))
+    ax.set_xlim(-0.5, 10.5)
     ax.set_ylim(0, 4)
     ax.axis("off")
 
@@ -440,18 +440,18 @@ def plot_03_explore_exploit_spectrum():
         ax.add_patch(mpatches.Rectangle((x, 1.5), 8 / 200, 0.8,
                                          facecolor=c, edgecolor="none"))
 
-    # Labels
-    ax.text(1, 1.9, "Exploración\npura", ha="center", va="center",
+    # Labels — placed outside the gradient bar to avoid overlap
+    ax.text(0.4, 1.9, "Exploración\npura", ha="center", va="center",
             fontsize=11, fontweight="bold", color=COLORS["blue"])
-    ax.text(9, 1.9, "Explotación\npura", ha="center", va="center",
+    ax.text(9.6, 1.9, "Explotación\npura", ha="center", va="center",
             fontsize=11, fontweight="bold", color=COLORS["green"])
     ax.text(5, 1.9, "Balance\nóptimo", ha="center", va="center",
             fontsize=12, fontweight="bold", color="white")
 
     # Descriptions
-    ax.text(1, 0.8, "Probar todo por igual\n→ mucha información\n→ poco reward",
+    ax.text(0.4, 0.8, "Probar todo por igual\n→ mucha información\n→ poco reward",
             ha="center", va="center", fontsize=9, color=COLORS["gray"])
-    ax.text(9, 0.8, "Siempre el mejor actual\n→ máximo reward inmediato\n→ riesgo de error",
+    ax.text(9.6, 0.8, "Siempre el mejor actual\n→ máximo reward inmediato\n→ riesgo de error",
             ha="center", va="center", fontsize=9, color=COLORS["gray"])
     ax.text(5, 0.6, "Algoritmos de bandidos:\nexplorar lo suficiente,\nexplotar lo aprendido",
             ha="center", va="center", fontsize=10, color=COLORS["dark"],
