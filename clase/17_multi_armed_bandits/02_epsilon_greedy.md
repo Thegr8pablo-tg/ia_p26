@@ -139,15 +139,13 @@ El brazo óptimo $i^{∗}$ tiene $\Delta_{i^{∗}} = 0$, así que solo contribuy
 
 #### Paso 2: ¿por qué jalamos un brazo subóptimo?
 
-En cada ronda, hay exactamente dos razones por las que ε-greedy puede jalar un brazo subóptimo $i$:
+En cada ronda, hay exactamente dos razones por las que ε-greedy jala un brazo subóptimo $i$:
 
 1. **Exploración**: con probabilidad $\varepsilon$, el algoritmo explora y elige un brazo uniformemente al azar. La probabilidad de caer en $i$ es $1/K$. Esto ocurre **sin importar** cuánto sepamos sobre $i$ — es exploración ciega.
 
-2. **Explotación errónea**: con probabilidad $1-\varepsilon$, el algoritmo explota (elige el brazo con mayor $\hat{\mu}$). Si la estimación $\hat{\mu}_i$ es incorrectamente alta (más alta que $\hat{\mu}_{i^{∗}}$), explotará el brazo equivocado. Esto solo ocurre al inicio, cuando tenemos pocas observaciones.
+2. **Explotación errónea**: con probabilidad $1-\varepsilon$, el algoritmo explota (elige el brazo con mayor estimación). Si nuestra estimación del brazo $i$ es incorrectamente más alta que la del brazo óptimo, explotará el brazo equivocado. Esto solo ocurre al inicio, cuando tenemos pocas observaciones.
 
-Podemos separar $N_i(T)$ en estas dos contribuciones:
-
-$$\mathbb{E}[N_i(T)] = \underbrace{\mathbb{E}[N_i^{\text{explora}}(T)]}_{\text{pulls por exploración}} + \underbrace{\mathbb{E}[N_i^{\text{error}}(T)]}_{\text{pulls por explotación errónea}}$$
+Separamos el conteo en estas dos contribuciones. Llamamos "pulls por exploración" a los del caso 1 y "pulls por error" a los del caso 2.
 
 #### Paso 3: contar los pulls por exploración
 
@@ -157,27 +155,27 @@ $$P(\text{explorar y elegir } i) = \varepsilon \cdot \frac{1}{K} = \frac{\vareps
 
 En $T$ rondas independientes, el número esperado de pulls por exploración es:
 
-$$\mathbb{E}[N_i^{\text{explora}}(T)] = \frac{\varepsilon}{K} \cdot T$$
+$$\mathbb{E}[\text{pulls exploración de } i] = \frac{\varepsilon}{K} \cdot T$$
 
 Este término crece **linealmente** con $T$. No importa cuánto sepamos sobre $i$: aunque tengamos 10,000 observaciones confirmando que $i$ es pésimo, ε-greedy sigue jalándolo con probabilidad $\varepsilon/K$ cada ronda.
 
 #### Paso 4: contar los pulls por explotación errónea
 
-Explotamos el brazo $i$ cuando $\hat{\mu}_i \geq \hat{\mu}_{i^{∗}}$. ¿Cuándo puede pasar esto?
+Explotamos el brazo $i$ erróneamente cuando su estimación supera la del brazo óptimo. ¿Cuándo puede pasar esto?
 
-La media muestral $\hat{\mu}_i$ fluctúa alrededor de la media real $\mu_i$. La desviación típica de $\hat{\mu}_i$ después de $n$ observaciones es $\sigma_i / \sqrt{n}$ (para Bernoulli, $\sigma_i = \sqrt{\mu_i(1-\mu_i)} \leq 1/2$). Para que $\hat{\mu}_i$ supere a $\hat{\mu}_{i^{∗}}$, necesitamos que la fluctuación cubra la brecha $\Delta_i$:
+La media muestral $\hat\mu$ de un brazo fluctúa alrededor de su media real $\mu$. Después de $n$ observaciones, la desviación típica es $\sigma / \sqrt{n}$ (para Bernoulli, $\sigma \leq 1/2$). Para que la estimación del brazo $i$ supere la del óptimo, la fluctuación debe cubrir la brecha $\Delta_i$:
 
-$$\frac{\sigma_i}{\sqrt{n}} \gtrsim \Delta_i \implies n \lesssim \frac{\sigma_i^2}{\Delta_i^2}$$
+$$\frac{\sigma}{\sqrt{n}} \gtrsim \Delta_i \implies n \lesssim \frac{\sigma^2}{\Delta_i^2}$$
 
-Es decir, después de $n^{∗} \sim 1/\Delta_i^2$ observaciones del brazo $i$, la estimación es lo suficientemente precisa para que $\hat{\mu}_i < \hat{\mu}_{i^{∗}}$ con alta probabilidad. A partir de ese punto, la explotación errónea se detiene.
+Es decir, después de aproximadamente $n^{∗} \sim 1/\Delta_i^2$ observaciones del brazo $i$, la estimación es suficientemente precisa y la explotación errónea se detiene.
 
-Pero hay un problema: las observaciones de $i$ no llegan en cada ronda. Solo observamos $i$ cuando lo jalamos, y lo jalamos por exploración con frecuencia $\varepsilon/K$ por ronda. Así que necesitamos del orden de:
+Pero las observaciones de $i$ no llegan en cada ronda — solo cuando lo jalamos. Lo jalamos por exploración con frecuencia $\varepsilon/K$ por ronda. Así que necesitamos del orden de:
 
-$$\frac{n^{∗}}{\varepsilon / K} = \frac{K}{\varepsilon \Delta_i^2} \text{ rondas}$$
+$$\frac{n^{∗}}{\varepsilon / K} = \frac{K}{\varepsilon \,\Delta_i^2} \text{ rondas}$$
 
-para acumular las $n^{∗}$ observaciones necesarias. Durante esas rondas, podemos estar explotando $i$ erróneamente, acumulando a lo más $\sim K / (\varepsilon \Delta_i^2)$ pulls adicionales:
+para acumular las $n^{∗}$ observaciones necesarias. Durante esas rondas, podemos estar explotando $i$ erróneamente, acumulando a lo más ese mismo número de pulls adicionales:
 
-$$\mathbb{E}[N_i^{\text{error}}(T)] \leq \frac{K}{\varepsilon \Delta_i^2}$$
+$$\mathbb{E}[\text{pulls error de } i] \leq \frac{K}{\varepsilon \,\Delta_i^2}$$
 
 Este término es **constante** — no crece con $T$. Es un costo transitorio que se paga al inicio.
 
@@ -185,17 +183,17 @@ Este término es **constante** — no crece con $T$. Es un costo transitorio que
 
 Sumando ambas contribuciones para el brazo $i$:
 
-$$\mathbb{E}[N_i(T)] \leq \frac{\varepsilon T}{K} + \frac{K}{\varepsilon \Delta_i^2}$$
+$$\mathbb{E}[N_i(T)] \leq \frac{\varepsilon T}{K} + \frac{K}{\varepsilon \,\Delta_i^2}$$
 
 Sustituyendo en la descomposición del regret:
 
-$$\mathbb{E}[R_T] = \sum_{i:\Delta_i > 0} \Delta_i \cdot \mathbb{E}[N_i(T)] \leq \sum_{i:\Delta_i > 0} \Delta_i \left(\frac{\varepsilon T}{K} + \frac{K}{\varepsilon \Delta_i^2}\right)$$
+$$\mathbb{E}[R_T] = \sum_{i:\,\Delta_i > 0} \Delta_i \cdot \mathbb{E}[N_i(T)] \leq \sum_{i:\,\Delta_i > 0} \Delta_i \left(\frac{\varepsilon T}{K} + \frac{K}{\varepsilon \,\Delta_i^2}\right)$$
 
-Distribuyendo la suma:
+Distribuyendo la suma y simplificando ($\Delta_i \cdot 1/\Delta_i^2 = 1/\Delta_i$):
 
-$$\mathbb{E}[R_T] \leq \underbrace{\frac{\varepsilon T}{K} \sum_{i:\Delta_i > 0} \Delta_i}_{\text{costo de exploración perpetua}} + \underbrace{\frac{K}{\varepsilon} \sum_{i:\Delta_i > 0} \frac{1}{\Delta_i}}_{\text{costo de errores iniciales}}$$
+$$\mathbb{E}[R_T] \leq \frac{\varepsilon T}{K} \sum_{i:\,\Delta_i > 0} \Delta_i \;+\; \frac{K}{\varepsilon} \sum_{i:\,\Delta_i > 0} \frac{1}{\Delta_i}$$
 
-El primer sumando es proporcional a $T$ (crece para siempre). El segundo es constante respecto a $T$ (se paga una vez). En notación asintótica, absorbiendo las sumas (que solo dependen del problema, no de $T$ ni de $\varepsilon$):
+El primer sumando (exploración perpetua) es proporcional a $T$ — crece para siempre. El segundo (errores iniciales) es constante respecto a $T$ — se paga una vez. Las sumas solo dependen del problema (los valores de $\Delta_i$), no de $T$ ni de $\varepsilon$, así que en notación asintótica:
 
 $$\boxed{\mathbb{E}[R_T] = O\left(\varepsilon T + \frac{K}{\varepsilon}\right)}$$
 
