@@ -18,21 +18,32 @@ Es como un chef que 90% del tiempo cocina su plato estrella, pero 10% del tiempo
 
 ## Regla de selección
 
-$$A_t = \begin{cases} \text{brazo aleatorio uniforme en } \{1, \ldots, K\} & \text{con probabilidad } \varepsilon \\ \displaystyle\arg\max_i \hat{\mu}_i(t) & \text{con probabilidad } 1 - \varepsilon \end{cases}$$
+En cada ronda, lanzamos una moneda con probabilidad $\varepsilon$:
 
-donde $\hat{\mu}_i(t)$ es la **media muestral** del brazo $i$ después de $t$ rondas:
+- **Con probabilidad $\varepsilon$**: elegir un brazo al azar (explorar)
+- **Con probabilidad $1 - \varepsilon$**: elegir el brazo con mejor media estimada (explotar)
 
-$$\hat{\mu}_i(t) = \frac{1}{N_i(t)} \sum_{\tau=1}^{t} r_\tau \cdot \mathbb{1}[A_\tau = i]$$
+$$A_t =
+\begin{cases}
+\text{brazo aleatorio en } 1, \ldots, K & \text{con prob. } \varepsilon \\
+\arg\max_i \hat{\mu}_i & \text{con prob. } 1 - \varepsilon
+\end{cases}$$
+
+donde $\hat{\mu}_i$ es la **media muestral** del brazo $i$: el promedio de todas las recompensas que hemos observado al jalar ese brazo.
 
 ---
 
 ## Actualización incremental de la media
 
-No necesitamos almacenar todas las recompensas pasadas. Podemos actualizar la media **incrementalmente**:
+No necesitamos almacenar todas las recompensas pasadas. Podemos actualizar la media **incrementalmente**. Si acabamos de jalar el brazo $i$ y observamos una recompensa $r$ (un número: 0 o 1 en Bernoulli, un valor real en Gaussiano), actualizamos:
 
-$$\hat{\mu}_i^{(\text{nuevo})} = \hat{\mu}_i^{(\text{viejo})} + \frac{1}{N_i}\left(r - \hat{\mu}_i^{(\text{viejo})}\right)$$
+$$\hat{\mu}_i \leftarrow \hat{\mu}_i + \frac{1}{N_i}\left(r - \hat{\mu}_i\right)$$
 
-**Derivación**: si $\hat{\mu}^{(n)} = \frac{1}{n}\sum_{j=1}^{n} r_j$, entonces:
+Aquí $r$ es la recompensa que acabamos de observar en esta ronda, $\hat{\mu}_i$ es nuestra estimación actual de la media del brazo $i$, y $N_i$ es el número total de veces que hemos jalado ese brazo (incluyendo esta vez).
+
+La fórmula dice: ajustar la estimación en la dirección del **error** $(r - \hat{\mu}_i)$, ponderado por $\frac{1}{N_i}$. Si $r > \hat{\mu}_i$, la estimación sube; si $r < \hat{\mu}_i$, baja. Conforme $N_i$ crece, los ajustes son más pequeños (la estimación se estabiliza).
+
+**Derivación**: si la media de $n$ observaciones es $\hat{\mu}^{(n)} = \frac{1}{n}\sum_{j=1}^{n} r_j$, al agregar una nueva observación $r_{n+1}$:
 
 $$\hat{\mu}^{(n+1)} = \frac{1}{n+1}\sum_{j=1}^{n+1} r_j = \frac{1}{n+1}\left(n \cdot \hat{\mu}^{(n)} + r_{n+1}\right) = \hat{\mu}^{(n)} + \frac{1}{n+1}(r_{n+1} - \hat{\mu}^{(n)})$$
 
@@ -46,7 +57,7 @@ Esta es exactamente la misma fórmula del **estimador Monte Carlo incremental** 
 función EPSILON_GREEDY(K, T, ε):
     # ── Inicialización ────────────────────────────────────
     para i = 1, …, K:
-        Q[i] ← 0              # [P1] estimador de recompensa promedio del brazo i
+        Q[i] ← 0              # [P1] media estimada del brazo i (sin datos aún)
         N[i] ← 0              # [P2] contador: cuántas veces se ha jalado el brazo i
 
     # ── Bucle principal ───────────────────────────────────
@@ -71,6 +82,8 @@ Notar lo simple que es: solo 5 líneas esenciales (marcadas `[P1]`–`[P5]`). No
 ---
 
 ## Traza manual: Problema Canónico A (Bernoulli, seed=7, ε=0.1)
+
+**¿Por qué $\hat{\mu}$ empieza en 0?** Inicializamos $Q[i] = 0$ porque no tenemos ninguna observación. La media de cero muestras no está definida, así que 0 es un valor convencional de "no sé nada". Podríamos inicializar en 0.5 (máxima entropía para Bernoulli) o en 1.0 (optimista), pero **no importa**: la primera vez que jalamos un brazo, la fórmula incremental da $Q[i] = 0 + (r - 0)/1 = r$, sobrescribiendo completamente la inicialización. Lo único que afecta $Q[i] = 0$ es el desempate en argmax antes de tener datos: con todos en 0, argmax siempre elige el primer brazo. Pero si la primera ronda es exploración (como aquí), la inicialización ni siquiera se usa.
 
 Veamos exactamente qué hace ε-greedy en las primeras 10 rondas:
 
