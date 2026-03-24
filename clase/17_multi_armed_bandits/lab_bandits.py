@@ -553,30 +553,26 @@ def plot_04_pure_strategies():
         explore_mean = np.mean(mus)
         explore = explore_mean * t_vals
 
-        # Pure exploitation of WORST arm (pessimistic greedy start)
-        exploit_worst = min(mus) * t_vals
-
-        # Pure exploitation of RANDOM first arm
-        rng = np.random.RandomState(42)
-        first_arm = rng.randint(K)
-        exploit_random = mus[first_arm] * t_vals
+        # Pure exploitation of worst arm (worst-case greedy start)
+        mu_worst = min(mus)
+        exploit_worst = mu_worst * t_vals
 
         ax.plot(t_vals, oracle, color=COLORS["green"], linewidth=2.5,
                 label=f"Oráculo (siempre brazo óptimo, μ∗={mu_star})")
         ax.plot(t_vals, explore, color=COLORS["blue"], linewidth=2,
                 linestyle="--",
                 label=f"Exploración pura (round-robin, μ̄={explore_mean:.2f})")
-        ax.plot(t_vals, exploit_random, color=COLORS["orange"], linewidth=2,
+        ax.plot(t_vals, exploit_worst, color=COLORS["orange"], linewidth=2,
                 linestyle="-.",
-                label=f"Explotación ciega (primer brazo, μ={mus[first_arm]})")
-        ax.fill_between(t_vals, exploit_random, oracle, alpha=0.08,
+                label=f"Explotación ciega (peor brazo, μ={mu_worst})")
+        ax.fill_between(t_vals, exploit_worst, oracle, alpha=0.08,
                         color=COLORS["red"])
         ax.set_xlabel("Ronda $t$", fontsize=11)
         ax.set_ylabel("Recompensa acumulada", fontsize=11)
         ax.set_title(title, fontsize=12)
         ax.legend(fontsize=9, loc="upper left")
         ax.annotate("Regret\nacumulado",
-                    xy=(700, (oracle[699] + exploit_random[699]) / 2),
+                    xy=(700, (oracle[699] + exploit_worst[699]) / 2),
                     fontsize=9, color=COLORS["red"], fontweight="bold",
                     ha="center")
 

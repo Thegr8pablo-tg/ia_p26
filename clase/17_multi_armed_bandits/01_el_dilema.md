@@ -172,7 +172,7 @@ donde $\Delta_i = \mu^{∗} - \mu_i$ es la brecha del brazo $i$ y $N_i(T)$ es el
 
 ![Estrategias puras]({{ '/17_multi_armed_bandits/images/04_pure_strategies.png' | url }})
 
-- **Explotación pura** (siempre jalar el primer brazo que pruebes): si por suerte empezaste con C, excelente. Si empezaste con A, regret lineal de $0.4T$.
+- **Explotación pura** (siempre jalar un brazo fijo sin explorar): si por suerte eliges C, excelente. Pero si caes en A (el peor), el regret crece linealmente como $\Delta_A \cdot T = 0.4T$.
 - **Exploración pura** (round-robin): recompensa promedio $\bar{\mu} = \frac{1}{K}\sum_i \mu_i$, siempre peor que $\mu^{∗}$. Regret lineal de $(\mu^{∗} - \bar{\mu})T$.
 - **Oráculo** (siempre el mejor brazo): regret = 0. Pero requiere saber las distribuciones de antemano.
 
