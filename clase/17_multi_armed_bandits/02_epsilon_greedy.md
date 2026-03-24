@@ -123,7 +123,7 @@ El ε constante tiene un problema fundamental: **nunca deja de explorar**. Inclu
 
 ### Derivación del regret con ε constante
 
-Recordemos que el regret acumulado se descompone como $R_T = \sum_{i=1}^{K} \Delta_i \cdot N_i(T)$, donde $N_i(T)$ es cuántas veces jalamos el brazo $i$ en $T$ rondas. Vamos a calcular $\mathbb{E}[N_i(T)]$ para cada brazo subóptimo.
+Recordemos la descomposición por brazo de la sección 17.1: $R_T = \sum_{i=1}^{K} \Delta_i \cdot N_i(T)$, donde $N_i(T)$ es el número de veces que jalamos el brazo $i$ en $T$ rondas (el mismo $N_i$ del pseudocódigo y la traza). Vamos a calcular $\mathbb{E}[N_i(T)]$ para cada brazo subóptimo.
 
 En cada ronda, hay dos formas de jalar un brazo subóptimo $i$:
 
