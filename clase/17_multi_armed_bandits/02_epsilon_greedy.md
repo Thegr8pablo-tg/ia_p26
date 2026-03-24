@@ -123,34 +123,91 @@ El ε constante tiene un problema fundamental: **nunca deja de explorar**. Inclu
 
 ### Derivación del regret con ε constante
 
-Recordemos la descomposición por brazo de la sección 17.1: $R_T = \sum_{i=1}^{K} \Delta_i \cdot N_i(T)$, donde $N_i(T)$ es el número de veces que jalamos el brazo $i$ en $T$ rondas (el mismo $N_i$ del pseudocódigo y la traza). Vamos a calcular $\mathbb{E}[N_i(T)]$ para cada brazo subóptimo.
+Queremos responder: ¿cuánto regret acumula ε-greedy después de $T$ rondas? La respuesta tiene dos partes: un costo que **nunca desaparece** (exploración perpetua) y un costo **transitorio** (errores iniciales). Vamos paso a paso.
 
-En cada ronda, hay dos formas de jalar un brazo subóptimo $i$:
+#### Paso 1: punto de partida
 
-1. **Exploración** (prob. $\varepsilon$): elegimos uniformemente entre $K$ brazos, así que jalamos $i$ con probabilidad $\varepsilon / K$
-2. **Explotación** (prob. $1 - \varepsilon$): jalamos $i$ solo si tiene la mejor estimación, es decir, $\hat{\mu}_i \geq \hat{\mu}_j$ para todo $j$. Esto ocurre por errores de estimación temprana
+Usamos la descomposición por brazo de la sección 17.1. El regret acumulado $R_T$ (el mismo que definimos antes: la suma de las brechas por cada pull subóptimo) se escribe como:
 
-El segundo caso se vuelve improbable conforme acumulamos datos (las estimaciones convergen a las medias reales). Eventualmente, solo jalamos brazos subóptimos por exploración. Contemos cada contribución por separado.
+$$R_T = \sum_{i=1}^{K} \Delta_i \cdot N_i(T)$$
 
-**Pulls por exploración**: en $T$ rondas, exploramos $\varepsilon T$ veces en expectativa. Cada vez, elegimos entre $K$ brazos uniformemente, así que el brazo $i$ recibe $\varepsilon T / K$ pulls por exploración.
+donde $\Delta_i = \mu^{∗} - \mu_i$ es la brecha del brazo $i$ y $N_i(T)$ es cuántas veces lo jalamos en $T$ rondas (el mismo $N_i$ del pseudocódigo y la traza). Tomando valor esperado $\mathbb{E}[\cdot]$ sobre la aleatoriedad de las recompensas y las decisiones del algoritmo:
 
-**Pulls por explotación errónea**: explotamos el brazo $i$ (subóptimo) cuando $\hat{\mu}_i \geq \hat{\mu}_{i^{∗}}$, es decir, cuando nuestra estimación de $i$ es mayor que la del brazo óptimo. ¿Cuántas rondas puede durar este error? La media muestral $\hat{\mu}_i$ converge a $\mu_i$ con velocidad $\sim 1/\sqrt{N_i}$ (por la ley de grandes números). Para que el error persista necesitamos que la fluctuación cubra la brecha $\Delta_i$, lo que requiere aproximadamente $N_i \lesssim 1/\Delta_i^2$ observaciones del brazo $i$. Pero estas observaciones de $i$ solo llegan cuando lo jalamos — y lo jalamos por exploración con frecuencia $\varepsilon/K$ por ronda. Así que necesitamos del orden de $\frac{1}{\Delta_i^2} \cdot \frac{K}{\varepsilon}$ rondas para acumular suficientes datos de $i$ y corregir el error. Después de eso, la explotación errónea de $i$ esencialmente se detiene.
+$$\mathbb{E}[R_T] = \sum_{i=1}^{K} \Delta_i \cdot \mathbb{E}[N_i(T)]$$
 
-Juntando ambas contribuciones:
+El brazo óptimo $i^{∗}$ tiene $\Delta_{i^{∗}} = 0$, así que solo contribuyen los brazos subóptimos. Nuestro objetivo se reduce a acotar $\mathbb{E}[N_i(T)]$ para cada brazo subóptimo $i$.
 
-$$\mathbb{E}[N_i(T)] \leq \underbrace{\frac{\varepsilon T}{K}}_{\text{exploración ciega}} + \underbrace{\frac{K}{\varepsilon \Delta_i^2}}_{\text{explotación errónea}}$$
+#### Paso 2: ¿por qué jalamos un brazo subóptimo?
 
-Sustituyendo en la descomposición del regret $R_T = \sum_i \Delta_i \cdot N_i(T)$ y sumando sobre los brazos subóptimos:
+En cada ronda, hay exactamente dos razones por las que ε-greedy puede jalar un brazo subóptimo $i$:
 
-$$\mathbb{E}[R_T] = \sum_{i:\Delta_i > 0} \Delta_i \cdot \mathbb{E}[N_i(T)] \leq \sum_{i:\Delta_i > 0} \Delta_i \left(\frac{\varepsilon T}{K} + \frac{K}{\varepsilon \Delta_i^2}\right) = \underbrace{\varepsilon T \cdot \frac{\sum_i \Delta_i}{K}}_{\text{costo de explorar para siempre}} + \underbrace{\frac{K \sum_i 1/\Delta_i}{\varepsilon}}_{\text{costo de errores iniciales}}$$
+1. **Exploración**: con probabilidad $\varepsilon$, el algoritmo explora y elige un brazo uniformemente al azar. La probabilidad de caer en $i$ es $1/K$. Esto ocurre **sin importar** cuánto sepamos sobre $i$ — es exploración ciega.
 
-Ambos sumandos son constantes respecto a $T$ y $\varepsilon$ respectivamente, así que en notación asintótica:
+2. **Explotación errónea**: con probabilidad $1-\varepsilon$, el algoritmo explota (elige el brazo con mayor $\hat{\mu}$). Si la estimación $\hat{\mu}_i$ es incorrectamente alta (más alta que $\hat{\mu}_{i^{∗}}$), explotará el brazo equivocado. Esto solo ocurre al inicio, cuando tenemos pocas observaciones.
 
-$$\mathbb{E}[R_T] = O\left(\varepsilon T + \frac{K}{\varepsilon}\right)$$
+Podemos separar $N_i(T)$ en estas dos contribuciones:
 
-**Nota sobre notación**: $R_T$ (mayúscula) es el regret acumulado total hasta la ronda $T$, definido en la sección 17.1. Es la misma $R_T = \sum_{t=1}^{T}(\mu^{∗} - \mu_{A_t})$ que vimos antes. La $\mathbb{E}$ denota el valor esperado sobre la aleatoriedad de las recompensas y las decisiones del algoritmo.
+$$\mathbb{E}[N_i(T)] = \underbrace{\mathbb{E}[N_i^{\text{explora}}(T)]}_{\text{pulls por exploración}} + \underbrace{\mathbb{E}[N_i^{\text{error}}(T)]}_{\text{pulls por explotación errónea}}$$
 
-**Interpretación**: para cualquier $\varepsilon > 0$ fijo, el término $\varepsilon T$ domina y **el regret crece linealmente** con $T$. Optimizando $\varepsilon$ se obtiene $\varepsilon^{∗} = \sqrt{K/T}$, que da $\mathbb{E}[R_T] = O(\sqrt{KT})$ — pero requiere conocer $T$ de antemano. Incluso optimizado, $O(\sqrt{T})$ es mucho peor que la cota de Lai-Robbins $O(\log T)$.
+#### Paso 3: contar los pulls por exploración
+
+Esto es directo. En cada ronda, la probabilidad de explorar **y** caer en el brazo $i$ es:
+
+$$P(\text{explorar y elegir } i) = \varepsilon \cdot \frac{1}{K} = \frac{\varepsilon}{K}$$
+
+En $T$ rondas independientes, el número esperado de pulls por exploración es:
+
+$$\mathbb{E}[N_i^{\text{explora}}(T)] = \frac{\varepsilon}{K} \cdot T$$
+
+Este término crece **linealmente** con $T$. No importa cuánto sepamos sobre $i$: aunque tengamos 10,000 observaciones confirmando que $i$ es pésimo, ε-greedy sigue jalándolo con probabilidad $\varepsilon/K$ cada ronda.
+
+#### Paso 4: contar los pulls por explotación errónea
+
+Explotamos el brazo $i$ cuando $\hat{\mu}_i \geq \hat{\mu}_{i^{∗}}$. ¿Cuándo puede pasar esto?
+
+La media muestral $\hat{\mu}_i$ fluctúa alrededor de la media real $\mu_i$. La desviación típica de $\hat{\mu}_i$ después de $n$ observaciones es $\sigma_i / \sqrt{n}$ (para Bernoulli, $\sigma_i = \sqrt{\mu_i(1-\mu_i)} \leq 1/2$). Para que $\hat{\mu}_i$ supere a $\hat{\mu}_{i^{∗}}$, necesitamos que la fluctuación cubra la brecha $\Delta_i$:
+
+$$\frac{\sigma_i}{\sqrt{n}} \gtrsim \Delta_i \implies n \lesssim \frac{\sigma_i^2}{\Delta_i^2}$$
+
+Es decir, después de $n^{∗} \sim 1/\Delta_i^2$ observaciones del brazo $i$, la estimación es lo suficientemente precisa para que $\hat{\mu}_i < \hat{\mu}_{i^{∗}}$ con alta probabilidad. A partir de ese punto, la explotación errónea se detiene.
+
+Pero hay un problema: las observaciones de $i$ no llegan en cada ronda. Solo observamos $i$ cuando lo jalamos, y lo jalamos por exploración con frecuencia $\varepsilon/K$ por ronda. Así que necesitamos del orden de:
+
+$$\frac{n^{∗}}{\varepsilon / K} = \frac{K}{\varepsilon \Delta_i^2} \text{ rondas}$$
+
+para acumular las $n^{∗}$ observaciones necesarias. Durante esas rondas, podemos estar explotando $i$ erróneamente, acumulando a lo más $\sim K / (\varepsilon \Delta_i^2)$ pulls adicionales:
+
+$$\mathbb{E}[N_i^{\text{error}}(T)] \leq \frac{K}{\varepsilon \Delta_i^2}$$
+
+Este término es **constante** — no crece con $T$. Es un costo transitorio que se paga al inicio.
+
+#### Paso 5: juntar las piezas
+
+Sumando ambas contribuciones para el brazo $i$:
+
+$$\mathbb{E}[N_i(T)] \leq \frac{\varepsilon T}{K} + \frac{K}{\varepsilon \Delta_i^2}$$
+
+Sustituyendo en la descomposición del regret:
+
+$$\mathbb{E}[R_T] = \sum_{i:\Delta_i > 0} \Delta_i \cdot \mathbb{E}[N_i(T)] \leq \sum_{i:\Delta_i > 0} \Delta_i \left(\frac{\varepsilon T}{K} + \frac{K}{\varepsilon \Delta_i^2}\right)$$
+
+Distribuyendo la suma:
+
+$$\mathbb{E}[R_T] \leq \underbrace{\frac{\varepsilon T}{K} \sum_{i:\Delta_i > 0} \Delta_i}_{\text{costo de exploración perpetua}} + \underbrace{\frac{K}{\varepsilon} \sum_{i:\Delta_i > 0} \frac{1}{\Delta_i}}_{\text{costo de errores iniciales}}$$
+
+El primer sumando es proporcional a $T$ (crece para siempre). El segundo es constante respecto a $T$ (se paga una vez). En notación asintótica, absorbiendo las sumas (que solo dependen del problema, no de $T$ ni de $\varepsilon$):
+
+$$\boxed{\mathbb{E}[R_T] = O\left(\varepsilon T + \frac{K}{\varepsilon}\right)}$$
+
+#### Paso 6: ¿qué nos dice esta cota?
+
+Para $\varepsilon$ **fijo** (por ejemplo, $\varepsilon = 0.1$), el término $\varepsilon T$ domina conforme $T \to \infty$. El regret crece **linealmente**: $\mathbb{E}[R_T] \sim 0.1 \cdot T$. Esto es fundamentalmente peor que la cota de Lai-Robbins $\Omega(\log T)$.
+
+¿Podemos elegir $\varepsilon$ óptimamente? Sí, minimizando $\varepsilon T + K/\varepsilon$ respecto a $\varepsilon$. Derivando e igualando a cero: $T - K/\varepsilon^2 = 0$, lo que da:
+
+$$\varepsilon^{∗} = \sqrt{\frac{K}{T}} \implies \mathbb{E}[R_T] = O(\sqrt{KT})$$
+
+Pero esto requiere conocer $T$ de antemano. Y aún así, $O(\sqrt{T})$ es mucho peor que $O(\log T)$.
 
 La siguiente gráfica muestra el regret empírico de ε-greedy **simulado en nuestro Problema Canónico A** (Bernoulli, $\mu = 0.3, 0.5, 0.7$) para distintos valores de $\varepsilon$, promediado sobre 200 ejecuciones. No es una curva teórica general — es el comportamiento concreto para este problema, pero la forma lineal del regret es universal para $\varepsilon$ constante.
 
