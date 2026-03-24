@@ -2,6 +2,24 @@
 title: "Planificación Clásica"
 ---
 
+:::exam{id="EX-07" title="Parcial: Búsqueda Adversarial y Planificación Clásica" date="2026-04-08" points="10" duration="20 minutos"}
+**Temas evaluados:**
+- Módulo 15: Búsqueda Adversarial
+- Módulo 16: Planificación Clásica
+:::
+
+:::homework{id="hw-modulos-15-16" title="Tarea Integradora: Búsqueda Adversarial y Planificación Clásica" due="2026-04-08" points="40"}
+Entrega los notebooks de los módulos 15 y 16 (20 puntos por módulo):
+
+- **Módulo 15 — Búsqueda Adversarial (20 pts):** notebooks del módulo
+- **Módulo 16 — Planificación Clásica (20 pts):** notebooks del módulo
+
+**Opciones de entrega (elige una):**
+
+1. **Pull Request + Canvas:** Sube tu trabajo en un pull request al repositorio del curso y pega el enlace en la tarea de Canvas.
+2. **Canvas directo:** Sube los archivos `.ipynb` directamente en la tarea de Canvas.
+:::
+
 # Planificación Clásica
 
 > *"A goal without a plan is just a wish."*
