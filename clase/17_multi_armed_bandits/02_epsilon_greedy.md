@@ -121,13 +121,32 @@ El ε constante tiene un problema fundamental: **nunca deja de explorar**. Inclu
 | Decaimiento lineal | $\varepsilon_t = \varepsilon_0 \left(1 - \frac{t}{T}\right)$ | Sublineal si se ajusta bien | Requiere conocer $T$ de antemano |
 | Decaimiento $1/t$ | $\varepsilon_t = \frac{c}{c + t}$ | $O(\sqrt{T})$ | Automático; no necesita $T$ |
 
-### Regret con ε constante
+### Derivación del regret con ε constante
 
-Con ε constante, en cada ronda hay probabilidad $\varepsilon$ de explorar. En expectativa, exploramos $\varepsilon T$ veces. Cada exploración tiene regret esperado $\frac{1}{K}\sum_i \Delta_i$. Por lo tanto:
+Recordemos que el regret acumulado se descompone como $R_T = \sum_{i=1}^{K} \Delta_i \cdot N_i(T)$, donde $N_i(T)$ es cuántas veces jalamos el brazo $i$ en $T$ rondas. Vamos a calcular $\mathbb{E}[N_i(T)]$ para cada brazo subóptimo.
 
-$$\mathbb{E}[R_T] = O\left(\varepsilon T + \frac{K}{\varepsilon}\right)$$
+En cada ronda, hay dos formas de jalar un brazo subóptimo $i$:
 
-El primer término es el costo de exploración perpetua. El segundo es el costo de las primeras rondas antes de que las estimaciones converjan. Para cualquier $\varepsilon > 0$, **el regret crece linealmente** con $T$. Esto contrasta con la cota inferior de Lai-Robbins que dice que $O(\log T)$ es posible.
+1. **Exploración** (prob. $\varepsilon$): elegimos uniformemente entre $K$ brazos, así que jalamos $i$ con probabilidad $\varepsilon / K$
+2. **Explotación** (prob. $1 - \varepsilon$): jalamos $i$ solo si tiene la mejor estimación, es decir, $\hat{\mu}_i \geq \hat{\mu}_j$ para todo $j$. Esto ocurre por errores de estimación temprana
+
+El segundo caso se vuelve improbable conforme acumulamos datos (las estimaciones convergen a las medias reales). Eventualmente, solo jalamos brazos subóptimos por exploración. Por lo tanto, el número esperado de pulls del brazo $i$ se puede acotar:
+
+$$\mathbb{E}[N_i(T)] \leq \frac{\varepsilon T}{K} + \frac{c_i}{\varepsilon}$$
+
+El primer término $\frac{\varepsilon T}{K}$ son los pulls por exploración ciega (proporcional a $T$, nunca para). El segundo término $\frac{c_i}{\varepsilon}$ viene de las rondas iniciales donde la estimación del brazo $i$ es incorrectamente alta — con $\varepsilon$ más pequeño, explotamos más, y si explotamos un brazo malo por error, tardamos más en corregir (porque exploramos menos). La constante $c_i$ depende de $\Delta_i$.
+
+Sustituyendo en la descomposición del regret y sumando sobre todos los brazos subóptimos:
+
+$$\mathbb{E}[R_T] = \sum_{i:\Delta_i > 0} \Delta_i \cdot \mathbb{E}[N_i(T)] = O\left(\varepsilon T \cdot \bar{\Delta} + \frac{\sum_i c_i \Delta_i}{\varepsilon}\right) = O\left(\varepsilon T + \frac{K}{\varepsilon}\right)$$
+
+donde $\bar{\Delta} = \frac{1}{K}\sum_i \Delta_i$ es la brecha promedio.
+
+**Nota sobre notación**: $R_T$ (mayúscula) es el regret acumulado total hasta la ronda $T$, definido en la sección 17.1. Es la misma $R_T = \sum_{t=1}^{T}(\mu^{∗} - \mu_{A_t})$ que vimos antes. La $\mathbb{E}$ denota el valor esperado sobre la aleatoriedad de las recompensas y las decisiones del algoritmo.
+
+**Interpretación**: para cualquier $\varepsilon > 0$ fijo, el término $\varepsilon T$ domina y **el regret crece linealmente** con $T$. Optimizando $\varepsilon$ se obtiene $\varepsilon^{∗} = \sqrt{K/T}$, que da $\mathbb{E}[R_T] = O(\sqrt{KT})$ — pero requiere conocer $T$ de antemano. Incluso optimizado, $O(\sqrt{T})$ es mucho peor que la cota de Lai-Robbins $O(\log T)$.
+
+La siguiente gráfica muestra el regret empírico de ε-greedy **simulado en nuestro Problema Canónico A** (Bernoulli, $\mu = 0.3, 0.5, 0.7$) para distintos valores de $\varepsilon$, promediado sobre 200 ejecuciones. No es una curva teórica general — es el comportamiento concreto para este problema, pero la forma lineal del regret es universal para $\varepsilon$ constante.
 
 ![Regret para distintos valores de ε]({{ '/17_multi_armed_bandits/images/07_egreedy_regret_by_epsilon.png' | url }})
 
