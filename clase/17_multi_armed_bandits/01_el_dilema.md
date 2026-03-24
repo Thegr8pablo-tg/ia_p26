@@ -178,21 +178,50 @@ donde $\Delta_i = \mu^{∗} - \mu_i$ es la brecha del brazo $i$ y $N_i(T)$ es el
 
 Necesitamos algo entre los dos extremos: explorar lo suficiente para identificar al mejor brazo, y explotar lo aprendido.
 
+### Divergencia KL: midiendo la distancia entre distribuciones
+
+Antes de enunciar la cota, necesitamos una herramienta del Módulo 06: la **divergencia de Kullback-Leibler** (KL). Dadas dos distribuciones $P$ y $Q$, la KL mide cuánta información se pierde al usar $Q$ como aproximación de $P$:
+
+$$\text{KL}(P \| Q) = \sum_x P(x) \ln \frac{P(x)}{Q(x)}$$
+
+Tres propiedades clave:
+
+1. **No-negatividad**: $\text{KL}(P \| Q) \geq 0$, con igualdad solo si $P = Q$
+2. **Asimetría**: $\text{KL}(P \| Q) \neq \text{KL}(Q \| P)$ en general — no es una distancia simétrica
+3. **Distribuciones cercanas → KL pequeña**: si $P$ y $Q$ son difíciles de distinguir con muestras, la KL entre ellas es pequeña
+
+Para Bernoulli con parámetros $p$ y $q$, la KL tiene forma cerrada:
+
+$$\text{KL}(p \| q) = p \ln \frac{p}{q} + (1 - p) \ln \frac{1 - p}{1 - q}$$
+
+![Divergencia KL para distribuciones Bernoulli]({{ '/17_multi_armed_bandits/images/27_kl_divergence.png' | url }})
+
+El panel izquierdo muestra la asimetría: $\text{KL}(0.3 \| 0.8) = 0.583$ pero $\text{KL}(0.8 \| 0.3) = 0.534$ — mismos valores, distinto orden, distinto resultado. El panel derecho fija $\mu^{∗} = 0.7$ y muestra cómo la KL crece conforme $\mu_i$ se aleja del óptimo. El brazo B ($\mu_B = 0.5$, KL $= 0.087$) está mucho más cerca del óptimo que A ($\mu_A = 0.3$, KL $= 0.339$), por lo que es más difícil de distinguir.
+
 ### La cota inferior de Lai-Robbins
 
-¿Existe un límite fundamental de cuánto regret es inevitable? Sí. Lai y Robbins (1985) demostraron que **ningún** algoritmo "uniformemente bueno" puede tener regret menor que:
+¿Existe un límite fundamental de cuánto regret es inevitable? Sí. Lai y Robbins (1985) demostraron que **ningún** algoritmo consistente puede tener regret menor que:
 
-$$\liminf_{T \to \infty} \frac{R_T}{\log T} \geq \sum_{i: \mu_i < \mu^{∗}} \frac{\Delta_i}{\text{KL}(\nu_i, \nu_{i^{∗}})}$$
+$$\liminf_{T \to \infty} \frac{R_T}{\log T} \geq \sum_{i:\, \mu_i < \mu^{∗}} \frac{\Delta_i}{\text{KL}(\mu_i \| \mu^{∗})}$$
 
-donde $\text{KL}(\nu_i, \nu_{i^{∗}})$ es la divergencia KL (Módulo 06) entre las distribuciones de los brazos $i$ e $i^{∗}$.
+donde $\Delta_i = \mu^{∗} - \mu_i$ es la brecha del brazo $i$ y $\text{KL}(\mu_i \| \mu^{∗})$ es la divergencia KL entre la distribución del brazo $i$ y la del brazo óptimo $i^{∗}$.
 
-**Interpretación**: el mejor regret posible crece **logarítmicamente** con $T$ — es decir, $R_T = \Omega(\log T)$. Un algoritmo que logra $R_T = O(\log T)$ es asintóticamente óptimo. Brazos con distribuciones más "parecidas" al óptimo (KL pequeña) contribuyen más al regret inevitable, porque son más difíciles de distinguir.
+**¿De dónde sale esta cota?** La intuición es la siguiente. Para que un algoritmo tenga regret sublineal, necesita eventualmente dejar de jalar cada brazo subóptimo $i$. Pero para *saber* que $i$ es subóptimo, necesita suficientes muestras de $i$ para distinguir su distribución de la del óptimo. Distinguir dos distribuciones con KL pequeña requiere más muestras (por la teoría de tests de hipótesis). Concretamente, se necesitan al menos $\sim \frac{\log T}{\text{KL}(\mu_i \| \mu^{∗})}$ muestras del brazo $i$ para tener confianza suficiente de que es peor. Cada una de esas muestras contribuye $\Delta_i$ de regret. Multiplicando:
 
-Para el caso Bernoulli, la divergencia KL es:
+$$N_i(T) \gtrsim \frac{\log T}{\text{KL}(\mu_i \| \mu^{∗})} \implies \text{regret de brazo } i \gtrsim \frac{\Delta_i \cdot \log T}{\text{KL}(\mu_i \| \mu^{∗})}$$
 
-$$\text{KL}(\mu_i, \mu^{∗}) = \mu_i \ln \frac{\mu_i}{\mu^{∗}} + (1 - \mu_i) \ln \frac{1 - \mu_i}{1 - \mu^{∗}}$$
+Sumando sobre todos los brazos subóptimos se obtiene la cota.
 
-Esta cota será nuestro benchmark: en las siguientes secciones veremos que ε-greedy no la alcanza, UCB1 se acerca, y Thompson Sampling la iguala asintóticamente.
+**Interpretación práctica**: el mejor regret posible crece **logarítmicamente** con $T$, es decir $R_T = \Omega(\log T)$. Un algoritmo que logra $R_T = O(\log T)$ es **asintóticamente óptimo**. Brazos con distribuciones más "parecidas" al óptimo (KL pequeña) contribuyen más al regret inevitable, porque son más difíciles de distinguir.
+
+Para nuestro Problema A con $\mu^{∗} = 0.7$:
+
+| Brazo | $\Delta_i$ | $\text{KL}(\mu_i \| \mu^{∗})$ | $\Delta_i / \text{KL}$ | Interpretación |
+|:---:|:---:|:---:|:---:|:---|
+| A | 0.4 | 0.339 | 1.18 | Fácil de distinguir → pocas muestras necesarias |
+| B | 0.2 | 0.087 | 2.29 | Difícil de distinguir → muchas muestras necesarias |
+
+El brazo B domina el regret inevitable: aunque su brecha $\Delta_B$ es menor, la KL es tan pequeña que necesita casi el doble de muestras ponderadas. Esta cota será nuestro benchmark: en las siguientes secciones veremos que ε-greedy no la alcanza, UCB1 se acerca, y Thompson Sampling la iguala asintóticamente.
 
 ---
 

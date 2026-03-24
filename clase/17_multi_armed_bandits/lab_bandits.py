@@ -6,7 +6,7 @@ Uso:
     cd clase/17_multi_armed_bandits
     python3 lab_bandits.py
 
-Genera 26 imágenes en:
+Genera 27 imágenes en:
     clase/17_multi_armed_bandits/images/
 
 Dependencias: numpy, matplotlib, scipy
@@ -406,6 +406,84 @@ def plot_26_reward_distributions():
                  fontsize=14, fontweight="bold", y=1.04)
     fig.tight_layout()
     _save(fig, "26_reward_distributions.png")
+
+
+def plot_27_kl_divergence():
+    """KL divergence: asymmetry and behavior for Bernoulli distributions."""
+    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+    # --- Left panel: KL(p, q) as heatmap showing asymmetry ---
+    ax = axes[0]
+    n = 200
+    p_vals = np.linspace(0.01, 0.99, n)
+    q_vals = np.linspace(0.01, 0.99, n)
+    P, Q = np.meshgrid(p_vals, q_vals)
+    KL = P * np.log(P / Q) + (1 - P) * np.log((1 - P) / (1 - Q))
+    KL = np.clip(KL, 0, 3)  # clip for display
+
+    im = ax.contourf(P, Q, KL, levels=20, cmap="YlOrRd")
+    fig.colorbar(im, ax=ax, label="KL$(p \\| q)$", shrink=0.85)
+
+    # Show asymmetry: mark two specific points with p+q != 1
+    p1, q1 = 0.3, 0.8
+    p2, q2 = 0.8, 0.3
+    kl1 = p1 * np.log(p1 / q1) + (1 - p1) * np.log((1 - p1) / (1 - q1))
+    kl2 = p2 * np.log(p2 / q2) + (1 - p2) * np.log((1 - p2) / (1 - q2))
+    ax.plot(p1, q1, "o", color=COLORS["blue"], markersize=10, zorder=5)
+    ax.plot(p2, q2, "s", color=COLORS["green"], markersize=10, zorder=5)
+    ax.annotate(f"KL(0.3 || 0.8) = {kl1:.3f}",
+                xy=(p1, q1), xytext=(0.05, 0.90),
+                fontsize=10, color=COLORS["blue"], fontweight="bold",
+                arrowprops=dict(arrowstyle="->", color=COLORS["blue"]))
+    ax.annotate(f"KL(0.8 || 0.3) = {kl2:.3f}",
+                xy=(p2, q2), xytext=(0.42, 0.18),
+                fontsize=10, color=COLORS["green"], fontweight="bold",
+                arrowprops=dict(arrowstyle="->", color=COLORS["green"]))
+    ax.plot([0, 1], [0, 1], "--", color=COLORS["gray"], alpha=0.5,
+            linewidth=1)
+    ax.set_xlabel("$p$", fontsize=12)
+    ax.set_ylabel("$q$", fontsize=12)
+    ax.set_title("KL$(p \\| q)$ para Bernoulli — asimetría",
+                 fontsize=12, fontweight="bold")
+
+    # --- Right panel: KL(p, q*) as function of p, fixed q* = 0.7 ---
+    ax = axes[1]
+    q_star = 0.7
+    p_range = np.linspace(0.01, 0.99, 300)
+    # Remove q_star itself to avoid log(0)
+    mask = np.abs(p_range - q_star) > 0.005
+    p_plot = p_range[mask]
+    kl_vals = p_plot * np.log(p_plot / q_star) + \
+              (1 - p_plot) * np.log((1 - p_plot) / (1 - q_star))
+
+    ax.plot(p_plot, kl_vals, color=COLORS["blue"], linewidth=2.5)
+    ax.axvline(q_star, color=COLORS["gray"], linestyle="--", alpha=0.6,
+               linewidth=1)
+    ax.text(q_star + 0.02, 1.5, f"$q = \\mu^{{∗}} = {q_star}$", fontsize=10,
+            color=COLORS["gray"])
+
+    # Mark canonical problem points
+    for mu_i, label, color in [(0.3, "A", COLORS["red"]),
+                                (0.5, "B", COLORS["orange"])]:
+        kl_i = mu_i * np.log(mu_i / q_star) + \
+               (1 - mu_i) * np.log((1 - mu_i) / (1 - q_star))
+        ax.plot(mu_i, kl_i, "o", color=color, markersize=10, zorder=5)
+        ax.annotate(f"Brazo {label}\nKL = {kl_i:.3f}",
+                    xy=(mu_i, kl_i),
+                    xytext=(mu_i - 0.12, kl_i + 0.35),
+                    fontsize=10, color=color, fontweight="bold",
+                    arrowprops=dict(arrowstyle="->", color=color))
+
+    ax.set_xlabel("$\\mu_i$ (media del brazo subóptimo)", fontsize=11)
+    ax.set_ylabel("KL$(\\mu_i \\| \\mu^{∗})$", fontsize=11)
+    ax.set_title(f"KL Bernoulli con $\\mu^{{∗}} = {q_star}$\n"
+                 "— más cerca del óptimo → KL menor → más difícil distinguir",
+                 fontsize=11, fontweight="bold")
+    ax.set_ylim(0, 3)
+    ax.set_xlim(0, 1)
+
+    fig.tight_layout()
+    _save(fig, "27_kl_divergence.png")
 
 
 def plot_01_slot_machines():
@@ -1509,6 +1587,7 @@ def main():
     # Section 01
     plot_01_slot_machines()
     plot_26_reward_distributions()
+    plot_27_kl_divergence()
     plot_02_gaussian_densities()
     plot_03_explore_exploit_spectrum()
     plot_04_pure_strategies()
@@ -1546,7 +1625,7 @@ def main():
     plot_24_ab_testing()
     plot_25_variant_taxonomy()
 
-    print(f"\n✓  Todas las {26} figuras generadas en {IMAGES_DIR}/")
+    print(f"\n✓  Todas las {27} figuras generadas en {IMAGES_DIR}/")
 
 
 if __name__ == "__main__":
