@@ -43,11 +43,22 @@ El punto crucial del paso 2: el agente **debe aleatorizar**. Si fuera determinis
 
 ### Regret adversarial
 
-¿Contra qué comparamos? No existe un "mejor brazo" fijo como en el caso estocástico (porque las pérdidas cambian). En cambio, comparamos contra el **mejor brazo fijo en retrospectiva** — el brazo que, si lo hubiéramos jalado *todas* las rondas, habría acumulado la menor pérdida total:
+En el caso estocástico, el benchmark era simple: el brazo con mayor $\mu_i$ (que nunca cambia). Aquí las pérdidas cambian cada ronda, así que no hay un "mejor brazo" obvio. El benchmark que usamos es el **mejor brazo fijo en retrospectiva**: imaginemos que *después* de jugar las $T$ rondas, miramos hacia atrás y preguntamos "¿qué brazo debería haber jalado todas las rondas?" Es el brazo $i$ que minimiza $\sum_{t=1}^T \ell_{t,i}$.
 
-$$R_T = \sum_{t=1}^{T} \ell_{t, A_t} - \min_{i \in \{1,\ldots,K\}} \sum_{t=1}^{T} \ell_{t,i}$$
+El regret mide cuánto peor lo hicimos comparado con esa estrategia:
 
-El primer término es la pérdida del agente. El segundo es la pérdida del mejor brazo fijo. La diferencia es el regret: cuánto más pagamos por no saber de antemano cuál brazo era mejor en promedio.
+$$R_T = \underset{\text{pérdida del agente}}{\sum_{t=1}^{T} \ell_{t, A_t}} - \underset{\text{pérdida del mejor brazo fijo}}{\min_{i \in \{1,\ldots,K\}} \sum_{t=1}^{T} \ell_{t,i}}$$
+
+**Ejemplo.** Supongamos $T = 4$ rondas, 2 brazos, y las pérdidas fueron:
+
+| Ronda | $\ell_{t,A}$ | $\ell_{t,B}$ | Agente elige | Pérdida del agente |
+|-------|-------------|-------------|--------------|-------------------|
+| 1 | 0.2 | 0.8 | A | 0.2 |
+| 2 | 0.9 | 0.3 | A | 0.9 |
+| 3 | 0.1 | 0.7 | B | 0.7 |
+| 4 | 0.8 | 0.4 | A | 0.8 |
+
+Pérdida total del agente: $0.2 + 0.9 + 0.7 + 0.8 = 2.6$. Pérdida total si hubiéramos elegido siempre A: $0.2 + 0.9 + 0.1 + 0.8 = 2.0$. Pérdida total si siempre B: $0.8 + 0.3 + 0.7 + 0.4 = 2.2$. El mejor brazo fijo es A (pérdida 2.0). Regret: $2.6 - 2.0 = 0.6$.
 
 ### ¿Por qué el adversario no elige pérdida máxima para todos?
 
