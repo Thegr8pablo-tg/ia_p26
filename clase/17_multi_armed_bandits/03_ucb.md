@@ -22,21 +22,30 @@ La idea de UCB1 (Upper Confidence Bound) es elegantemente simple: actúa como si
 
 Para cuantificar "qué tan lejos puede estar $\hat{\mu}_i$ de $\mu_i$", necesitamos una herramienta probabilística. La **desigualdad de Hoeffding** nos dice que para $N$ observaciones independientes en $[0, 1]$:
 
-$$P(\hat{\mu} - \mu \geq \epsilon) \leq e^{-2N\epsilon^2}$$
+$$P(\hat\mu - \mu \geq \epsilon) \leq e^{-2N\epsilon^2}$$
 
-Queremos una cota que falle con probabilidad a lo más $\delta$. Igualamos el lado derecho a $\delta$:
+**Paso 1: invertir la desigualdad.** Queremos una cota que falle con probabilidad a lo más $\delta$. Igualamos el lado derecho a $\delta$ y despejamos $\epsilon$:
 
-$$e^{-2N\epsilon^2} = \delta \quad \Longrightarrow \quad \epsilon = \sqrt{\frac{\ln(1/\delta)}{2N}}$$
+$$e^{-2N\epsilon^2} = \delta \implies -2N\epsilon^2 = \ln \delta \implies \epsilon = \sqrt{\frac{\ln(1/\delta)}{2N}}$$
 
-Si elegimos $\delta = 1/t^2$ (la confianza crece con el tiempo), obtenemos:
+Esto nos da un **intervalo de confianza**: con probabilidad $\geq 1 - \delta$,
 
-$$\epsilon = \sqrt{\frac{2 \ln t}{N}}$$
+$$\mu \leq \hat\mu + \sqrt{\frac{\ln(1/\delta)}{2N}}$$
 
-Con probabilidad $\geq 1 - 1/t^2$, la media real $\mu_i$ satisface:
+**Paso 2: elegir $\delta$.** Necesitamos que $\delta$ dependa del tiempo $t$ porque UCB1 aplica esta cota en **cada ronda** para **cada brazo**. Si $\delta$ es constante, los errores se acumulan y la garantía se pierde. Elegimos $\delta = 1/t^2$ porque:
 
-$$\mu_i \leq \hat{\mu}_i + \sqrt{\frac{2 \ln t}{N_i(t)}}$$
+- La serie $\sum_{t=1}^{\infty} 1/t^2 = \pi^2/6 < \infty$ converge, lo que permite aplicar una cota de la unión sobre todas las rondas $t = 1, 2, \ldots$ sin que la probabilidad total de error diverja.
+- Cualquier $\delta = 1/t^p$ con $p > 1$ funcionaría (la serie $\sum 1/t^p$ converge para $p > 1$). Se elige $p = 2$ por simplicidad.
 
-El lado derecho es el **Upper Confidence Bound** — de ahí el nombre.
+Sustituyendo $\delta = 1/t^2$ en la expresión de $\epsilon$:
+
+$$\epsilon = \sqrt{\frac{\ln(t^2)}{2N}} = \sqrt{\frac{2 \ln t}{2N}} = \sqrt{\frac{2 \ln t}{N}}$$
+
+**Resultado.** Para cada brazo $i$ con $N_i(t)$ observaciones en la ronda $t$, con probabilidad $\geq 1 - 1/t^2$:
+
+$$\mu_i \leq \hat\mu_i + \sqrt{\frac{2 \ln t}{N_i(t)}}$$
+
+El lado derecho es el **Upper Confidence Bound** (UCB) — una cota superior de la media real con alta confianza. La idea de UCB1 es: si elegimos siempre el brazo con el UCB más alto, estamos eligiendo el brazo que **podría** ser el mejor dada nuestra incertidumbre.
 
 ---
 
