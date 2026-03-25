@@ -60,7 +60,22 @@ donde $\hat\mu_i(t)$ es la media muestral del brazo $i$ hasta la ronda $t$, y $N
 - $\hat\mu_i(t)$ es la **explotación**: nuestra mejor estimación de la media real. Favorece brazos que han dado buenas recompensas.
 - $\sqrt{2 \ln t / N_i(t)}$ es la **exploración** (bonus de confianza): mide nuestra incertidumbre sobre el brazo $i$. Es **grande** cuando $N_i$ es pequeño (pocas observaciones → mucha incertidumbre) y **pequeño** cuando $N_i$ es grande (mucha confianza). El $\ln t$ en el numerador crece lentamente con el tiempo, asegurando que ningún brazo sea ignorado para siempre.
 
-La clave es que UCB1 no separa exploración y explotación como ε-greedy (con un coin flip). En cambio, **las unifica en un solo criterio**: el brazo con el UCB más alto es el que más vale la pena jalar, ya sea porque tiene buena media o porque no lo conocemos bien.
+### ¿Pero cómo explora si siempre toma el argmax?
+
+A primera vista parece que argmax solo explotaría — siempre elige "el mejor". La trampa es que el argmax **no es sobre $\hat\mu_i$** sino sobre $\hat\mu_i + \text{bonus}$. El bonus cambia quién es "el mejor":
+
+**Ejemplo concreto.** Supongamos que en la ronda $t = 100$ tenemos dos brazos:
+
+| Brazo | $\hat\mu_i$ | $N_i$ | Bonus $\sqrt{2\ln 100 / N_i}$ | UCB |
+|-------|------------|--------|-------------------------------|-----|
+| A | 0.6 | 80 | 0.24 | 0.84 |
+| B | 0.3 | 3 | 1.75 | 2.05 |
+
+El brazo A tiene mejor media estimada (0.6 vs 0.3), pero el brazo B tiene un bonus enorme porque solo lo hemos jalado 3 veces. El argmax elige B — ¡el brazo con peor media! Esto es **exploración**, pero no por azar (como ε-greedy) sino por una razón concreta: B tiene tanta incertidumbre que *podría* ser mejor que A.
+
+Después de jalar B, su $N_B$ sube a 4, el bonus baja, y la próxima ronda B necesitará competir de nuevo. Si B resulta ser malo, su $\hat\mu_B$ baja y su UCB deja de ganar. Si resulta ser bueno, su $\hat\mu_B$ sube y lo seguimos jalando — ahora por explotación.
+
+**El mecanismo**: el $\ln t$ en el numerador crece con cada ronda, inflando gradualmente el bonus de todos los brazos. Pero al jalar un brazo, su $N_i$ sube y su bonus baja. Esto crea una tensión: los brazos ignorados acumulan bonus hasta que eventualmente ganan el argmax. **Ningún brazo puede ser ignorado para siempre** — su bonus crecerá hasta forzar su selección. UCB1 no separa exploración y explotación como ε-greedy (con un coin flip). En cambio, **las unifica en un solo criterio**: el brazo con el UCB más alto es el que más vale la pena jalar, ya sea porque tiene buena media o porque no lo conocemos bien.
 
 ### Interpretación geométrica
 
@@ -68,7 +83,7 @@ Cada brazo tiene un "intervalo de confianza". UCB1 elige el brazo con el **borde
 
 ![Bandas de confianza UCB1]({{ '/17_multi_armed_bandits/images/09_ucb_confidence_bands.png' | url }})
 
-Un brazo con media baja pero mucha incertidumbre (pocas observaciones) puede tener un borde superior más alto que un brazo con media alta pero poca incertidumbre. Esto captura el principio: **"tal vez este brazo es excelente — no hemos mirado lo suficiente para descartarlo"**.
+Un brazo con media baja pero mucha incertidumbre (pocas observaciones) puede tener un borde superior más alto que un brazo con media alta pero poca incertidumbre. Esto es exactamente lo que vimos en el ejemplo numérico: el principio de **optimismo ante la incertidumbre** — "tal vez este brazo es excelente, no hemos mirado lo suficiente para descartarlo".
 
 ---
 
