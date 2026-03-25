@@ -42,14 +42,9 @@ El lado derecho es el **Upper Confidence Bound** — de ahí el nombre.
 
 ## La fórmula de UCB1
 
-$$A_t = \arg\max_i \left[ \underbrace{\hat{\mu}_i(t)}_{\text{explotación}} + \underbrace{\sqrt{\frac{2 \ln t}{N_i(t)}}}_{\text{exploración (bonus)}} \right]$$
+$$A_t = \arg\max_i \left[ \hat{\mu}_i(t) + \sqrt{\frac{2 \ln t}{N_i(t)}} \right]$$
 
-Cada brazo tiene dos componentes:
-
-- **Explotación**: la media muestral $\hat{\mu}_i$ — lo que sabemos
-- **Exploración**: el bonus $\sqrt{2 \ln t / N_i}$ — lo que no sabemos
-
-El bonus es **grande** cuando $N_i$ es pequeño (pocas observaciones) y **pequeño** cuando $N_i$ es grande (mucha confianza). El $\ln t$ en el numerador asegura que el bonus crece lentamente con el tiempo, forzando exploración eventual de todos los brazos.
+El primer término es la **explotación** (media muestral — lo que sabemos) y el segundo es la **exploración** (bonus de confianza — lo que no sabemos). El bonus es **grande** cuando $N_i$ es pequeño (pocas observaciones) y **pequeño** cuando $N_i$ es grande (mucha confianza). El $\ln t$ en el numerador asegura que el bonus crece lentamente con el tiempo, forzando exploración eventual de todos los brazos.
 
 ### Interpretación geométrica
 
@@ -137,7 +132,7 @@ UCB1 usa la desigualdad de Hoeffding, que es **independiente de la distribución
 
 Sí. **KL-UCB** reemplaza el bonus de Hoeffding por una cota basada en la **divergencia KL** (Módulo 06):
 
-$$A_t = \arg\max_i \left\{ q \in [0, 1] : \text{KL}(\hat{\mu}_i, q) \leq \frac{\ln t}{N_i(t)} \right\}$$
+$$A_t = \arg\max_i \left\lbrace q \in [0, 1] : \text{KL}(\hat\mu_i, q) \leq \frac{\ln t}{N_i(t)} \right\rbrace$$
 
 donde $\text{KL}(p, q) = p \ln \frac{p}{q} + (1-p) \ln \frac{1-p}{1-q}$ es la divergencia KL entre $\text{Bernoulli}(p)$ y $\text{Bernoulli}(q)$.
 
