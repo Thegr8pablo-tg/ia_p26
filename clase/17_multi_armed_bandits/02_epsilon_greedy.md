@@ -229,27 +229,27 @@ La intuición: si la varianza es pequeña relativa a $\delta^2$, es improbable q
 
 **Aplicación a nuestro estimador.** Aplicamos Chebyshev al estimador $\hat\mu_i$ (que tiene varianza $\sigma_i^2/n$) con desviación $\delta = \Delta_i/2$:
 
-$$P\!\left(\lvert \hat\mu_i - \mu_i \rvert \geq \frac{\Delta_i}{2}\right) \leq \frac{\sigma_i^2 / n}{(\Delta_i/2)^2} = \frac{4\,\sigma_i^2}{n\,\Delta_i^2}$$
+$$P\!\left(\lvert \hat\mu_i - \mu_i \rvert \geq \frac{\Delta_i}{2}\right) \leq \frac{\sigma_i^2 / n}{(\Delta_i/2)^2} = \frac{4 \sigma_i^2}{n \cdot \Delta_i^2}$$
 
 ¿Por qué $\Delta_i/2$? Si la estimación del brazo $i$ se desvía más de $\Delta_i/2$ hacia arriba, puede superar la media real del brazo óptimo (que es $\mu_i + \Delta_i$ arriba). Esto es una condición suficiente para la explotación errónea.
 
 **Umbral de observaciones.** La probabilidad de error se vuelve menor que 1 cuando:
 
-$$\frac{4\,\sigma_i^2}{n\,\Delta_i^2} < 1 \implies n > \frac{4\,\sigma_i^2}{\Delta_i^2}$$
+$$\frac{4 \sigma_i^2}{n \cdot \Delta_i^2} < 1 \implies n > \frac{4 \sigma_i^2}{\Delta_i^2}$$
 
 Definimos:
 
-$$n_i^{∗} = \left\lceil \frac{4\,\sigma_i^2}{\Delta_i^2} \right\rceil$$
+$$n_i^{∗} = \left\lceil \frac{4 \sigma_i^2}{\Delta_i^2} \right\rceil$$
 
 Después de $n_i^{∗}$ observaciones del brazo $i$, la explotación errónea se vuelve improbable y decae como $1/n$. Para Bernoulli, $\sigma_i^2 \leq 1/4$, así que $n_i^{∗} \leq \lceil 1/\Delta_i^2 \rceil$.
 
 **Velocidad de acumulación.** Las observaciones del brazo $i$ solo llegan cuando lo jalamos. Fuera del período de error, lo jalamos solo por exploración, con frecuencia $\varepsilon/K$ por ronda. Necesitamos del orden de:
 
-$$\frac{n_i^{∗}}{\varepsilon/K} = \frac{K\,n_i^{∗}}{\varepsilon} \leq \frac{K}{\varepsilon\,\Delta_i^2}$$
+$$\frac{n_i^{∗}}{\varepsilon/K} = \frac{K \cdot n_i^{∗}}{\varepsilon} \leq \frac{K}{\varepsilon\Delta_i^2}$$
 
 rondas para acumular las $n_i^{∗}$ observaciones. Este es el número máximo de pulls por explotación errónea del brazo $i$:
 
-$$\mathbb{E}[\text{pulls por error de } i] \leq \frac{K}{\varepsilon\,\Delta_i^2}$$
+$$\mathbb{E}[\text{pulls por error de } i] \leq \frac{K}{\varepsilon\Delta_i^2}$$
 
 Es **constante** respecto a $T$ — un costo transitorio que se paga al inicio.
 
@@ -257,23 +257,23 @@ Es **constante** respecto a $T$ — un costo transitorio que se paga al inicio.
 
 Sumando exploración y error para cada brazo subóptimo $i$:
 
-$$\mathbb{E}[N_i(T)] \leq \frac{\varepsilon T}{K} + \frac{K}{\varepsilon\,\Delta_i^2}$$
+$$\mathbb{E}[N_i(T)] \leq \frac{\varepsilon T}{K} + \frac{K}{\varepsilon\Delta_i^2}$$
 
 Sustituyendo en la descomposición del regret:
 
-$$\mathbb{E}[R_T] = \sum_{i:\,\Delta_i > 0} \Delta_i \cdot \mathbb{E}[N_i(T)] \leq \sum_{i:\,\Delta_i > 0} \Delta_i \left(\frac{\varepsilon T}{K} + \frac{K}{\varepsilon\,\Delta_i^2}\right)$$
+$$\mathbb{E}[R_T] = \sum_{i:\Delta_i > 0} \Delta_i \cdot \mathbb{E}[N_i(T)] \leq \sum_{i:\Delta_i > 0} \Delta_i \left(\frac{\varepsilon T}{K} + \frac{K}{\varepsilon\Delta_i^2}\right)$$
 
 Distribuimos la suma. El primer término:
 
-$$\frac{\varepsilon T}{K} \sum_{i:\,\Delta_i > 0} \Delta_i = \varepsilon\,\bar\Delta\,T$$
+$$\frac{\varepsilon T}{K} \sum_{i:\Delta_i > 0} \Delta_i = \varepsilon \cdot \bar\Delta \cdot T$$
 
 donde $\bar\Delta = \frac{1}{K}\sum_{i} \Delta_i$ es la brecha promedio. El segundo término usa $\Delta_i / \Delta_i^2 = 1/\Delta_i$:
 
-$$\frac{K}{\varepsilon} \sum_{i:\,\Delta_i > 0} \frac{1}{\Delta_i} = \frac{K\,H}{\varepsilon}$$
+$$\frac{K}{\varepsilon} \sum_{i:\Delta_i > 0} \frac{1}{\Delta_i} = \frac{K \cdot H}{\varepsilon}$$
 
-donde $H = \sum_{i:\,\Delta_i > 0} 1/\Delta_i$ es la "dificultad" del problema (brazos con brecha pequeña contribuyen más). Entonces:
+donde $H = \sum_{i:\Delta_i > 0} 1/\Delta_i$ es la "dificultad" del problema (brazos con brecha pequeña contribuyen más). Entonces:
 
-$$\mathbb{E}[R_T] \leq \varepsilon\,\bar\Delta\,T + \frac{K\,H}{\varepsilon}$$
+$$\mathbb{E}[R_T] \leq \varepsilon \cdot \bar\Delta \cdot T + \frac{K \cdot H}{\varepsilon}$$
 
 Absorbiendo las constantes del problema ($\bar\Delta$ y $H$ dependen solo de los $\mu_i$, no de $T$ ni de $\varepsilon$):
 
@@ -287,7 +287,7 @@ El primer término es el costo de la **exploración perpetua** (lineal en $T$, n
 
 Juntando ambas cotas:
 
-$$\varepsilon\,\bar\Delta\,T \leq \mathbb{E}[R_T] \leq \varepsilon\,\bar\Delta\,T + \frac{K\,H}{\varepsilon}$$
+$$\varepsilon \cdot \bar\Delta \cdot T \leq \mathbb{E}[R_T] \leq \varepsilon \cdot \bar\Delta \cdot T + \frac{K \cdot H}{\varepsilon}$$
 
 Para $\varepsilon$ **fijo** (por ejemplo, $\varepsilon = 0.1$), el término $\varepsilon T$ domina conforme $T \to \infty$. El regret crece **linealmente** — fundamentalmente peor que la cota de Lai-Robbins $\Omega(\log T)$.
 
