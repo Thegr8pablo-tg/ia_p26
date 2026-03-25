@@ -45,6 +45,10 @@ El punto crucial del paso 2: el agente **debe aleatorizar**. Si fuera determinis
 
 En el caso estocástico, el benchmark era simple: el brazo con mayor $\mu_i$ (que nunca cambia). Aquí las pérdidas cambian cada ronda, así que no hay un "mejor brazo" obvio. El benchmark que usamos es el **mejor brazo fijo en retrospectiva**: imaginemos que *después* de jugar las $T$ rondas, miramos hacia atrás y preguntamos "¿qué brazo debería haber jalado todas las rondas?" Es el brazo $i$ que minimiza $\sum_{t=1}^T \ell_{t,i}$.
 
+**¿Por qué "fijo"?** ¿Por qué no comparar contra la mejor estrategia que puede *cambiar* de brazo cada ronda? Porque esa estrategia elegiría siempre el brazo con menor pérdida en cada ronda — tendría pérdida casi cero. Ningún algoritmo puede competir con alguien que conoce el futuro, así que el regret sería siempre $\Omega(T)$ y el problema no tendría solución.
+
+El "mejor brazo fijo" es un benchmark **más débil pero alcanzable**: un brazo que, comprometido de antemano a una sola elección para todas las rondas, minimiza su pérdida total. Es como calificar con curva: no comparamos contra un estudiante que sabía todas las respuestas (benchmark imposible), sino contra el que siempre eligió la misma estrategia y resultó ser la mejor en promedio. EXP3 demuestra que se puede competir con este benchmark, logrando regret $R_T/T \to 0$ conforme $T \to \infty$.
+
 El regret mide cuánto peor lo hicimos comparado con esa estrategia:
 
 $$R_T = \underset{\text{pérdida del agente}}{\sum_{t=1}^{T} \ell_{t, A_t}} - \underset{\text{pérdida del mejor brazo fijo}}{\min_{i \in \{1,\ldots,K\}} \sum_{t=1}^{T} \ell_{t,i}}$$
@@ -62,11 +66,15 @@ Pérdida total del agente: $0.2 + 0.9 + 0.7 + 0.8 = 2.6$. Pérdida total si hubi
 
 ### ¿Por qué el adversario no elige pérdida máxima para todos?
 
-Una pregunta natural: si el adversario quiere hacernos daño, ¿por qué no elige $\ell_t = (1, 1, 1)$ — pérdida máxima para todos los brazos? Porque eso **no genera regret**. Si todos los brazos tienen pérdida 1, nuestra pérdida total es $T$ pero la del mejor brazo fijo también es $T$: el regret es $T - T = 0$.
+Esta pregunta toca la filosofía detrás del modelo. El adversario no es un agente que quiere "destruirnos" — es una **abstracción matemática** que modela el peor caso posible. Viene de la **teoría de juegos**: pensamos en el problema como un juego de suma cero entre el agente y la naturaleza (o un oponente). El regret mide quién gana.
 
-El objetivo del adversario no es hacernos sufrir en términos absolutos — es hacer que suframos **más que el mejor brazo fijo**. Para generar regret, necesita que las pérdidas sean **diferentes entre brazos**: darle pérdida alta al brazo que vamos a elegir y pérdida baja a algún otro brazo. Así, el mejor brazo fijo acumula poca pérdida mientras nosotros acumulamos mucha.
+¿Por qué no elige $\ell_t = (1, 1, 1)$ — pérdida máxima para todos? Porque eso **no genera regret**. Si todos los brazos tienen pérdida 1, nuestra pérdida total es $T$ pero la del mejor brazo fijo también es $T$: el regret es $T - T = 0$. El adversario nos lastimó, pero también lastimó al benchmark por igual — no ganó nada.
 
-Esto explica por qué los algoritmos deterministas son vulnerables: si el adversario sabe qué brazo elegiremos (porque la selección es determinista dado el historial), puede asignarle pérdida 1 y darle pérdida 0 a otro brazo. Cada ronda genera regret 1, y el regret total es $T$ — lineal. Contra un algoritmo **aleatorio** como EXP3, el adversario no sabe cuál brazo elegiremos en esta ronda, así que no puede dirigir el castigo sin también afectar al benchmark.
+El objetivo del adversario es maximizar el **regret** — la diferencia entre nuestra pérdida y la del mejor brazo fijo. Para lograrlo necesita **asimetría**: darle pérdida alta al brazo que vamos a elegir y pérdida baja a algún otro brazo. Así, existe un brazo fijo que acumula poca pérdida (el benchmark baja) mientras nosotros acumulamos mucha (nuestra pérdida sube).
+
+Históricamente, esta formulación surge de la **teoría de decisión minimax** de Von Neumann y Wald (1940s): diseñar estrategias que funcionen bien incluso bajo el peor escenario posible. No asumimos que existe un adversario real — pero si nuestro algoritmo funciona contra el peor caso, funcionará contra cualquier entorno, incluyendo los estocásticos.
+
+**¿Por qué esto hace vulnerables a los algoritmos deterministas?** Si el adversario sabe qué brazo elegiremos (porque la selección es determinista dado el historial), puede asignarle pérdida 1 y darle pérdida 0 a otro brazo. Cada ronda genera regret 1, y el regret total es $T$ — lineal. Contra un algoritmo **aleatorio** como EXP3, el adversario no sabe cuál brazo elegiremos en esta ronda, así que no puede dirigir el castigo sin también afectar al benchmark.
 
 ### Contraste con el modelo estocástico
 
