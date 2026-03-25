@@ -51,9 +51,16 @@ El lado derecho es el **Upper Confidence Bound** (UCB) — una cota superior de 
 
 ## La fórmula de UCB1
 
-$$A_t = \arg\max_i \left[ \hat{\mu}_i(t) + \sqrt{\frac{2 \ln t}{N_i(t)}} \right]$$
+En cada ronda $t$, el algoritmo debe decidir qué brazo jalar. Llamamos $A_t$ al brazo elegido en la ronda $t$ (es decir, $A_t \in \{1, \ldots, K\}$). UCB1 elige el brazo que maximiza la **cota superior de confianza** que acabamos de derivar:
 
-El primer término es la **explotación** (media muestral — lo que sabemos) y el segundo es la **exploración** (bonus de confianza — lo que no sabemos). El bonus es **grande** cuando $N_i$ es pequeño (pocas observaciones) y **pequeño** cuando $N_i$ es grande (mucha confianza). El $\ln t$ en el numerador asegura que el bonus crece lentamente con el tiempo, forzando exploración eventual de todos los brazos.
+$$A_t = \arg\max_i \left[ \hat\mu_i(t) + \sqrt{\frac{2 \ln t}{N_i(t)}} \right]$$
+
+donde $\hat\mu_i(t)$ es la media muestral del brazo $i$ hasta la ronda $t$, y $N_i(t)$ es el número de veces que hemos jalado el brazo $i$. Para cada brazo, calculamos su UCB y elegimos el mayor. Desglosando los dos términos:
+
+- $\hat\mu_i(t)$ es la **explotación**: nuestra mejor estimación de la media real. Favorece brazos que han dado buenas recompensas.
+- $\sqrt{2 \ln t / N_i(t)}$ es la **exploración** (bonus de confianza): mide nuestra incertidumbre sobre el brazo $i$. Es **grande** cuando $N_i$ es pequeño (pocas observaciones → mucha incertidumbre) y **pequeño** cuando $N_i$ es grande (mucha confianza). El $\ln t$ en el numerador crece lentamente con el tiempo, asegurando que ningún brazo sea ignorado para siempre.
+
+La clave es que UCB1 no separa exploración y explotación como ε-greedy (con un coin flip). En cambio, **las unifica en un solo criterio**: el brazo con el UCB más alto es el que más vale la pena jalar, ya sea porque tiene buena media o porque no lo conocemos bien.
 
 ### Interpretación geométrica
 
