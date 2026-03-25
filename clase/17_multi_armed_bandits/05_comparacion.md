@@ -38,15 +38,28 @@ La figura muestra el regret acumulado promedio (líneas sólidas) con bandas de 
 
 **2. Thompson y KL-UCB son casi indistinguibles.** Ambos alcanzan el regret asintóticamente óptimo (cota de Lai-Robbins). La diferencia está en las constantes: Thompson tiende a tener menor regret en horizontes finitos porque su exploración bayesiana es más eficiente que el bonus de confianza.
 
-**3. UCB1 pierde contra ε-greedy en este horizonte.** Esto parece contradecir la teoría: UCB1 tiene regret $O(\log T)$ mientras ε-greedy tiene regret $O(\varepsilon T)$ — lineal. ¿Cómo puede perder el logarítmico?
+**3. UCB1 pierde contra ε-greedy en este horizonte.** Esto parece contradecir la teoría: UCB1 tiene regret $O(\log T)$ mientras ε-greedy tiene regret $O(\varepsilon T)$ — lineal. ¿Cómo puede un algoritmo logarítmico perder contra uno lineal?
 
-La respuesta está en las **constantes**. El regret de UCB1 para este problema es aproximadamente $\sum_i \frac{2 \log T}{\Delta_i} = \frac{2 \log T}{0.4} + \frac{2 \log T}{0.2} = 5 \log T + 10 \log T = 15 \log T$. El de ε-greedy es $\varepsilon \cdot \bar\Delta \cdot T = 0.1 \cdot 0.2 \cdot T = 0.02T$. Igualando: $15 \log T = 0.02T$ se cruzan alrededor de $T \approx 2{,}700$. **Antes de ese cruce, ε-greedy gana.**
+La clave es que **la notación asintótica esconde las constantes**. Cuando decimos $O(\log T)$ vs $O(\varepsilon T)$, estamos diciendo que *existe un $T_0$* a partir del cual el logarítmico gana. Pero $T_0$ puede ser grande. Computemos las constantes para nuestro problema:
 
-¿Por qué la constante de UCB1 es tan grande? Porque el bonus de Hoeffding es una cota **universal** (vale para cualquier distribución en $[0,1]$), así que es más ancho de lo necesario para Bernoulli. Esto infla el UCB de brazos subóptimos, forzando más exploración de la necesaria. El factor $1/\Delta_i$ castiga especialmente los brazos con brecha pequeña (como B con $\Delta_B = 0.2$): UCB1 necesita muchas observaciones para distinguirlo del óptimo. En cambio, ε-greedy explora solo el 10% del tiempo — exploración ciega pero infrecuente.
+- **UCB1**: $\sum_i \frac{2 \log T}{\Delta_i} = \frac{2 \log T}{0.4} + \frac{2 \log T}{0.2} = 15 \log T$. A $T = 1{,}000$: $15 \times 6.9 \approx 104$.
+- **ε-greedy**: $\varepsilon \cdot \bar\Delta \cdot T = 0.1 \times 0.2 \times T = 0.02T$. A $T = 1{,}000$: $0.02 \times 1{,}000 = 20$.
 
-A largo plazo ($T \to \infty$), UCB1 ganará porque $\log T$ crece más lento que $T$. Pero para horizontes prácticos como $T = 1{,}000$, la constante grande de Hoeffding hace que UCB1 pague más que la exploración constante de ε-greedy. La brecha respecto a KL-UCB confirma el costo de usar Hoeffding (que ignora la distribución) en vez de KL (que la explota): KL-UCB tiene constante cercana al óptimo de Lai-Robbins.
+UCB1 paga **5 veces más** a $T = 1{,}000$ (las constantes teóricas sobreestiman un poco, pero la dirección es correcta). Igualando $15 \log T = 0.02T$, el cruce ocurre alrededor de $T \approx 2{,}700$. Verificamos con simulación (50 runs):
 
-**4. ε-greedy tiene buena constante pero mala tasa.** Con $\varepsilon = 0.1$, el regret crece como $0.02T$ — pendiente leve pero **constante**. El 10% de exploración uniforme se mantiene incluso cuando ya sabemos cuál es el mejor brazo. En la gráfica se ve que la curva de ε-greedy es prácticamente una recta, mientras las demás se aplanan. Si extendiéramos a $T = 10{,}000$, ε-greedy alcanzaría $R_T \approx 200$ mientras UCB1 estaría alrededor de $\approx 140$.
+| $T$ | Thompson | KL-UCB | ε-greedy | UCB1 | EXP3 |
+|-----|----------|--------|----------|------|------|
+| 1,000 | 12 | 14 | 37 | 44 | 69 |
+| 5,000 | 16 | 24 | 118 | **82** | 161 |
+| 10,000 | 18 | — | 218 | **98** | 228 |
+
+A $T = 5{,}000$, UCB1 ya gana (82 vs 118). A $T = 10{,}000$, la diferencia es dramática (98 vs 218). La curva de ε-greedy sigue subiendo linealmente mientras UCB1 se aplana.
+
+**Lección**: la notación $O(\cdot)$ describe la *forma* de la curva, no dónde se ubica. Un algoritmo con mejor tasa asintótica puede tener peor rendimiento en horizontes finitos si su constante es grande. Para este problema, el cruce ocurre relativamente pronto ($T \approx 2{,}700$), pero hay problemas donde el cruce puede ser mucho más tardío (cuando las brechas $\Delta_i$ son muy pequeñas).
+
+¿Por qué la constante de UCB1 es tan grande? Porque el bonus de Hoeffding es una cota **universal** (vale para cualquier distribución en $[0,1]$), así que es más ancho de lo necesario para Bernoulli. El factor $1/\Delta_i$ castiga especialmente los brazos con brecha pequeña (B con $\Delta_B = 0.2$ contribuye $10 \log T$ al regret). KL-UCB y Thompson usan la estructura de la distribución para calibrar mejor la exploración, logrando constantes cercanas al óptimo de Lai-Robbins.
+
+**4. ε-greedy tiene buena constante pero mala tasa.** Con $\varepsilon = 0.1$, el regret crece como $0.02T$ — pendiente leve pero **constante**. El 10% de exploración uniforme se mantiene incluso cuando ya sabemos cuál es el mejor brazo. En la gráfica se ve que la curva de ε-greedy es prácticamente una recta, mientras las demás se aplanan.
 
 **5. Las bandas de dispersión importan.** Thompson tiene no solo menor media sino también **menor varianza** que UCB1. Esto se traduce en mayor predictibilidad del rendimiento — valioso en aplicaciones como ensayos clínicos donde un run desafortunado tiene consecuencias reales.
 
