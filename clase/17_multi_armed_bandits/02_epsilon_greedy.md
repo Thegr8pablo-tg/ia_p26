@@ -203,7 +203,7 @@ $$P(X_t = 1) = \frac{\varepsilon}{K}$$
 
 para toda ronda $t$, sin importar el historial. Por linealidad de la esperanza:
 
-$$\mathbb{E}\!\left[\sum_{t=1}^{T} X_t\right] = \sum_{t=1}^{T} P(X_t = 1) = \frac{\varepsilon T}{K}$$
+$$\mathbb{E}\left[\sum_{t=1}^{T} X_t\right] = \sum_{t=1}^{T} P(X_t = 1) = \frac{\varepsilon T}{K}$$
 
 #### Paso 4: pulls por explotación errónea (Chebyshev)
 
@@ -229,7 +229,7 @@ La intuición: si la varianza es pequeña relativa a $\delta^2$, es improbable q
 
 **Aplicación a nuestro estimador.** Aplicamos Chebyshev al estimador $\hat\mu_i$ (que tiene varianza $\sigma_i^2/n$) con desviación $\delta = \Delta_i/2$:
 
-$$P\!\left(\lvert \hat\mu_i - \mu_i \rvert \geq \frac{\Delta_i}{2}\right) \leq \frac{\sigma_i^2 / n}{(\Delta_i/2)^2} = \frac{4 \sigma_i^2}{n \cdot \Delta_i^2}$$
+$$P\left(\lvert \hat\mu_i - \mu_i \rvert \geq \frac{\Delta_i}{2}\right) \leq \frac{\sigma_i^2 / n}{(\Delta_i/2)^2} = \frac{4 \sigma_i^2}{n \cdot \Delta_i^2}$$
 
 ¿Por qué $\Delta_i/2$? Recordemos que $\mu^{∗} = \mu_i + \Delta_i$. Para que la explotación elija erróneamente el brazo $i$ sobre el óptimo, necesitamos $\hat\mu_i > \hat\mu^{∗}$. Esto puede ocurrir si **ambos** estimadores se desvían de sus medias reales: $\hat\mu_i$ sube y $\hat\mu^{∗}$ baja. Si cada uno se desvía a lo más $\Delta_i/2$, los estimadores se cruzan:
 
@@ -237,7 +237,7 @@ $$\hat\mu_i \leq \mu_i + \frac{\Delta_i}{2}, \quad \hat\mu^{∗} \geq \mu^{∗} 
 
 Entonces $\hat\mu_i \leq \hat\mu^{∗}$ y la explotación elige correctamente. Dicho al revés: para que haya error, **al menos uno** de los estimadores debe desviarse más de $\Delta_i/2$. Por la cota de la unión (union bound):
 
-$$P(\text{error}) \leq P\!\left(\lvert \hat\mu_i - \mu_i \rvert \geq \frac{\Delta_i}{2}\right) + P\!\left(\lvert \hat\mu^{∗} - \mu^{∗} \rvert \geq \frac{\Delta_i}{2}\right) \leq \frac{4 \sigma_i^2}{n_i \cdot \Delta_i^2} + \frac{4 \sigma_{∗}^2}{n_{∗} \cdot \Delta_i^2}$$
+$$P(\text{error}) \leq P\left(\lvert \hat\mu_i - \mu_i \rvert \geq \frac{\Delta_i}{2}\right) + P\left(\lvert \hat\mu^{∗} - \mu^{∗} \rvert \geq \frac{\Delta_i}{2}\right) \leq \frac{4 \sigma_i^2}{n_i \cdot \Delta_i^2} + \frac{4 \sigma_{∗}^2}{n_{∗} \cdot \Delta_i^2}$$
 
 donde $n_i$ y $n_{∗}$ son el número de observaciones de cada brazo. Ambos términos tienen la misma forma; para simplificar, usamos $\sigma^2 = \max_j \sigma_j^2$ y notamos que basta con que cada brazo tenga suficientes observaciones. El factor 2 de la unión no cambia el orden asintótico, así que trabajamos con un solo término.
 
@@ -285,7 +285,7 @@ $$\mathbb{E}[R_T] \leq \varepsilon \cdot \bar\Delta \cdot T + \frac{K \cdot H}{\
 
 Absorbiendo las constantes del problema ($\bar\Delta$ y $H$ dependen solo de los $\mu_i$, no de $T$ ni de $\varepsilon$):
 
-$$\boxed{\mathbb{E}[R_T] = O\!\left(\varepsilon T + \frac{K}{\varepsilon}\right)}$$
+$$\boxed{\mathbb{E}[R_T] = O\left(\varepsilon T + \frac{K}{\varepsilon}\right)}$$
 
 El primer término es el costo de la **exploración perpetua** (lineal en $T$, nunca desaparece). El segundo es el costo de los **errores iniciales** (constante, se paga una vez).
 

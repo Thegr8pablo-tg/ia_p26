@@ -106,7 +106,7 @@ La siguiente tabla sintetiza las propiedades teóricas y prácticas de los cinco
 | **Marco teórico** | Frecuentista | Frecuentista | Frecuentista | Bayesiano | Frecuentista |
 | **Mecanismo de exploración** | Aleatorio uniforme con prob. $\varepsilon$ | Bonus de confianza (Hoeffding) | Bonus de confianza (KL) | Muestreo del posterior | Pesos exponenciales |
 | **Parámetros** | $\varepsilon$ | Ninguno | Ninguno | Prior ($\alpha_0, \beta_0$) | $\gamma$ (tasa de mezcla) |
-| **Regret** | $O(\varepsilon T)$ — **lineal** | $O\!\left(\sum_i \frac{\log T}{\Delta_i}\right)$ | $O\!\left(\sum_i \frac{\Delta_i \log T}{\text{KL}(\mu_i, \mu^{∗})}\right)$ | $O\!\left(\sum_i \frac{\Delta_i \log T}{\text{KL}(\mu_i, \mu^{∗})}\right)$ | $O(\sqrt{KT \log K})$ |
+| **Regret** | $O(\varepsilon T)$ — **lineal** | $O\left(\sum_i \frac{\log T}{\Delta_i}\right)$ | $O\left(\sum_i \frac{\Delta_i \log T}{\text{KL}(\mu_i, \mu^{∗})}\right)$ | $O\left(\sum_i \frac{\Delta_i \log T}{\text{KL}(\mu_i, \mu^{∗})}\right)$ | $O(\sqrt{KT \log K})$ |
 | **Asintóticamente óptimo** | No | No (constante subóptima) | **Sí** | **Sí** | N/A (distinto régimen) |
 | **Cómputo por paso** | $O(1)$ | $O(K)$ | $O(K)$ — requiere resolver ecuación KL | $O(K)$ — requiere muestreo | $O(K)$ |
 | **Determinista** | No (coin flip) | Sí | Sí | No (muestreo posterior) | No (pesos probabilísticos) |
