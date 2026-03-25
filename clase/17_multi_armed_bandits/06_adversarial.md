@@ -127,13 +127,19 @@ Pero hay un obstáculo: en cada ronda solo observamos la pérdida del brazo que 
 
 ### Importance weighting: corregir el sesgo de muestreo
 
-Supongamos que elegimos el brazo $A_t = i$ con probabilidad $p_{t,i}$ y observamos pérdida $\ell_{t,i}$. Para los brazos que *no* elegimos, no tenemos información. Pero podemos construir un **estimador** de la pérdida de cada brazo:
+Queremos actualizar los pesos de **todos** los brazos, pero solo observamos la pérdida del brazo que elegimos. Para los demás, no tenemos información directa. ¿Qué hacemos?
+
+**La idea con una analogía.** Imagina una encuesta electoral donde encuestas a personas al azar, pero tu muestreo está sesgado: visitas la zona norte (60% de tus encuestas) mucho más que la zona sur (10%). Si solo cuentas votos crudos, sobrerepresentas al norte. La corrección es simple: cada voto del sur lo cuentas como $1/0.1 = 10$ votos (porque lo muestreaste con probabilidad 0.1), y cada voto del norte como $1/0.6 \approx 1.7$. Así, en promedio, cada zona contribuye proporcionalmente a su tamaño real. Esto es **importance weighting**: dividir cada observación por su probabilidad de ser observada.
+
+**Aplicación a EXP3.** Elegimos el brazo $i$ con probabilidad $p_{t,i}$ y observamos pérdida $\ell_{t,i}$. Definimos el estimador:
 
 $$\hat\ell_{t,i} = \begin{cases} \ell_{t,i} / p_{t,i} & \text{si } A_t = i \text{ (lo elegimos)} \\ 0 & \text{si } A_t \neq i \text{ (no lo elegimos)} \end{cases}$$
 
-¿Por qué dividir por $p_{t,i}$? Porque si un brazo se elige con poca frecuencia (digamos $p_{t,i} = 0.1$), solo lo observamos el 10% de las veces. Para compensar, multiplicamos su pérdida por $1/0.1 = 10$ cuando sí lo observamos. En promedio:
+¿Qué hace la división por $p_{t,i}$? Si un brazo se elige con poca frecuencia ($p_{t,i} = 0.1$), solo lo observamos el 10% de las veces. Cuando sí lo observamos, "amplificamos" su pérdida por $1/0.1 = 10$ para compensar todas las veces que no lo vimos. Si un brazo se elige frecuentemente ($p_{t,i} = 0.9$), lo observamos casi siempre y la amplificación es mínima ($1/0.9 \approx 1.1$).
 
-$$\mathbb{E}[\hat\ell_{t,i}] = p_{t,i} \cdot \frac{\ell_{t,i}}{p_{t,i}} + (1 - p_{t,i}) \cdot 0 = \ell_{t,i}$$
+¿Es correcto en promedio? Sí — el estimador es **insesgado**:
+
+$$\mathbb{E}[\hat\ell_{t,i}] = \underset{\text{prob. de observarlo}}{p_{t,i}} \cdot \underset{\text{valor si lo observamos}}{\frac{\ell_{t,i}}{p_{t,i}}} + \underset{\text{prob. de no observarlo}}{(1 - p_{t,i})} \cdot \underset{\text{valor si no}}{0} = \ell_{t,i}$$
 
 El estimador es **insesgado** — en expectativa, recupera la pérdida real. Esto se llama **importance weighting**: corregir el sesgo de muestreo dividiendo por la probabilidad de observación.
 
