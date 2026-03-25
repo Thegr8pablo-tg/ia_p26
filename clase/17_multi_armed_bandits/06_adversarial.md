@@ -25,23 +25,29 @@ En estos escenarios, modelar al entorno como un **adversario** que elige las rec
 
 ## 6.2 El modelo adversarial
 
+### ¿Por qué pérdidas en vez de recompensas?
+
+Hasta ahora hemos hablado de **recompensas** (el brazo paga $r_t$ y queremos maximizar). En el modelo adversarial, la convención es usar **pérdidas** $\ell_t \in [0, 1]$ que queremos **minimizar**. La relación es simple: $\ell_t = 1 - r_t$. Un brazo con recompensa alta tiene pérdida baja y viceversa.
+
+¿Por qué el cambio? Por tradición de la teoría de juegos y optimización online, donde el problema se plantea como minimización. No cambia la matemática — solo la dirección. Cuando veamos que EXP3 "penaliza" un brazo con pérdida alta, es equivalente a decir que "favorece" brazos con recompensa alta.
+
 ### Protocolo
 
-En cada ronda $t = 1, \ldots, T$:
+En el modelo estocástico, las recompensas vienen de una distribución fija — el entorno es "pasivo". En el modelo adversarial, imaginamos un **oponente** que elige activamente las pérdidas. El juego se desarrolla así en cada ronda $t = 1, \ldots, T$:
 
-1. El **adversario** elige un vector de pérdidas $\ell_t = (\ell_{t,1}, \ldots, \ell_{t,K}) \in [0, 1]^K$ — una pérdida por brazo
-2. El **agente** elige un brazo $A_t$ muestreando de una distribución $p_t$ sobre $\{1, \ldots, K\}$
-3. El agente observa **solo** $\ell_{t, A_t}$ — la pérdida del brazo que eligió (feedback de bandidos, no la pérdida de los otros brazos)
+1. El **adversario** elige un vector de pérdidas $\ell_t = (\ell_{t,1}, \ldots, \ell_{t,K}) \in [0, 1]^K$ — una pérdida para cada brazo (el agente no ve este vector completo)
+2. El **agente** elige un brazo $A_t$ muestreando de una distribución $p_t$ sobre los $K$ brazos
+3. El agente observa **solo** $\ell_{t, A_t}$ — la pérdida del brazo que eligió, no la de los demás
 
-El adversario puede ser **oblivious** (elige todas las pérdidas antes del juego) o **adaptativo** (elige $\ell_t$ después de ver las acciones pasadas $A_1, \ldots, A_{t-1}$, pero *antes* de ver $A_t$). El resultado de EXP3 cubre ambos casos.
+El punto crucial del paso 2: el agente **debe aleatorizar**. Si fuera determinista (como UCB1), el adversario podría predecir su elección y castigarlo siempre.
 
 ### Regret adversarial
 
-El regret se define contra el **mejor brazo fijo en retrospectiva**:
+¿Contra qué comparamos? No existe un "mejor brazo" fijo como en el caso estocástico (porque las pérdidas cambian). En cambio, comparamos contra el **mejor brazo fijo en retrospectiva** — el brazo que, si lo hubiéramos jalado *todas* las rondas, habría acumulado la menor pérdida total:
 
 $$R_T = \sum_{t=1}^{T} \ell_{t, A_t} - \min_{i \in \{1,\ldots,K\}} \sum_{t=1}^{T} \ell_{t,i}$$
 
-Notar que aquí usamos **pérdidas** (no recompensas). Minimizar pérdida = maximizar recompensa. El benchmark es el brazo que, *visto todo el juego*, acumula la menor pérdida total. El agente no sabe cuál es ese brazo hasta el final.
+El primer término es la pérdida del agente. El segundo es la pérdida del mejor brazo fijo. La diferencia es el regret: cuánto más pagamos por no saber de antemano cuál brazo era mejor en promedio.
 
 ### Contraste con el modelo estocástico
 
@@ -82,19 +88,45 @@ En el panel izquierdo (entorno estocástico), tanto UCB1 como EXP3 funcionan. En
 
 ## 6.4 El algoritmo EXP3
 
-**EXP3** (Exponential-weight algorithm for Exploration and Exploitation) fue propuesto por Auer et al. (2002). Sus tres ideas centrales son:
+**EXP3** (Exponential-weight algorithm for Exploration and Exploitation) fue propuesto por Auer et al. (2002). Antes de ver el pseudocódigo, construyamos la intuición paso a paso.
 
-1. **Pesos multiplicativos**: cada brazo $i$ tiene un peso $w_i$ que refleja su rendimiento acumulado. Buenos brazos acumulan peso alto
-2. **Mezcla con exploración uniforme**: las probabilidades de selección mezclan los pesos normalizados con una componente uniforme $\gamma / K$, garantizando que ningún brazo tenga probabilidad cero
-3. **Estimación por importance weighting**: solo observamos la pérdida del brazo elegido. Para estimar las pérdidas de los demás brazos, usamos el estimador de **importance weighting** (Módulo 12): $\hat{\ell}_{t,i} = \ell_{t,i} / p_{t,i}$ cuando $A_t = i$
+### El problema fundamental: solo vemos un brazo
 
-### Conexión con Módulo 12: importance weighting
+En UCB1 y Thompson, estimamos $\mu_i$ para cada brazo. Pero eso asume que $\mu_i$ es constante — si el adversario cambia las pérdidas cada ronda, no hay "media real" que estimar.
 
-En el Módulo 12 vimos que para estimar $\mathbb{E}_{x \sim p}[f(x)]$ usando muestras de otra distribución $q$, usamos $\frac{p(x)}{q(x)} f(x)$. Aquí la situación es análoga: queremos estimar la pérdida $\ell_{t,i}$ de *todos* los brazos, pero solo observamos la del brazo $A_t$ (muestreado con probabilidad $p_{t,i}$). El estimador:
+¿Qué podemos hacer entonces? En vez de estimar medias, mantenemos **pesos** que resumen qué tan bien le ha ido a cada brazo *hasta ahora*. Brazos con bajas pérdidas acumulan peso alto; brazos con altas pérdidas lo pierden.
 
-$$\hat{\ell}_{t,i} = \frac{\ell_{t,i} \cdot \mathbb{1}[A_t = i]}{p_{t,i}}$$
+Pero hay un obstáculo: en cada ronda solo observamos la pérdida del brazo que elegimos. No sabemos qué habría pasado con los otros brazos. ¿Cómo actualizamos sus pesos?
 
-es **insesgado**: $\mathbb{E}[\hat{\ell}_{t,i}] = \ell_{t,i}$. La división por $p_{t,i}$ corrige el sesgo de muestreo — si un brazo se elige con poca frecuencia, su pérdida observada se amplifica proporcionalmente.
+### Importance weighting: corregir el sesgo de muestreo
+
+Supongamos que elegimos el brazo $A_t = i$ con probabilidad $p_{t,i}$ y observamos pérdida $\ell_{t,i}$. Para los brazos que *no* elegimos, no tenemos información. Pero podemos construir un **estimador** de la pérdida de cada brazo:
+
+$$\hat\ell_{t,i} = \begin{cases} \ell_{t,i} / p_{t,i} & \text{si } A_t = i \text{ (lo elegimos)} \\ 0 & \text{si } A_t \neq i \text{ (no lo elegimos)} \end{cases}$$
+
+¿Por qué dividir por $p_{t,i}$? Porque si un brazo se elige con poca frecuencia (digamos $p_{t,i} = 0.1$), solo lo observamos el 10% de las veces. Para compensar, multiplicamos su pérdida por $1/0.1 = 10$ cuando sí lo observamos. En promedio:
+
+$$\mathbb{E}[\hat\ell_{t,i}] = p_{t,i} \cdot \frac{\ell_{t,i}}{p_{t,i}} + (1 - p_{t,i}) \cdot 0 = \ell_{t,i}$$
+
+El estimador es **insesgado** — en expectativa, recupera la pérdida real. Esto se llama **importance weighting**: corregir el sesgo de muestreo dividiendo por la probabilidad de observación.
+
+### Pesos multiplicativos: la idea central
+
+Cada brazo tiene un peso $w_i$ que empieza en 1 (sin preferencia). Después de estimar la pérdida $\hat\ell_{t,i}$, actualizamos:
+
+$$w_i \leftarrow w_i \cdot \exp(-\eta \cdot \hat\ell_{t,i})$$
+
+Si $\hat\ell_{t,i}$ es grande (brazo malo), $\exp(-\eta \cdot \hat\ell_{t,i})$ es menor que 1, así que el peso **baja**. Si $\hat\ell_{t,i} = 0$ (no lo observamos), el peso no cambia. Los pesos normalizados ($w_i / \sum_j w_j$) dan la probabilidad de selección.
+
+¿Por qué multiplicativo (exponencial) en vez de aditivo? Porque la actualización multiplicativa es más agresiva con los brazos malos y más estable numéricamente. Es la misma idea detrás del algoritmo AdaBoost en machine learning.
+
+### Mezcla con exploración uniforme
+
+Si solo usáramos los pesos normalizados, un brazo con peso muy bajo tendría probabilidad casi cero de ser elegido. Esto es peligroso: el adversario podría darle pérdida baja (hacerlo bueno) y nunca lo detectaríamos. Para evitarlo, **mezclamos** los pesos con una componente uniforme:
+
+$$p_i = (1 - \gamma) \cdot \frac{w_i}{\sum_j w_j} + \frac{\gamma}{K}$$
+
+El parámetro $\gamma \in (0, 1)$ controla cuánta exploración forzamos. Con $\gamma = 0$, solo explotamos los pesos. Con $\gamma = 1$, exploramos uniformemente. El valor óptimo balancea ambos.
 
 ### Pseudocódigo
 
