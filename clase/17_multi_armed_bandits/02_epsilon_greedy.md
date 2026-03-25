@@ -235,7 +235,11 @@ $$P\!\left(\lvert \hat\mu_i - \mu_i \rvert \geq \frac{\Delta_i}{2}\right) \leq \
 
 $$\hat\mu_i \leq \mu_i + \frac{\Delta_i}{2}, \quad \hat\mu^{∗} \geq \mu^{∗} - \frac{\Delta_i}{2} = \mu_i + \frac{\Delta_i}{2}$$
 
-Entonces $\hat\mu_i \leq \hat\mu^{∗}$ y la explotación elige correctamente. Dicho al revés: para que haya error, **al menos uno** de los estimadores debe desviarse más de $\Delta_i/2$. Acotar $P(\lvert \hat\mu_i - \mu_i \rvert \geq \Delta_i/2)$ es por tanto una **condición suficiente** para el error.
+Entonces $\hat\mu_i \leq \hat\mu^{∗}$ y la explotación elige correctamente. Dicho al revés: para que haya error, **al menos uno** de los estimadores debe desviarse más de $\Delta_i/2$. Por la cota de la unión (union bound):
+
+$$P(\text{error}) \leq P\!\left(\lvert \hat\mu_i - \mu_i \rvert \geq \frac{\Delta_i}{2}\right) + P\!\left(\lvert \hat\mu^{∗} - \mu^{∗} \rvert \geq \frac{\Delta_i}{2}\right) \leq \frac{4 \sigma_i^2}{n_i \cdot \Delta_i^2} + \frac{4 \sigma_{∗}^2}{n_{∗} \cdot \Delta_i^2}$$
+
+donde $n_i$ y $n_{∗}$ son el número de observaciones de cada brazo. Ambos términos tienen la misma forma; para simplificar, usamos $\sigma^2 = \max_j \sigma_j^2$ y notamos que basta con que cada brazo tenga suficientes observaciones. El factor 2 de la unión no cambia el orden asintótico, así que trabajamos con un solo término.
 
 **Umbral de observaciones.** La probabilidad de error se vuelve menor que 1 cuando:
 
@@ -245,7 +249,7 @@ Definimos:
 
 $$n_i^{∗} = \left\lceil \frac{4 \sigma_i^2}{\Delta_i^2} \right\rceil$$
 
-Después de $n_i^{∗}$ observaciones del brazo $i$, la explotación errónea se vuelve improbable y decae como $1/n$. Para Bernoulli, $\sigma_i^2 \leq 1/4$, así que $n_i^{∗} \leq \lceil 1/\Delta_i^2 \rceil$.
+Después de $n_i^{∗}$ observaciones del brazo $i$ (y análogamente del brazo óptimo), la explotación errónea se vuelve improbable y decae como $1/n$. Para Bernoulli, $\sigma_i^2 \leq 1/4$, así que $n_i^{∗} \leq \lceil 1/\Delta_i^2 \rceil$.
 
 **Velocidad de acumulación.** Las observaciones del brazo $i$ solo llegan cuando lo jalamos. Fuera del período de error, lo jalamos solo por exploración, con frecuencia $\varepsilon/K$ por ronda. Necesitamos del orden de:
 
