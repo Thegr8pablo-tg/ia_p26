@@ -231,7 +231,11 @@ La intuición: si la varianza es pequeña relativa a $\delta^2$, es improbable q
 
 $$P\!\left(\lvert \hat\mu_i - \mu_i \rvert \geq \frac{\Delta_i}{2}\right) \leq \frac{\sigma_i^2 / n}{(\Delta_i/2)^2} = \frac{4 \sigma_i^2}{n \cdot \Delta_i^2}$$
 
-¿Por qué $\Delta_i/2$? Si la estimación del brazo $i$ se desvía más de $\Delta_i/2$ hacia arriba, puede superar la media real del brazo óptimo (que es $\mu_i + \Delta_i$ arriba). Esto es una condición suficiente para la explotación errónea.
+¿Por qué $\Delta_i/2$? Recordemos que $\mu^{∗} = \mu_i + \Delta_i$. Para que la explotación elija erróneamente el brazo $i$ sobre el óptimo, necesitamos $\hat\mu_i > \hat\mu^{∗}$. Esto puede ocurrir si **ambos** estimadores se desvían de sus medias reales: $\hat\mu_i$ sube y $\hat\mu^{∗}$ baja. Si cada uno se desvía a lo más $\Delta_i/2$, los estimadores se cruzan:
+
+$$\hat\mu_i \leq \mu_i + \frac{\Delta_i}{2}, \quad \hat\mu^{∗} \geq \mu^{∗} - \frac{\Delta_i}{2} = \mu_i + \frac{\Delta_i}{2}$$
+
+Entonces $\hat\mu_i \leq \hat\mu^{∗}$ y la explotación elige correctamente. Dicho al revés: para que haya error, **al menos uno** de los estimadores debe desviarse más de $\Delta_i/2$. Acotar $P(\lvert \hat\mu_i - \mu_i \rvert \geq \Delta_i/2)$ es por tanto una **condición suficiente** para el error.
 
 **Umbral de observaciones.** La probabilidad de error se vuelve menor que 1 cuando:
 
