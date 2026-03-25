@@ -163,7 +163,7 @@ Este término crece **linealmente** con $T$. No importa cuánto sepamos sobre $i
 
 Explotamos el brazo $i$ erróneamente cuando su estimación supera la del brazo óptimo. ¿Cuándo puede pasar esto?
 
-La media muestral $\hat\mu$ de un brazo fluctúa alrededor de su media real $\mu$. Después de $n$ observaciones, la desviación típica es $\sigma / \sqrt{n}$ (para Bernoulli, $\sigma \leq 1/2$). Para que la estimación del brazo $i$ supere la del óptimo, la fluctuación debe cubrir la brecha $\Delta_i$:
+La media muestral $\hat\mu$ de un brazo fluctúa alrededor de su media real $\mu$. Cada recompensa individual tiene una desviación estándar $\sigma$ (para Bernoulli con parámetro $p$, es $\sigma = \sqrt{p(1-p)} \leq 1/2$). Después de $n$ observaciones, la desviación estándar del **estimador** $\hat\mu$ (no de cada recompensa, sino del promedio) es $\sigma / \sqrt{n}$ — se reduce con más datos. Para que la estimación del brazo $i$ supere la del óptimo, esta fluctuación del estimador debe cubrir la brecha $\Delta_i$:
 
 $$\frac{\sigma}{\sqrt{n}} \gtrsim \Delta_i \implies n \lesssim \frac{\sigma^2}{\Delta_i^2}$$
 
