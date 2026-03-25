@@ -49,6 +49,14 @@ $$R_T = \sum_{t=1}^{T} \ell_{t, A_t} - \min_{i \in \{1,\ldots,K\}} \sum_{t=1}^{T
 
 El primer término es la pérdida del agente. El segundo es la pérdida del mejor brazo fijo. La diferencia es el regret: cuánto más pagamos por no saber de antemano cuál brazo era mejor en promedio.
 
+### ¿Por qué el adversario no elige pérdida máxima para todos?
+
+Una pregunta natural: si el adversario quiere hacernos daño, ¿por qué no elige $\ell_t = (1, 1, 1)$ — pérdida máxima para todos los brazos? Porque eso **no genera regret**. Si todos los brazos tienen pérdida 1, nuestra pérdida total es $T$ pero la del mejor brazo fijo también es $T$: el regret es $T - T = 0$.
+
+El objetivo del adversario no es hacernos sufrir en términos absolutos — es hacer que suframos **más que el mejor brazo fijo**. Para generar regret, necesita que las pérdidas sean **diferentes entre brazos**: darle pérdida alta al brazo que vamos a elegir y pérdida baja a algún otro brazo. Así, el mejor brazo fijo acumula poca pérdida mientras nosotros acumulamos mucha.
+
+Esto explica por qué los algoritmos deterministas son vulnerables: si el adversario sabe qué brazo elegiremos (porque la selección es determinista dado el historial), puede asignarle pérdida 1 y darle pérdida 0 a otro brazo. Cada ronda genera regret 1, y el regret total es $T$ — lineal. Contra un algoritmo **aleatorio** como EXP3, el adversario no sabe cuál brazo elegiremos en esta ronda, así que no puede dirigir el castigo sin también afectar al benchmark.
+
 ### Contraste con el modelo estocástico
 
 | Aspecto | Estocástico | Adversarial |
