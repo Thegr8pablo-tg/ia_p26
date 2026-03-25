@@ -18,7 +18,7 @@ Es como un chef que 90% del tiempo cocina su plato estrella, pero 10% del tiempo
 
 ## Regla de selección
 
-En cada ronda, lanzamos una moneda con probabilidad $\varepsilon$:
+Tenemos $K$ brazos (en nuestro problema canónico, $K = 3$: los brazos A, B, C). En cada ronda, lanzamos una moneda con probabilidad $\varepsilon$:
 
 - **Con probabilidad $\varepsilon$**: elegir un brazo al azar (explorar)
 - **Con probabilidad $1 - \varepsilon$**: elegir el brazo con mejor media estimada (explotar)
