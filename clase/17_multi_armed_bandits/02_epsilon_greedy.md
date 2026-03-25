@@ -135,25 +135,29 @@ donde $A_t$ es el brazo elegido en la ronda $t$, $\Delta_i = \mu^{∗} - \mu_i$ 
 
 #### Paso 2: cota inferior de la probabilidad de selección
 
-En ε-greedy, con probabilidad $\varepsilon$ exploramos uniformemente entre los $K$ brazos. Esto significa que para **cualquier** brazo $i$ (sin importar el historial ni las estimaciones):
+En ε-greedy, la probabilidad de elegir el brazo $i$ tiene dos componentes:
+
+$$P(A_t = i) = \underset{\text{exploración}}{\frac{\varepsilon}{K}} + \underset{\text{explotación}}{(1 - \varepsilon) \cdot \mathbf{1}[\hat\mu_i = \max_j \hat\mu_j]}$$
+
+El segundo término es $0$ o $(1-\varepsilon)$ dependiendo de si el brazo $i$ tiene la estimación más alta en ese momento. Como este término es siempre $\geq 0$:
 
 $$P(A_t = i) \geq \frac{\varepsilon}{K}$$
 
-La explotación puede sumar probabilidad adicional, pero la exploración garantiza este mínimo.
+La desigualdad es estricta ($>$) para el brazo que la explotación elige, e igualdad ($=$) para los demás.
 
 #### Paso 3: regret por ronda acotado inferiormente
 
 Sustituyendo esta cota inferior en la expresión del regret por ronda:
 
-$$\mathbb{E}[r_t] = \sum_{i=1}^{K} P(A_t = i) \cdot \Delta_i \geq \sum_{i=1}^{K} \frac{\varepsilon}{K} \cdot \Delta_i = \varepsilon \cdot \frac{1}{K}\sum_{i=1}^{K} \Delta_i = \varepsilon \,\bar\Delta$$
+$$\mathbb{E}[r_t] = \sum_{i=1}^{K} P(A_t = i) \cdot \Delta_i \geq \sum_{i=1}^{K} \frac{\varepsilon}{K} \cdot \Delta_i = \varepsilon \cdot \frac{1}{K}\sum_{i=1}^{K} \Delta_i = \varepsilon \cdot \bar\Delta$$
 
-donde $\bar\Delta = \frac{1}{K}\sum_{i=1}^{K} \Delta_i$ es la brecha promedio de todos los brazos (incluyendo el óptimo, que contribuye $\Delta_{i^{∗}} = 0$).
+La desigualdad $\geq$ viene de reemplazar cada $P(A_t = i)$ por su cota inferior $\varepsilon/K$, descartando la probabilidad adicional que la explotación asigna a algún brazo. Definimos $\bar\Delta = \frac{1}{K}\sum_{i=1}^{K} \Delta_i$, la brecha promedio de todos los brazos (incluyendo el óptimo, que contribuye $\Delta_{i^{∗}} = 0$).
 
 #### Paso 4: sumar sobre $T$ rondas
 
 Como la cota vale para **toda** ronda $t$ (la exploración nunca se detiene), sumamos:
 
-$$\mathbb{E}[R_T] = \sum_{t=1}^{T} \mathbb{E}[r_t] \geq \sum_{t=1}^{T} \varepsilon\,\bar\Delta = \varepsilon\,\bar\Delta\, T$$
+$$\mathbb{E}[R_T] = \sum_{t=1}^{T} \mathbb{E}[r_t] \geq \sum_{t=1}^{T} \varepsilon \cdot \bar\Delta = \varepsilon \cdot \bar\Delta \cdot T$$
 
 Como $\varepsilon$ y $\bar\Delta$ son constantes independientes de $T$:
 
