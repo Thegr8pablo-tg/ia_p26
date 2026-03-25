@@ -23,17 +23,41 @@ No hay parámetro $\varepsilon$. No hay bonus de confianza. La exploración emer
 
 ---
 
-## 4.2 La distribución Beta
+## 4.2 Probabilidad bayesiana: la idea
 
-Para recompensas Bernoulli (0 o 1), el posterior sobre la probabilidad de éxito de cada brazo es una distribución **Beta**. Esta sección es autocontenida — no requiere haber visto Beta en el Módulo 05.
+Hasta ahora hemos usado probabilidad **frecuentista**: la media $\mu_i$ de un brazo es un número fijo (desconocido) y la estimamos con la media muestral $\hat\mu_i$. No decimos "la probabilidad de que $\mu_i = 0.7$" — eso no tiene sentido en el enfoque frecuentista, porque $\mu_i$ no es aleatorio.
+
+La probabilidad **bayesiana** cambia la perspectiva: como **nosotros** no conocemos $\mu_i$, modelamos nuestra **incertidumbre** sobre su valor como una distribución de probabilidad. Esta distribución no describe aleatoriedad en el mundo — describe lo que **nosotros creemos** dado lo que hemos observado.
+
+El marco bayesiano tiene tres ingredientes:
+
+1. **Prior** (creencia inicial): antes de observar datos, ¿qué creemos sobre $\mu_i$? Si no sabemos nada, decimos "cualquier valor entre 0 y 1 es igualmente plausible" — una distribución uniforme.
+
+2. **Likelihood** (verosimilitud): dado un valor concreto de $\mu_i$, ¿qué tan probable es observar los datos que vimos? Para un brazo Bernoulli con probabilidad de éxito $\theta$, la probabilidad de observar $r = 1$ es $\theta$ y la de $r = 0$ es $1 - \theta$.
+
+3. **Posterior** (creencia actualizada): después de observar datos, combinamos prior y likelihood para obtener una nueva distribución sobre $\mu_i$. Esto es el **teorema de Bayes**:
+
+$$\underset{\text{posterior}}{p(\theta \mid \text{datos})} \propto \underset{\text{likelihood}}{p(\text{datos} \mid \theta)} \cdot \underset{\text{prior}}{p(\theta)}$$
+
+Cada nueva observación actualiza el posterior, que se vuelve el prior para la siguiente observación. Con pocos datos, el posterior es ancho (mucha incertidumbre). Con muchos datos, se estrecha alrededor del valor real.
+
+---
+
+## 4.3 La distribución Beta
+
+Para usar el marco bayesiano necesitamos elegir una distribución para representar nuestra creencia sobre $\theta \in [0, 1]$ (la probabilidad de éxito de un brazo Bernoulli). La distribución **Beta** es la elección natural.
+
+### ¿Qué es $\theta$?
+
+Cada brazo $i$ tiene una probabilidad de éxito $\theta_i$ que desconocemos (es lo que antes llamábamos $\mu_i$). En el enfoque bayesiano, $\theta_i$ no es un número fijo sino una variable aleatoria que representa nuestra incertidumbre. La distribución Beta describe qué valores de $\theta_i$ consideramos plausibles.
 
 ### Definición
 
-La distribución $\text{Beta}(\alpha, \beta)$ describe la incertidumbre sobre una probabilidad $\theta \in [0, 1]$:
+La distribución $\text{Beta}(\alpha, \beta)$ tiene dos parámetros y soporte en $[0, 1]$:
 
 $$p(\theta \mid \alpha, \beta) = \frac{\theta^{\alpha-1}(1-\theta)^{\beta-1}}{B(\alpha, \beta)}$$
 
-donde $B(\alpha, \beta) = \frac{\Gamma(\alpha)\Gamma(\beta)}{\Gamma(\alpha+\beta)}$ es la función Beta (constante de normalización).
+donde $B(\alpha, \beta) = \frac{\Gamma(\alpha)\Gamma(\beta)}{\Gamma(\alpha+\beta)}$ es una constante de normalización (para que integre a 1). No necesitas memorizar esta fórmula — lo importante es la interpretación de los parámetros.
 
 ### Parámetros como conteos
 
@@ -42,7 +66,7 @@ La forma más útil de pensar en $\alpha$ y $\beta$:
 - $\alpha = \text{éxitos observados} + 1$
 - $\beta = \text{fracasos observados} + 1$
 
-El "+1" viene del prior: $\text{Beta}(1, 1) = \text{Uniforme}(0, 1)$, que dice "no sé nada".
+El "+1" viene del prior. Si empezamos con $\alpha = 1, \beta = 1$ (cero éxitos, cero fracasos), obtenemos $\text{Beta}(1, 1)$, que es exactamente la distribución $\text{Uniforme}(0, 1)$ — "cualquier $\theta$ es igualmente plausible", la máxima ignorancia.
 
 ### Propiedades
 
@@ -51,6 +75,8 @@ El "+1" viene del prior: $\text{Beta}(1, 1) = \text{Uniforme}(0, 1)$, que dice "
 | **Media** | $\frac{\alpha}{\alpha + \beta}$ | Fracción de éxitos (suavizada por el prior) |
 | **Moda** | $\frac{\alpha - 1}{\alpha + \beta - 2}$ (si $\alpha, \beta > 1$) | Valor más probable |
 | **Varianza** | $\frac{\alpha\beta}{(\alpha+\beta)^2(\alpha+\beta+1)}$ | Decrece con más datos |
+
+Observa que la media $\alpha/(\alpha + \beta)$ converge a la frecuencia de éxitos conforme acumulamos datos (los "+1" del prior se vuelven despreciables).
 
 ### Cómo cambia la forma
 
@@ -63,19 +89,25 @@ El "+1" viene del prior: $\text{Beta}(1, 1) = \text{Uniforme}(0, 1)$, que dice "
 
 ### Conjugación con Bernoulli
 
-Aquí está la magia. Si nuestro prior sobre $\theta$ es $\text{Beta}(\alpha, \beta)$ y observamos una recompensa $r \in \{0, 1\}$:
+Aquí está la conexión clave. Si nuestro prior sobre $\theta$ es $\text{Beta}(\alpha, \beta)$ y observamos una recompensa Bernoulli $r \in \{0, 1\}$, el posterior es:
 
 $$\text{Posterior} = \begin{cases} \text{Beta}(\alpha + 1, \beta) & \text{si } r = 1 \text{ (éxito)} \\ \text{Beta}(\alpha, \beta + 1) & \text{si } r = 0 \text{ (fracaso)} \end{cases}$$
 
-¡El posterior es otra Beta! Solo sumamos 1 al parámetro correspondiente. Esto se llama **conjugación**: la familia Beta es el *prior conjugado* de la likelihood Bernoulli. La actualización es computacionalmente trivial.
+El posterior es **otra Beta** — solo sumamos 1 al parámetro correspondiente. Esto se llama **conjugación**: la familia Beta es el *prior conjugado* de la likelihood Bernoulli. La actualización es computacionalmente trivial: no hay que calcular integrales ni resolver ecuaciones, solo incrementar un contador.
+
+¿Por qué funciona? Si sustituimos el prior $\text{Beta}(\alpha, \beta)$ y la likelihood Bernoulli en el teorema de Bayes:
+
+$$p(\theta \mid r=1) \propto \theta \cdot \theta^{\alpha-1}(1-\theta)^{\beta-1} = \theta^{\alpha}(1-\theta)^{\beta-1}$$
+
+que tiene la forma de $\text{Beta}(\alpha+1, \beta)$. El mismo argumento con $r=0$ da $\text{Beta}(\alpha, \beta+1)$.
 
 ![Evolución del posterior Beta]({{ '/17_multi_armed_bandits/images/13_beta_posterior_evolution.png' | url }})
 
-Observa cómo los posteriores pasan de planos (Beta(1,1) en $t=0$) a concentrados (cerca del $\mu$ real en $t=200$). El brazo C (azul, $\mu=0.7$) tiene su posterior centrado alrededor de 0.7 con poca varianza.
+Observa cómo los posteriores pasan de planos (Beta(1,1) en $t=0$) a concentrados (cerca del $\theta$ real en $t=200$). El brazo C (azul, $\theta=0.7$) tiene su posterior centrado alrededor de 0.7 con poca varianza.
 
 ---
 
-## 4.3 Thompson Sampling para Bernoulli
+## 4.4 Thompson Sampling para Bernoulli
 
 ### Pseudocódigo
 
@@ -129,7 +161,7 @@ función THOMPSON_SAMPLING_BERNOULLI(K, T):
 
 ---
 
-## 4.4 Thompson Sampling para Gaussianas (Normal-Normal)
+## 4.5 Thompson Sampling para Gaussianas (Normal-Normal)
 
 Para el Problema Canónico B (recompensas $r \sim \mathcal{N}(\mu_i, \sigma^2)$ con $\sigma$ conocida), usamos la conjugación **Normal-Normal**.
 
@@ -164,7 +196,7 @@ donde $\tau_\text{datos} = 1/\sigma^2$.
 
 ---
 
-## 4.5 El patrón general: familias conjugadas
+## 4.6 El patrón general: familias conjugadas
 
 Thompson Sampling funciona con **cualquier** familia conjugada. El patrón es siempre el mismo:
 
@@ -185,7 +217,7 @@ Thompson Sampling funciona con **cualquier** familia conjugada. El patrón es si
 
 ---
 
-## 4.6 ¿Por qué funciona? Probability matching
+## 4.7 ¿Por qué funciona? Probability matching
 
 Thompson Sampling satisface una propiedad elegante llamada **probability matching**:
 
@@ -203,7 +235,7 @@ Esta es la diferencia clave con UCB1: UCB1 es determinista dado el historial. Th
 
 ---
 
-## 4.7 Análisis de regret
+## 4.8 Análisis de regret
 
 **Teorema (Kaufmann, Korda & Munos, 2012):** Para bandidos Bernoulli, Thompson Sampling con prior Beta(1,1) satisface:
 
