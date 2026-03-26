@@ -167,141 +167,98 @@ El regret crece **linealmente** con $T$. Esto es inevitable mientras $\varepsilo
 
 > **Nota sobre cotas e igualdades.** Tanto la cota inferior como la superior parten de la misma expresión exacta $\mathbb{E}[R_T]$. La diferencia es la **dirección** en la que relajamos:
 > - **Cota inferior**: reemplazamos términos por algo **menor** (descartamos la probabilidad de explotación) → obtenemos $\mathbb{E}[R_T] \geq f(T)$.
-> - **Cota superior**: reemplazamos términos por algo **mayor** (acotamos los errores de explotación con Chebyshev) → obtenemos $\mathbb{E}[R_T] \leq g(T)$.
+> - **Cota superior**: reemplazamos términos por algo **mayor** (acotamos los errores de explotación por arriba) → obtenemos $\mathbb{E}[R_T] \leq g(T)$.
 >
 > Juntas, las dos cotas encierran el regret verdadero: $f(T) \leq \mathbb{E}[R_T] \leq g(T)$.
 
 ---
 
-### Cota superior: el regret es $O(\varepsilon T)$
+### Cota superior
 
-La cota inferior muestra que el regret es al menos lineal. Ahora queremos una **cota superior** que muestre que no crece más rápido que eso (salvo un término logarítmico despreciable). Esta cota requiere analizar cuántas veces el algoritmo explota un brazo subóptimo **por error**, lo que involucra una desigualdad de concentración.
+Para demostrar la cota superior del regret de ε-greedy, analizamos cómo evoluciona $\mathbb{E}[R_T]$ según el esquema de exploración $\varepsilon_t$ elegido.
 
-#### Paso 1: descomposición del regret
+#### Paso 1: la fórmula del regret
 
-Partimos de la descomposición por brazo (sección 17.1). Tanto $R_T$ como $N_i(T)$ son variables aleatorias (dependen de las recompensas y decisiones del algoritmo). Tomamos valor esperado:
+El regret esperado acumulado después de $T$ rondas es la suma del regret en cada ronda $t$:
 
-$$\mathbb{E}[R_T] = \sum_{i=1}^{K} \Delta_i \cdot \mathbb{E}[N_i(T)]$$
+$$\mathbb{E}[R_T] = \sum_{t=1}^{T} \sum_{i=1}^{K} \Delta_i \cdot P(A_t = i)$$
 
-donde $N_i(T)$ es el número de veces que jalamos el brazo $i$ en $T$ rondas (el mismo $N_i$ del pseudocódigo y la traza). El brazo óptimo tiene $\Delta_{i^{∗}} = 0$, así que solo contribuyen los subóptimos. Debemos acotar $\mathbb{E}[N_i(T)]$ para cada brazo con $\Delta_i > 0$.
+donde:
 
-#### Paso 2: dos fuentes de pulls subóptimos
+- $t$: la ronda actual.
+- $\Delta_i = \mu^{∗} - \mu_i$: la brecha del brazo $i$.
+- $P(A_t = i)$: la probabilidad de jalar el brazo subóptimo $i$ en la ronda $t$.
 
-En la ronda $t$, ε-greedy jala un brazo subóptimo $i$ por una de dos razones:
+#### Paso 2: descomposición de $P(A_t = i)$
 
-1. **Exploración**: con probabilidad $\varepsilon$, elige un brazo uniformemente en $\{1, \ldots, K\}$. Cae en $i$ con probabilidad $1/K$, independientemente del historial.
+En una ronda cualquiera $t$, el algoritmo jala un brazo subóptimo $i$ por una de dos razones:
 
-2. **Explotación errónea**: con probabilidad $1 - \varepsilon$, elige el brazo con mayor estimación. Si la estimación del brazo $i$ es incorrectamente más alta que la del óptimo, lo explotará por error.
+**A. Exploración.** El algoritmo decide explorar (con probabilidad $\varepsilon_t$) y le toca el brazo $i$ al azar entre los $K$ brazos:
 
-Descomponemos $N_i(T)$ en estas dos contribuciones.
+$$P(\text{jalar } i \mid \text{explorar}) = \frac{\varepsilon_t}{K}$$
 
-#### Paso 3: pulls por exploración
+**B. Error de explotación.** El algoritmo decide explotar (con probabilidad $1 - \varepsilon_t$), pero la estimación del brazo $i$ es incorrectamente más alta que la del óptimo ($\hat\mu_i(t) > \hat\mu^{∗}(t)$). Llamemos a esta probabilidad $P(\text{error}_t)$.
 
-Definimos $X_t = 1$ si en la ronda $t$ el algoritmo explora y elige el brazo $i$, y $X_t = 0$ en caso contrario. Por la regla de ε-greedy:
+Combinando ambas:
 
-$$P(X_t = 1) = \frac{\varepsilon}{K}$$
+$$P(A_t = i) = \frac{\varepsilon_t}{K} + (1 - \varepsilon_t) \cdot P(\text{error}_t)$$
 
-para toda ronda $t$, sin importar el historial. Por linealidad de la esperanza:
+El regret en cada ronda tiene dos fuentes: la exploración forzada y los errores al explotar.
 
-$$\mathbb{E}\left[\sum_{t=1}^{T} X_t\right] = \sum_{t=1}^{T} P(X_t = 1) = \frac{\varepsilon T}{K}$$
+#### Paso 3: el efecto del esquema de $\varepsilon_t$
 
-#### Paso 4: pulls por explotación errónea (Chebyshev)
+La cota superior depende completamente de cómo se comporta $\varepsilon_t$ conforme crece $t$.
 
-Explotamos $i$ por error cuando su estimación supera la del brazo óptimo. ¿Cuántas veces puede ocurrir esto? Para responder necesitamos una herramienta de concentración.
+**Caso 1: $\varepsilon$ constante → regret lineal.**
 
-**El estimador.** Después de jalar el brazo $i$ exactamente $n$ veces, observamos recompensas i.i.d. $r_1, \ldots, r_n$ con media $\mu_i$ y varianza $\sigma_i^2$. Para Bernoulli, $\sigma_i^2 = \mu_i(1-\mu_i)$. La media muestral es:
+Si $\varepsilon_t = \varepsilon$ para toda ronda (por ejemplo, $\varepsilon = 0.1$):
 
-$$\hat\mu_i = \frac{1}{n}\sum_{j=1}^{n} r_j$$
+- El término $\varepsilon/K$ **nunca desaparece** — en cada ronda pagamos al menos $\varepsilon \cdot \Delta_i / K$ de regret por exploración.
+- Sumando sobre todas las rondas:
 
-Sus propiedades:
+$$\mathbb{E}[R_T] \geq \sum_{t=1}^{T} \frac{\varepsilon}{K} \sum_{i:\Delta_i > 0} \Delta_i = \varepsilon \cdot \bar\Delta \cdot T$$
 
-$$\mathbb{E}[\hat\mu_i] = \mu_i, \qquad \text{Var}(\hat\mu_i) = \frac{\sigma_i^2}{n}$$
-
-El estimador es **insesgado** (en promedio da la media real) y su varianza decrece como $1/n$ (más observaciones → más precisión).
-
-**Desigualdad de Chebyshev.** Para acotar la probabilidad de que el estimador se aleje de su media, usamos la desigualdad de Chebyshev. Esta es una cota universal que vale para **cualquier** variable aleatoria con varianza finita:
-
-> **Chebyshev.** Sea $X$ una variable aleatoria con media $\mathbb{E}[X] = \mu$ y varianza $\text{Var}(X) = \sigma^2 < \infty$. Para todo $\delta > 0$:
->
-> $$P(\lvert X - \mu \rvert \geq \delta) \leq \frac{\sigma^2}{\delta^2}$$
-
-La intuición: si la varianza es pequeña relativa a $\delta^2$, es improbable que $X$ se aleje más de $\delta$ de su media. No asume nada sobre la forma de la distribución — solo necesita que la varianza exista.
-
-**Aplicación a nuestro estimador.** Aplicamos Chebyshev al estimador $\hat\mu_i$ (que tiene varianza $\sigma_i^2/n$) con desviación $\delta = \Delta_i/2$:
-
-$$P\left(\lvert \hat\mu_i - \mu_i \rvert \geq \frac{\Delta_i}{2}\right) \leq \frac{\sigma_i^2 / n}{(\Delta_i/2)^2} = \frac{4 \sigma_i^2}{n \cdot \Delta_i^2}$$
-
-¿Por qué $\Delta_i/2$? Recordemos que $\mu^{∗} = \mu_i + \Delta_i$. Para que la explotación elija erróneamente el brazo $i$ sobre el óptimo, necesitamos $\hat\mu_i > \hat\mu^{∗}$. Esto puede ocurrir si **ambos** estimadores se desvían de sus medias reales: $\hat\mu_i$ sube y $\hat\mu^{∗}$ baja. Si cada uno se desvía a lo más $\Delta_i/2$, los estimadores se cruzan:
-
-$$\hat\mu_i \leq \mu_i + \frac{\Delta_i}{2}, \quad \hat\mu^{∗} \geq \mu^{∗} - \frac{\Delta_i}{2} = \mu_i + \frac{\Delta_i}{2}$$
-
-Entonces $\hat\mu_i \leq \hat\mu^{∗}$ y la explotación elige correctamente. Dicho al revés: para que haya error (es decir, que la explotación elija $i$ sobre el óptimo: $\hat\mu_i > \hat\mu^{∗}$), **al menos uno** de los estimadores debe desviarse en la dirección peligrosa — $\hat\mu_i$ hacia arriba o $\hat\mu^{∗}$ hacia abajo — por más de $\Delta_i/2$. Definimos $P(\text{error}) = P(\hat\mu_i > \hat\mu^{∗})$ y aplicamos la cota de la unión (union bound):
-
-$$P(\hat\mu_i > \hat\mu^{∗}) \leq P\left(\hat\mu_i - \mu_i \geq \frac{\Delta_i}{2}\right) + P\left(\mu^{∗} - \hat\mu^{∗} \geq \frac{\Delta_i}{2}\right)$$
-
-Cada probabilidad es **una cola** (one-tailed). Chebyshev es una cota de dos colas, pero como $P(X \geq \delta) \leq P(\lvert X \rvert \geq \delta)$, podemos aplicarlo para acotar cada término:
-
-$$P(\text{error}) \leq \frac{4 \sigma_i^2}{n_i \cdot \Delta_i^2} + \frac{4 \sigma_{∗}^2}{n_{∗} \cdot \Delta_i^2}$$
-
-donde $n_i$ y $n_{∗}$ son el número de observaciones de cada brazo. Ambos términos tienen la misma forma; para simplificar, usamos $\sigma^2 = \max_j \sigma_j^2$ y notamos que basta con que cada brazo tenga suficientes observaciones. El factor 2 de la unión no cambia el orden asintótico, así que trabajamos con un solo término.
-
-**Conteo de explotaciones erróneas.** ¿Cuántas veces en total se explota erróneamente el brazo $i$? Llamemos $M_i$ a este número. Cada vez que explotamos $i$ por error, obtenemos una observación adicional de $i$, así que después de la $n$-ésima observación de $i$, la probabilidad de que la siguiente explotación elija $i$ es a lo más $\frac{4\sigma_i^2}{n \cdot \Delta_i^2}$ (por Chebyshev). Podemos acotar:
-
-$$\mathbb{E}[M_i] \leq \sum_{n=1}^{\infty} P(\text{error tras } n \text{ observaciones}) \leq \sum_{n=1}^{n_i^{∗}} 1 + \sum_{n=n_i^{∗}+1}^{\infty} \frac{4\sigma_i^2}{n \cdot \Delta_i^2}$$
-
-donde $n_i^{∗} = \left\lceil \frac{4\sigma_i^2}{\Delta_i^2} \right\rceil$ es el umbral donde la cota de Chebyshev baja de 1 (para $n \leq n_i^{∗}$, la cota excede 1 y no dice nada, así que acotamos trivialmente por 1). Para Bernoulli, $\sigma_i^2 \leq 1/4$, así que $n_i^{∗} \leq \lceil 1/\Delta_i^2 \rceil$.
-
-El primer sumando es $n_i^{∗}$. Para el segundo, usamos $4\sigma_i^2/\Delta_i^2 \leq n_i^{∗}$:
-
-$$\sum_{n=n_i^{∗}+1}^{\infty} \frac{n_i^{∗}}{n} \leq n_i^{∗} \int_{n_i^{∗}}^{\infty} \frac{dn}{n}$$
-
-Esta integral diverge, pero en la práctica el brazo $i$ solo tiene a lo más $T$ observaciones, así que:
-
-$$\sum_{n=n_i^{∗}+1}^{T} \frac{n_i^{∗}}{n} \leq n_i^{∗} \log\frac{T}{n_i^{∗}}$$
-
-Entonces:
-
-$$\mathbb{E}[M_i] \leq n_i^{∗} + n_i^{∗} \log\frac{T}{n_i^{∗}} = n_i^{∗}\left(1 + \log\frac{T}{n_i^{∗}}\right) = O\left(\frac{\log T}{\Delta_i^2}\right)$$
-
-#### Paso 5: juntar las piezas
-
-Sumando exploración y explotación errónea para cada brazo subóptimo $i$:
-
-$$\mathbb{E}[N_i(T)] \leq \frac{\varepsilon T}{K} + \mathbb{E}[M_i] \leq \frac{\varepsilon T}{K} + O\left(\frac{\log T}{\Delta_i^2}\right)$$
-
-Sustituyendo en la descomposición del regret:
-
-$$\mathbb{E}[R_T] = \sum_{i:\Delta_i > 0} \Delta_i \cdot \mathbb{E}[N_i(T)] \leq \sum_{i:\Delta_i > 0} \Delta_i \left(\frac{\varepsilon T}{K} + O\left(\frac{\log T}{\Delta_i^2}\right)\right)$$
-
-Distribuimos la suma. El primer término:
-
-$$\frac{\varepsilon T}{K} \sum_{i:\Delta_i > 0} \Delta_i = \varepsilon \cdot \bar\Delta \cdot T$$
-
-donde $\bar\Delta = \frac{1}{K}\sum_{i} \Delta_i$ es la brecha promedio. El segundo término usa $\Delta_i / \Delta_i^2 = 1/\Delta_i$:
-
-$$O(\log T) \sum_{i:\Delta_i > 0} \frac{1}{\Delta_i} = O(H \log T)$$
-
-donde $H = \sum_{i:\Delta_i > 0} 1/\Delta_i$ es la "dificultad" del problema (brazos con brecha pequeña contribuyen más). Entonces:
-
-$$\mathbb{E}[R_T] \leq \varepsilon \cdot \bar\Delta \cdot T + O(H \log T)$$
-
-Para $\varepsilon$ constante, el término $\varepsilon T$ es **lineal** y domina al término $O(\log T)$ conforme $T \to \infty$. Absorbiendo las constantes:
+- Con suficientes observaciones, $P(\text{error}_t) \to 0$ (los estimadores convergen), así que el error de explotación se vuelve despreciable. El término dominante es la exploración:
 
 $$\boxed{\mathbb{E}[R_T] = O(\varepsilon T)}$$
 
-El costo dominante es la **exploración perpetua**: en cada ronda, con probabilidad $\varepsilon$, el algoritmo elige un brazo al azar. Los errores de explotación (que crecen solo como $\log T$) son despreciables en comparación.
+**Resultado:** regret lineal. El algoritmo **nunca deja de cometer errores** porque nunca deja de explorar.
+
+**Caso 2: $\varepsilon_t$ decreciente → regret logarítmico.**
+
+Para lograr una cota superior eficiente, usamos $\varepsilon_t = \frac{c \cdot K}{d^2 \cdot t}$, donde $c > 0$ es una constante y $d$ es la brecha mínima entre brazos. Al sustituir en la suma del regret:
+
+$$\mathbb{E}[R_T] \leq \sum_{t=1}^{T} \left(\frac{c}{d^2 \cdot t} \cdot \Delta_i + \text{error de explotación}\right)$$
+
+Dos observaciones clave:
+
+- **La serie armónica.** La suma $\sum_{t=1}^{T} \frac{1}{t} \approx \ln(T)$. Este es el origen del crecimiento logarítmico.
+- **El término de error.** Con exploración suficiente ($c > 5$), la probabilidad de error $P(\text{error}_t)$ converge rápidamente a una constante — se vuelve despreciable.
+
+#### Paso 4: la cota superior final
+
+Sumando los componentes $1/t$ sobre todas las rondas y todos los brazos subóptimos:
+
+$$\boxed{\mathbb{E}[R_T] \leq \left(\sum_{i:\Delta_i > 0} \frac{c}{d^2 \cdot \Delta_i}\right) \ln(T) + O(1)}$$
+
+El primer término crece **logarítmicamente**: conforme $T \to \infty$, el regret crece solo como $\ln(T)$. El segundo término $O(1)$ captura el costo inicial mientras los estimadores aún son imprecisos.
+
+**En palabras simples:** con $\varepsilon_t$ decreciente, el algoritmo aprende cuál es el brazo óptimo y dedica la gran mayoría de su tiempo a explotarlo. Los "errores" ocurren con frecuencia cada vez menor — la tasa de errores decrece como $1/t$, y la suma de $1/t$ crece como $\ln(T)$.
 
 ---
 
-### Interpretación y ε óptimo
+### Interpretación y $\varepsilon$ óptimo
 
-Juntando ambas cotas:
+Juntando la cota inferior $\Omega(\varepsilon T)$ con la cota superior, el panorama es:
 
-$$\varepsilon \cdot \bar\Delta \cdot T \leq \mathbb{E}[R_T] \leq \varepsilon \cdot \bar\Delta \cdot T + O(H \log T)$$
+| Esquema | Cota superior | Comportamiento |
+|---------|--------------|----------------|
+| $\varepsilon$ constante | $O(\varepsilon T)$ | Lineal — nunca deja de explorar |
+| $\varepsilon_t = c \cdot K/(d^2 \cdot t)$ | $O(\ln T)$ | Logarítmico — aprende y converge |
 
-Para $\varepsilon$ **fijo** (por ejemplo, $\varepsilon = 0.1$), el término $\varepsilon T$ domina conforme $T \to \infty$ y el $O(\log T)$ es despreciable. El regret crece **linealmente** — $\Theta(\varepsilon T)$ — fundamentalmente peor que la cota de Lai-Robbins $\Omega(\log T)$.
+Con $\varepsilon$ **fijo** (por ejemplo, $\varepsilon = 0.1$), el regret es $\Theta(\varepsilon T)$ — fundamentalmente peor que la cota de Lai-Robbins $\Omega(\log T)$.
 
-¿Podemos mejorar eligiendo $\varepsilon$ como función de $T$? Si hacemos $\varepsilon = \varepsilon(T) \to 0$, el término de exploración $\varepsilon T$ disminuye, pero la exploración se vuelve más lenta y los errores de explotación tardan más en desaparecer. El esquema de decaimiento $\varepsilon_t = c/(c+t)$ (de la tabla anterior) logra $O(\sqrt{T})$, pero incluso esto es peor que $O(\log T)$ — ε-greedy, incluso optimizado, no alcanza la cota de Lai-Robbins.
+Con $\varepsilon_t$ **decreciente** como $1/t$, alcanzamos regret $O(\log T)$, que es óptimo en orden. Pero hay un problema práctico: el esquema $\varepsilon_t = c \cdot K/(d^2 \cdot t)$ requiere conocer $d$ (la brecha mínima entre brazos), que en la práctica **no conocemos**. Si elegimos $d$ demasiado grande, exploramos de menos; si $d$ es demasiado pequeño, exploramos de más.
 
 La siguiente gráfica muestra el regret empírico de ε-greedy **simulado en nuestro Problema Canónico A** (Bernoulli, $\mu = 0.3, 0.5, 0.7$) para distintos valores de $\varepsilon$, promediado sobre 200 ejecuciones. No es una curva teórica general — es el comportamiento concreto para este problema, pero la forma lineal del regret es universal para $\varepsilon$ constante.
 
@@ -334,7 +291,7 @@ En la sección siguiente veremos cómo **UCB1** resuelve este problema: en lugar
 | **Idea** | Con probabilidad ε, explorar al azar; sino, explotar |
 | **Parámetros** | ε (sensible al ajuste) |
 | **Regret (ε constante)** | $O(\varepsilon T)$ — lineal |
-| **Regret (ε decreciente)** | $O(\sqrt{T})$ — sublineal pero no logarítmico |
+| **Regret (ε decreciente)** | $O(\ln T)$ con esquema óptimo (requiere conocer $d$) |
 | **Ventaja** | Extremadamente simple de implementar |
 | **Desventaja** | Exploración ciega: no usa la información acumulada |
 | **Cuándo usar** | Prototipo rápido, baseline de comparación |
