@@ -205,6 +205,12 @@ $$P(A_t = i) = \frac{\varepsilon_t}{K} + (1 - \varepsilon_t) \cdot P(\text{error
 
 El regret en cada ronda tiene dos fuentes: la exploración forzada y los errores al explotar.
 
+**¿Por qué $P(\text{error}_t) \to 0$?** Para que la explotación elija erróneamente el brazo $i$ sobre el óptimo, necesitamos $\hat\mu_i(t) > \hat\mu^{∗}(t)$. La media real del óptimo es $\mu^{∗} = \mu_i + \Delta_i$, así que los estimadores deben "cruzarse" — lo cual requiere que al menos uno se desvíe de su media real por más de $\Delta_i/2$. La desigualdad de Chebyshev nos dice que:
+
+$$P\left(\lvert \hat\mu_i - \mu_i \rvert \geq \frac{\Delta_i}{2}\right) \leq \frac{\sigma_i^2 / n_i}{(\Delta_i/2)^2} = \frac{4\sigma_i^2}{n_i \cdot \Delta_i^2}$$
+
+donde $n_i$ es el número de observaciones del brazo $i$. A medida que $n_i$ crece, esta probabilidad decrece como $1/n_i$. Combinando ambos estimadores por union bound: $P(\text{error}_t) = O(1/n_i)$. Esto es lo que garantiza que los errores de explotación eventualmente desaparezcan — **entre más datos, menos errores**.
+
 #### Paso 3: el efecto del esquema de $\varepsilon_t$
 
 La cota superior depende completamente de cómo se comporta $\varepsilon_t$ conforme crece $t$.
@@ -218,7 +224,7 @@ Si $\varepsilon_t = \varepsilon$ para toda ronda (por ejemplo, $\varepsilon = 0.
 
 $$\mathbb{E}[R_T] \geq \sum_{t=1}^{T} \frac{\varepsilon}{K} \sum_{i:\Delta_i > 0} \Delta_i = \varepsilon \cdot \bar\Delta \cdot T$$
 
-- Con suficientes observaciones, $P(\text{error}_t) \to 0$ (los estimadores convergen), así que el error de explotación se vuelve despreciable. El término dominante es la exploración:
+- Por Chebyshev (Paso 2), $P(\text{error}_t) = O(1/n_i) \to 0$ conforme acumulamos observaciones. El error de explotación se vuelve despreciable y el término dominante es la exploración:
 
 $$\boxed{\mathbb{E}[R_T] = O(\varepsilon T)}$$
 
@@ -233,7 +239,7 @@ $$\mathbb{E}[R_T] \leq \sum_{t=1}^{T} \left(\frac{c}{d^2 \cdot t} \cdot \Delta_i
 Dos observaciones clave:
 
 - **La serie armónica.** La suma $\sum_{t=1}^{T} \frac{1}{t} \approx \ln(T)$. Este es el origen del crecimiento logarítmico.
-- **El término de error.** Con exploración suficiente ($c > 5$), la probabilidad de error $P(\text{error}_t)$ converge rápidamente a una constante — se vuelve despreciable.
+- **El término de error.** Por Chebyshev (Paso 2), $P(\text{error}_t) = O(1/n_i)$. Con exploración suficiente ($c > 5$), cada brazo acumula $n_i = \Omega(\ln t)$ observaciones, así que $P(\text{error}_t) \to 0$ y la suma de errores converge a una constante $O(1)$.
 
 #### Paso 4: la cota superior final
 
