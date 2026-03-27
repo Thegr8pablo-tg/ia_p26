@@ -205,11 +205,19 @@ $$P(A_t = i) = \frac{\varepsilon_t}{K} + (1 - \varepsilon_t) \cdot P(\text{error
 
 El regret en cada ronda tiene dos fuentes: la exploración forzada y los errores al explotar.
 
-**¿Por qué $P(\text{error}_t) \to 0$?** Para que la explotación elija erróneamente el brazo $i$ sobre el óptimo, necesitamos $\hat\mu_i(t) > \hat\mu^{∗}(t)$. La media real del óptimo es $\mu^{∗} = \mu_i + \Delta_i$, así que los estimadores deben "cruzarse" — lo cual requiere que al menos uno se desvíe de su media real por más de $\Delta_i/2$. La desigualdad de Chebyshev nos dice que:
+**¿Por qué $P(\text{error}_t) \to 0$?** Para que la explotación elija erróneamente el brazo $i$ sobre el óptimo, necesitamos $\hat\mu_i(t) > \hat\mu^{∗}(t)$. La media real del óptimo es $\mu^{∗} = \mu_i + \Delta_i$, así que los estimadores deben "cruzarse" — lo cual requiere que al menos uno se desvíe de su media real por más de $\Delta_i/2$. Para acotar esta probabilidad usamos la desigualdad de Chebyshev:
+
+> **Desigualdad de Chebyshev.** Sea $X$ una variable aleatoria con media $\mathbb{E}[X] = \mu$ y varianza $\text{Var}(X) = \sigma^2 < \infty$. Para todo $\delta > 0$:
+>
+> $$P(\lvert X - \mu \rvert \geq \delta) \leq \frac{\sigma^2}{\delta^2}$$
+>
+> La intuición: si la varianza es pequeña relativa a $\delta^2$, es improbable que $X$ se aleje más de $\delta$ de su media. No asume nada sobre la forma de la distribución — solo necesita que la varianza exista.
+
+Nuestro estimador $\hat\mu_i$ (la media muestral tras $n_i$ observaciones) tiene varianza $\sigma_i^2/n_i$. Aplicando Chebyshev con $\delta = \Delta_i/2$:
 
 $$P\left(\lvert \hat\mu_i - \mu_i \rvert \geq \frac{\Delta_i}{2}\right) \leq \frac{\sigma_i^2 / n_i}{(\Delta_i/2)^2} = \frac{4\sigma_i^2}{n_i \cdot \Delta_i^2}$$
 
-donde $n_i$ es el número de observaciones del brazo $i$. A medida que $n_i$ crece, esta probabilidad decrece como $1/n_i$. Combinando ambos estimadores por union bound: $P(\text{error}_t) = O(1/n_i)$. Esto es lo que garantiza que los errores de explotación eventualmente desaparezcan — **entre más datos, menos errores**.
+A medida que $n_i$ crece, esta probabilidad decrece como $1/n_i$. Combinando ambos estimadores (el del brazo $i$ y el del óptimo) por union bound: $P(\text{error}_t) = O(1/n_i)$. Esto es lo que garantiza que los errores de explotación eventualmente desaparezcan — **entre más datos, menos errores**.
 
 #### Paso 3: el efecto del esquema de $\varepsilon_t$
 
