@@ -32,7 +32,7 @@ RAVE recolecta esa información. Además de las estadísticas normales $Q(v)$ y 
 
 Supongamos que estamos en la raíz y hacemos un rollout a través del hijo $(1,0)$. La secuencia de movimientos del rollout es:
 
-$$\underbrace{(1,0)}_{\text{turno 1}} \to (0,1) \to \underbrace{(2,2)}_{\text{turno 3}} \to (0,0) \to (2,0) \to \ldots \to \text{Negro gana } (+1)$$
+$$(1,0) \to (0,1) \to (2,2) \to (0,0) \to (2,0) \to \ldots \to \text{Negro gana} \;(+1)$$
 
 En MCTS estándar, solo se actualiza el nodo $(1,0)$: $Q(1,0) \mathrel{+}= 1$, $N(1,0) \mathrel{+}= 1$.
 
