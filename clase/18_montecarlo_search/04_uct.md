@@ -69,6 +69,39 @@ donde el primer término es la **explotación** y el segundo es la **exploració
 
 En la práctica, $c$ se ajusta empíricamente. Para recompensas en $[0, 1]$, valores de $c$ entre 0.5 y 1.5 suelen funcionar bien.
 
+### Ejemplo concreto: UCT nivel por nivel
+
+Para entender cómo funciona la selección, tracemos una iteración completa con números reales. Usaremos $c = 1.41$.
+
+![UCT en acción: selección nivel por nivel]({{ '/18_montecarlo_search/images/09c_uct_selection_trace.png' | url }})
+
+**Panel izquierdo — Iteración 101: la exploración domina.**
+
+La raíz tiene $N = 100$ y tres hijos. Calculamos UCT para cada uno:
+
+| Hijo | $N(v)$ | $Q(v)$ | $Q/N$ (explotación) | $c\sqrt{\ln(100)/N}$ (exploración) | UCT |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| $a_1$ | 45 | 30 | 0.67 | $1.41 \times \sqrt{4.6/45} = 0.45$ | **1.12** |
+| $a_2$ | 50 | 25 | 0.50 | $1.41 \times \sqrt{4.6/50} = 0.43$ | 0.93 |
+| $a_3$ | 5 | 3 | 0.60 | $1.41 \times \sqrt{4.6/5} = 1.35$ | **1.95** |
+
+El nodo $a_3$ tiene una tasa de éxito mediocre (60%, menor que el 67% de $a_1$), pero solo tiene 5 visitas. Su bonus de exploración es **enorme** (1.35 vs 0.45 de $a_1$). UCT dice: "apenas probaste esta opción — dale más oportunidades antes de descartarla."
+
+**Panel derecho — Iteración 120: la selección baja por el árbol.**
+
+Veinte iteraciones después, $a_3$ ya acumuló 25 visitas. Su bonus se redujo y ahora $a_1$ gana en la raíz. Pero la selección **no se detiene ahí** — UCT se aplica de nuevo en $a_1$ para elegir entre sus hijos, usando $N(a_1) = 50$ como el nuevo $N(\text{padre})$:
+
+| Nieto | $N(v)$ | $Q(v)$ | $Q/N$ | $c\sqrt{\ln(50)/N}$ | UCT |
+|:---:|:---:|:---:|:---:|:---:|:---:|
+| $g_1$ | 20 | 14 | 0.70 | $1.41 \times \sqrt{3.9/20} = 0.62$ | 1.32 |
+| $g_2$ | 22 | 15 | 0.68 | $1.41 \times \sqrt{3.9/22} = 0.59$ | **1.27** |
+
+La selección elige $g_1$, y si $g_1$ tiene un hijo no expandido, se pasa a expansión `[M2]`. Si todos sus hijos ya existen, UCT se aplica *otra vez* en $g_1$ con $N(g_1)$ como padre — y así sucesivamente hasta encontrar un nodo con hijos sin expandir.
+
+**Lo importante**: UCT no se aplica solo en la raíz. Se aplica en **cada nodo intermedio** del camino de selección, desde la raíz hasta llegar a un nodo con acciones no expandidas. En cada nivel, $N(\text{padre})$ es el $N$ del nodo actual, no el de la raíz.
+
+**Caso borde — $N(v) = 0$**: si un hijo nunca ha sido visitado, UCT $= \infty$. Los nodos no visitados **siempre** tienen prioridad absoluta. Por eso la expansión `[M2]` funciona: un nodo recién creado salta automáticamente al frente de la cola.
+
 ---
 
 ## 3. Comparación con UCB1
