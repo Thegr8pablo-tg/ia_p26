@@ -1194,6 +1194,209 @@ def plot_18_eval_vs_rollout():
 # UCT formula breakdown (09)
 # ---------------------------------------------------------------------------
 
+def plot_19_rave_example():
+    """RAVE information sharing: toy example showing how RAVE bootstraps."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 7))
+
+    def _draw_tree_node(ax, x, y, N, Q, label, radius=0.32,
+                        rave_N=None, rave_Q=None, highlight=False):
+        color = COLORS["light"]
+        ec = COLORS["dark"]
+        lw = 1.5
+        if highlight:
+            color = COLORS["green"]
+            ec = COLORS["dark"]
+            lw = 2.5
+        circle = plt.Circle((x, y), radius, facecolor=color, edgecolor=ec,
+                             linewidth=lw, zorder=3)
+        ax.add_patch(circle)
+        tc = "white" if highlight else COLORS["dark"]
+        if N > 0:
+            qn = Q / N
+            ax.text(x, y + 0.08, f"N={N}, Q/N={qn:+.2f}",
+                    ha='center', va='center', fontsize=7, fontweight='bold',
+                    color=tc, zorder=4)
+        else:
+            ax.text(x, y + 0.08, "N=0", ha='center', va='center',
+                    fontsize=7, fontweight='bold', color=tc, zorder=4)
+        if rave_N is not None and rave_N > 0:
+            rave_qn = rave_Q / rave_N
+            ax.text(x, y - 0.12, f"RAVE: {rave_N} ({rave_qn:+.2f})",
+                    ha='center', va='center', fontsize=6.5,
+                    color=COLORS["purple"], zorder=4)
+        ax.text(x, y - radius - 0.12, label, ha='center', fontsize=9,
+                color=COLORS["dark"], zorder=4)
+
+    def _edge(ax, x1, y1, x2, y2, highlight=False):
+        c = COLORS["blue"] if highlight else COLORS["dark"]
+        lw = 2.5 if highlight else 1
+        alpha = 0.9 if highlight else 0.3
+        ax.plot([x1, x2], [y1, y2], '-', color=c, linewidth=lw, alpha=alpha, zorder=1)
+
+    # =========================================================================
+    # Panel 1: Standard MCTS after 10 iterations — some nodes have 0 visits
+    # =========================================================================
+    ax = ax1
+    # Root: 10 visits
+    rx, ry = 2.5, 5.5
+    # 5 children (Hex 3x3 after 4 moves → 5 legal)
+    children = [
+        (0.5, 3.5, 4, 2, "(1,0)"),    # 4 visits
+        (1.5, 3.5, 3, 1, "(1,2)"),    # 3 visits
+        (2.5, 3.5, 2, 0, "(2,0)"),    # 2 visits
+        (3.5, 3.5, 1, -1, "(2,1)"),   # 1 visit
+        (4.5, 3.5, 0, 0, "(2,2)"),    # 0 visits!
+    ]
+    for cx, cy, _, _, _ in children:
+        _edge(ax, rx, ry, cx, cy)
+    _draw_tree_node(ax, rx, ry, 10, 2, "Raiz (turno Negro)")
+    for cx, cy, n, q, lbl in children:
+        hl = (n == 0)
+        _draw_tree_node(ax, cx, cy, n, q, lbl, highlight=hl)
+
+    # Annotation for the 0-visit node
+    ax.annotate("N=0: no sabemos\nnada sobre (2,2)",
+                xy=(4.5, 3.5), xytext=(4.5, 2.0),
+                fontsize=8, color=COLORS["red"], ha='center',
+                arrowprops=dict(arrowstyle='->', color=COLORS["red"], lw=1.5),
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                          edgecolor=COLORS["red"], alpha=0.9))
+
+    ax.set_xlim(-0.5, 5.5)
+    ax.set_ylim(1.2, 6.5)
+    ax.set_aspect('equal')
+    ax.axis('off')
+    ax.set_title("MCTS estandar (10 iteraciones)\nAlgunos nodos sin visitas",
+                 fontsize=11, fontweight='bold')
+
+    # =========================================================================
+    # Panel 2: Same tree but with RAVE statistics
+    # =========================================================================
+    ax = ax2
+    # Same structure, but now RAVE stats are populated from rollouts
+    # that happened THROUGH OTHER NODES but contained these moves
+    children_rave = [
+        (0.5, 3.5, 4, 2, "(1,0)", 8, 4),     # appeared in 8 rollouts total
+        (1.5, 3.5, 3, 1, "(1,2)", 7, 3),     # appeared in 7
+        (2.5, 3.5, 2, 0, "(2,0)", 6, 2),     # appeared in 6
+        (3.5, 3.5, 1, -1, "(2,1)", 5, -1),   # appeared in 5
+        (4.5, 3.5, 0, 0, "(2,2)", 4, 2),     # appeared in 4 rollouts!
+    ]
+    for cx, cy, _, _, _, _, _ in children_rave:
+        _edge(ax, rx, ry, cx, cy)
+    _draw_tree_node(ax, rx, ry, 10, 2, "Raiz (turno Negro)")
+    for cx, cy, n, q, lbl, rn, rq in children_rave:
+        _draw_tree_node(ax, cx, cy, n, q, lbl,
+                        rave_N=rn, rave_Q=rq,
+                        highlight=(n == 0))
+
+    # Annotation for the 0-visit node with RAVE
+    ax.annotate("N=0, pero RAVE sabe que (2,2)\naparecio en 4 rollouts con Q/N=+0.50\n"
+                "-> tenemos una estimacion inicial!",
+                xy=(4.5, 3.5), xytext=(3.5, 1.6),
+                fontsize=8, color=COLORS["green"], ha='center',
+                arrowprops=dict(arrowstyle='->', color=COLORS["green"], lw=1.5),
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                          edgecolor=COLORS["green"], alpha=0.9))
+
+    # Show a rollout path that contributed to RAVE
+    ax.annotate("Rollout por (1,0) incluyo\nmovimiento (2,2) en turno 5\n"
+                "-> RAVE cuenta ese resultado\npara el nodo (2,2)",
+                xy=(0.5, 3.1), xytext=(1.8, 1.6),
+                fontsize=7.5, color=COLORS["purple"], ha='center',
+                arrowprops=dict(arrowstyle='->', color=COLORS["purple"], lw=1),
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                          edgecolor=COLORS["purple"], alpha=0.9))
+
+    ax.set_xlim(-0.5, 5.5)
+    ax.set_ylim(0.8, 6.5)
+    ax.set_aspect('equal')
+    ax.axis('off')
+    ax.set_title("MCTS + RAVE (10 iteraciones)\nRollouts comparten informacion entre nodos",
+                 fontsize=11, fontweight='bold')
+
+    fig.suptitle("RAVE: como los rollouts comparten informacion",
+                 fontsize=14, fontweight='bold', y=1.02)
+    plt.tight_layout()
+    _save(fig, "19_rave_example.png")
+
+
+def plot_20_puct_vs_uct():
+    """PUCT vs UCT: how a policy prior reshapes exploration."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+    c = 1.41
+    N_parent = 100
+
+    # 5 actions with different visit counts
+    actions = ["$a_1$", "$a_2$", "$a_3$", "$a_4$", "$a_5$"]
+    N_vals =  [35,      25,      20,      15,      5]
+    Q_vals =  [18,      15,      10,      6,       3]
+
+    # --- Panel 1: UCT (uniform prior) ---
+    uct_vals = []
+    for N, Q in zip(N_vals, Q_vals):
+        exploit = Q / N
+        explore = c * math.sqrt(math.log(N_parent) / N)
+        uct_vals.append((exploit, explore))
+
+    x = np.arange(len(actions))
+    width = 0.6
+    exploit_bars = [e for e, _ in uct_vals]
+    explore_bars = [ex for _, ex in uct_vals]
+
+    ax1.bar(x, exploit_bars, width, label='Explotacion Q/N',
+            color=COLORS["blue"], alpha=0.8)
+    ax1.bar(x, explore_bars, width, bottom=exploit_bars,
+            label='Exploracion UCT', color=COLORS["teal"], alpha=0.8)
+    for i, (e, ex) in enumerate(uct_vals):
+        ax1.text(i, e + ex + 0.02, f"{e+ex:.2f}", ha='center', fontsize=8,
+                 fontweight='bold')
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(actions, fontsize=10)
+    ax1.set_ylabel("Valor UCT", fontsize=11)
+    ax1.set_title("UCT: prior uniforme\n(todas las acciones se tratan igual)",
+                  fontsize=11, fontweight='bold')
+    ax1.legend(fontsize=9, loc='upper right')
+    ax1.set_ylim(0, 2.2)
+
+    # --- Panel 2: PUCT with policy prior ---
+    # Prior from a "policy network": a₃ is strongly preferred
+    prior = [0.10, 0.10, 0.50, 0.20, 0.10]  # sums to 1
+    puct_vals = []
+    for N, Q, p in zip(N_vals, Q_vals, prior):
+        exploit = Q / N
+        # PUCT: c * P(a) * sqrt(N_parent) / (1 + N)
+        explore = c * p * math.sqrt(N_parent) / (1 + N)
+        puct_vals.append((exploit, explore))
+
+    exploit_bars2 = [e for e, _ in puct_vals]
+    explore_bars2 = [ex for _, ex in puct_vals]
+
+    ax2.bar(x, exploit_bars2, width, label='Explotacion Q/N',
+            color=COLORS["blue"], alpha=0.8)
+    ax2.bar(x, explore_bars2, width, bottom=exploit_bars2,
+            label='Exploracion PUCT', color=COLORS["orange"], alpha=0.8)
+    # Show prior values
+    for i, (e, ex, p) in enumerate(zip(exploit_bars2, explore_bars2, prior)):
+        ax2.text(i, e + ex + 0.02, f"{e+ex:.2f}", ha='center', fontsize=8,
+                 fontweight='bold')
+        ax2.text(i, -0.12, f"P={p:.2f}", ha='center', fontsize=8,
+                 color=COLORS["orange"], fontweight='bold')
+    ax2.set_xticks(x)
+    ax2.set_xticklabels(actions, fontsize=10)
+    ax2.set_ylabel("Valor PUCT", fontsize=11)
+    ax2.set_title("PUCT: prior de red de politica\n($a_3$ tiene P=0.50 -> exploracion dirigida)",
+                  fontsize=11, fontweight='bold')
+    ax2.legend(fontsize=9, loc='upper right')
+    ax2.set_ylim(-0.2, 2.2)
+
+    fig.suptitle("UCT vs PUCT: como el prior de la red cambia la exploracion",
+                 fontsize=14, fontweight='bold')
+    plt.tight_layout()
+    _save(fig, "20_puct_vs_uct.png")
+
+
 def plot_09c_uct_selection_trace():
     """Concrete UCT selection trace through a 3-level tree with numbers."""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
@@ -1527,6 +1730,10 @@ def main():
     # Rollout figures
     plot_17_rollout_convergence()
     plot_18_eval_vs_rollout()
+
+    # Beyond MCTS figures
+    plot_19_rave_example()
+    plot_20_puct_vs_uct()
 
     print(f"\n✓  Todas las imágenes generadas en {IMAGES_DIR}/")
 
