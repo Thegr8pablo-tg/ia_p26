@@ -2,6 +2,31 @@
 title: "Búsqueda Monte Carlo en Árboles"
 ---
 
+:::project{id="proyecto-hex" title="Torneo de Hex" due="2026-04-20" team_size="3" points="10"}
+
+**Repositorio:** [ia_p26_hex_tournament](https://github.com/sonder-art/ia_p26_hex_tournament)
+
+Implementa una estrategia que juegue Hex en un tablero 11x11 en dos variantes: **classic** (información completa) y **dark** (fog of war — solo ves tus propias piedras). Tu estrategia compite en un torneo contra tres oponentes de dificultad creciente: Random, GreedyPath y MCTS_Default.
+
+**Entregables (via Pull Request al repositorio del torneo):**
+1. `estudiantes/<tu_equipo>/strategy.py` — tu estrategia (único archivo evaluado en el torneo)
+2. `estudiantes/<tu_equipo>/README.md` — explicación detallada de qué hace tu estrategia, cómo la diseñaron, qué alternativas consideraron y por qué tomaron las decisiones que tomaron
+
+**Calificación:**
+
+| Resultado | Puntos |
+|-----------|--------|
+| No gana contra ningún default | 0 |
+| Gana contra Random | 6 |
+| Gana contra Random + GreedyPath | 8 |
+| Gana contra los tres (Random + GreedyPath + MCTS_Default) | 10 |
+
+Los **top 3** por total de partidas ganadas reciben puntos extra.
+
+Consulta el README del repositorio para instrucciones de setup, restricciones de recursos (10s por jugada, solo numpy + stdlib) e ideas de estrategias.
+
+:::
+
 # Búsqueda Monte Carlo en Árboles
 
 > *"Instead of trying to find the perfect move, play a thousand random games and see which move wins most often."*
