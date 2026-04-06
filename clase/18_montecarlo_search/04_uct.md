@@ -45,13 +45,19 @@ UCT usa la **misma estructura** para elegir qué hijo visitar.
 
 En cada nodo durante la fase de selección `[M1]`, elegimos el hijo $v$ que maximiza:
 
-$$\text{UCT}(v) = \underbrace{\frac{Q(v)}{N(v)}}_{\text{explotación}} + \underbrace{c \sqrt{\frac{\ln N(\text{padre})}{N(v)}}}_{\text{exploración}}$$
+$$\text{UCT}(v) = \frac{Q(v)}{N(v)} + c \sqrt{\frac{\ln N(\text{padre})}{N(v)}}$$
+
+donde el primer término es la **explotación** y el segundo es la **exploración**.
 
 ![Descomposición de la fórmula UCT]({{ '/18_montecarlo_search/images/09_uct_formula.png' | url }})
 
 **Término de explotación** $Q(v)/N(v)$: la tasa de éxito promedio del nodo. Favorece nodos con buenos resultados — los que han ganado más rollouts.
 
-**Término de exploración** $c\sqrt{\ln N(\text{padre}) / N(v)}$: crece cuando $N(v)$ es pequeño relativo a $N(\text{padre})$. Un hijo que ha sido poco visitado recibe un bonus que lo hace más atractivo. El logaritmo en el numerador asegura que la exploración nunca se detiene completamente, pero crece cada vez más lento.
+**Término de exploración** $c\sqrt{\ln N(\text{padre}) / N(v)}$: este término es un **bonus** que hace más atractivos a los nodos poco visitados. Tiene dos partes que vale la pena descomponer:
+
+- **El denominador** $N(v)$ (visitas al hijo): cuanto **menos** visitado sea un nodo, **mayor** es el bonus. Si un hijo tiene 2 visitas y otro tiene 200, el primero recibe un bonus mucho más grande — forzando al algoritmo a no ignorarlo sin evidencia suficiente.
+- **El numerador** $\ln N(\text{padre})$ (log de visitas totales al padre): crece con el tiempo, pero **logarítmicamente**. Esto significa que el bonus de exploración nunca desaparece del todo — siempre hay un incentivo para revisitar nodos olvidados — pero crece tan lento que eventualmente la explotación domina. Después de 100 visitas al padre, $\ln(100) \approx 4.6$; después de 10,000 visitas, $\ln(10{,}000) \approx 9.2$. Se duplicó el bonus, pero las visitas se multiplicaron por 100.
+- **El cociente** $\ln N(\text{padre}) / N(v)$: compara cuánto se ha jugado *en total* desde este nodo padre versus cuánto se ha invertido *en este hijo en particular*. Si el padre tiene 1000 visitas y un hijo solo tiene 3, el cociente es grande → ese hijo merece más atención. Es la misma lógica que en UCB1 (§17.3): un brazo poco jalado tiene alta incertidumbre y merece el beneficio de la duda.
 
 **La constante $c$**: controla el balance entre explotación y exploración. Es exactamente el mismo rol que $\varepsilon$ jugaba en $\varepsilon$-greedy (§17.2) — pero de forma más elegante:
 
