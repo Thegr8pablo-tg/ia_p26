@@ -46,6 +46,13 @@ Si en 1000 partidas aleatorias desde esa posición ganas el 73%, probablemente e
 
 Esta es exactamente la idea de un **rollout** (o **simulación**): una partida completa jugada con movimientos aleatorios desde una posición dada hasta un estado terminal.
 
+Antes de formalizar, fijemos los dos conceptos centrales:
+
+- **Rollout** (simulación): una partida completa jugada con movimientos aleatorios desde un estado $s$ hasta un estado terminal. El resultado es la utilidad final ($+1$, $0$ o $-1$).
+- **Eval** (función de evaluación, §15.5): una función $\text{eval}(s)$ diseñada por humanos que asigna un valor numérico a un estado sin necesidad de llegar al final del juego. Requiere conocimiento experto del dominio (e.g., contar material en ajedrez).
+
+La diferencia clave: $\text{eval}(s)$ es rápida pero necesita que alguien sepa *qué hace buena una posición*; un rollout no necesita ningún conocimiento — solo las reglas — pero requiere simular muchas partidas para obtener una buena estimación.
+
 ---
 
 ## 3. El rollout como estimador Monte Carlo
