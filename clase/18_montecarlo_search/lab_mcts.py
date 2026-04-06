@@ -272,16 +272,18 @@ def _mcts_agent(iterations, c=1.41):
 
 
 def _minimax(state, player, depth=99):
-    """Simple minimax for small boards."""
+    """Simple minimax for small boards.  Returns value from `player`'s perspective."""
     if state.is_terminal() or depth == 0:
         return state.utility(player), None
-    best_val = -2
+    is_maximizing = (state.current_player == player)
+    best_val = -2 if is_maximizing else 2
     best_act = None
     for a in state.actions():
-        child = state.result(a)
-        val, _ = _minimax(child, player, depth - 1)
-        val = -val  # opponent's perspective
-        if val > best_val:
+        val, _ = _minimax(state.result(a), player, depth - 1)
+        if is_maximizing and val > best_val:
+            best_val = val
+            best_act = a
+        elif not is_maximizing and val < best_val:
             best_val = val
             best_act = a
     return best_val, best_act
@@ -861,41 +863,50 @@ def plot_11_uct_c_effect():
 # ---------------------------------------------------------------------------
 
 def plot_12_mcts_vs_minimax_3x3():
-    """MCTS convergence to minimax value on Hex 3x3."""
+    """MCTS convergence to minimax-optimal action on Hex 3x3."""
     fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 
     state = Hex(3)
-    # Get exact minimax value
-    mm_val, mm_act = _minimax(state, 1)
+    # Minimax ground truth: which first moves are winning for Black?
+    winning_moves = set()
+    for a in state.actions():
+        child = state.result(a)
+        val, _ = _minimax(child, 1)
+        if val == 1:  # Black still wins with optimal play → winning first move
+            winning_moves.add(a)
 
-    # Run MCTS with increasing iterations
-    iter_values = [10, 20, 50, 100, 200, 500, 1000]
-    n_trials = 30
-    estimates = {it: [] for it in iter_values}
+    # Run MCTS with increasing iterations, track if chosen action is winning
+    iter_values = [5, 10, 20, 50, 100, 200, 500, 1000, 2000]
+    n_trials = 60
+    correct_rate = []
 
     for it in iter_values:
+        correct = 0
         for trial in range(n_trials):
-            random.seed(trial * 7)
+            random.seed(trial * 7 + it)
             _, root = _run_mcts(state, it, 1, c=1.41)
-            # Best action's Q/N
             if root.children:
                 best_a = max(root.children, key=lambda a: root.children[a].N)
-                best_qn = root.children[best_a].Q / root.children[best_a].N
-                estimates[it].append(best_qn)
+                if best_a in winning_moves:
+                    correct += 1
+        rate = correct / n_trials
+        correct_rate.append(rate)
+        print(f"  M={it:4d}: {correct}/{n_trials} = {rate:.1%} pick winning move")
 
-    means = [np.mean(estimates[it]) for it in iter_values]
-    stds = [np.std(estimates[it]) for it in iter_values]
-
-    ax.errorbar(iter_values, means, yerr=stds, fmt='o-', color=COLORS["blue"],
-                linewidth=2, markersize=8, capsize=5, label="MCTS estimado")
-    ax.axhline(y=mm_val, color=COLORS["red"], linestyle='--', linewidth=2,
-               label=f"Minimax exacto = {mm_val}")
+    ax.plot(iter_values, correct_rate, 'o-', color=COLORS["blue"],
+            linewidth=2.5, markersize=8, markerfacecolor=COLORS["blue"],
+            label="MCTS con UCT")
+    ax.axhline(y=1.0, color=COLORS["green"], linestyle='--', linewidth=2,
+               alpha=0.7, label="Ideal (siempre elige ganadora)")
+    ax.axhline(y=5/9, color=COLORS["gray"], linestyle=':', linewidth=1.5,
+               alpha=0.7, label=f"Azar (5/9 = {5/9:.1%} ganadoras)")
     ax.set_xscale('log')
     ax.set_xlabel("Iteraciones M", fontsize=12)
-    ax.set_ylabel("Valor estimado (Q/N de la mejor acción)", fontsize=12)
-    ax.set_title("Convergencia de MCTS al valor minimax (Hex 3×3)",
+    ax.set_ylabel("Fracción de veces que elige un movimiento ganador", fontsize=12)
+    ax.set_title("Convergencia de MCTS a la acción minimax-óptima (Hex 3$\\times$3)",
                  fontsize=13, fontweight='bold')
-    ax.legend(fontsize=11)
+    ax.set_ylim(-0.05, 1.1)
+    ax.legend(fontsize=10, loc='lower right')
     _save(fig, "12_mcts_vs_minimax_3x3.png")
 
 

@@ -24,13 +24,13 @@ El árbol completo de Hex 3×3 tiene $\sim 10^3$ nodos — minimax lo resuelve e
 
 ![Convergencia de MCTS a minimax en Hex 3×3]({{ '/18_montecarlo_search/images/12_mcts_vs_minimax_3x3.png' | url }})
 
-La figura muestra el valor estimado por MCTS para la mejor acción de la raíz, en función del número de iteraciones $M$. La línea punteada es el valor exacto de minimax. Observaciones:
+En Hex 3×3, de los 9 posibles primeros movimientos, 5 son minimax-ganadores y 4 son perdedores (ver §18.4). La figura muestra, para cada presupuesto $M$, la fracción de veces (sobre 60 repeticiones con semillas distintas) que MCTS elige un movimiento ganador:
 
-- Con $M < 50$, la estimación es ruidosa — puede estar lejos del valor real
-- Alrededor de $M = 200$, MCTS identifica correctamente la mejor acción
-- Con $M > 500$, los valores convergen con precisión al valor minimax
+- Con $M < 20$, MCTS acierta alrededor del 60% — apenas mejor que elegir al azar (55.6%, línea gris), porque no ha tenido suficientes rollouts para distinguir acciones buenas de malas
+- Alrededor de $M = 100$, la tasa sube a ~87% — la exploración de UCT ya identificó las acciones ganadoras en la mayoría de los casos
+- Con $M \geq 500$, MCTS elige un movimiento ganador en prácticamente el 100% de los intentos
 
-Esto confirma experimentalmente el teorema de convergencia de §18.4: MCTS con UCT **es** minimax en el límite. La ventaja es que con un presupuesto limitado ($M = 200$ en vez de explorar los $\sim 10^3$ nodos), ya da la respuesta correcta.
+Esto confirma experimentalmente el teorema de convergencia de §18.4: MCTS con UCT converge a la acción minimax-óptima. Y lo hace explorando solo una fracción del árbol ($M = 500$ iteraciones vs $\sim 10^3$ nodos totales).
 
 ---
 
