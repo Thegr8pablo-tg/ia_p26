@@ -6,24 +6,25 @@ title: "Búsqueda Monte Carlo en Árboles"
 
 **Repositorio:** [ia_p26_hex_tournament](https://github.com/sonder-art/ia_p26_hex_tournament)
 
-Implementa una estrategia que juegue Hex en un tablero 11x11 en dos variantes: **classic** (información completa) y **dark** (fog of war — solo ves tus propias piedras). Tu estrategia compite en un torneo contra tres oponentes de dificultad creciente: Random, GreedyPath y MCTS_Default.
+Implementa una estrategia que juegue Hex en un tablero 11x11 en dos variantes: **classic** (información completa) y **dark** (fog of war — solo ves tus propias piedras). Tu estrategia compite en un torneo contra 6 niveles de dificultad: Random y 5 tiers de MCTS (binarios opacos que solo corren en Docker).
 
 **Entregables (via Pull Request al repositorio del torneo):**
 1. `estudiantes/<tu_equipo>/strategy.py` — tu estrategia (único archivo evaluado en el torneo)
 2. `estudiantes/<tu_equipo>/README.md` — explicación detallada de qué hace tu estrategia, cómo la diseñaron, qué alternativas consideraron y por qué tomaron las decisiones que tomaron
 
-**Calificación:**
+**Calificación** (tu nota = puntos del tier más alto que venzas):
 
-| Resultado | Puntos |
+| Tier vencido | Puntos |
 |-----------|--------|
-| No gana contra ningún default | 0 |
-| Gana contra Random | 6 |
-| Gana contra Random + GreedyPath | 8 |
-| Gana contra los tres (Random + GreedyPath + MCTS_Default) | 10 |
+| No ganas contra nadie | 0 |
+| Random | 5 |
+| MCTS_Tier_1 | 6 |
+| MCTS_Tier_2 | 7 |
+| MCTS_Tier_3 | 8 |
+| MCTS_Tier_4 | 9 |
+| MCTS_Tier_5 o top 3 del torneo | 10 |
 
-Los **top 3** por total de partidas ganadas reciben puntos extra.
-
-Consulta el README del repositorio para instrucciones de setup, restricciones de recursos (10s por jugada, solo numpy + stdlib) e ideas de estrategias.
+Consulta el README del repositorio para instrucciones de setup, Docker, restricciones de recursos (15s por jugada, solo numpy + stdlib) e ideas de estrategias.
 
 :::
 
