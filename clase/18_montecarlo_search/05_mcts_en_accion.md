@@ -70,20 +70,14 @@ En Hex 7×7, minimax exacto es imposible ($\sim 10^{20}$ estados). Aquí es dond
 
 ## 3. Presupuesto de iteraciones
 
-¿Cuántas iteraciones necesita MCTS para jugar bien? Más es mejor, pero con rendimientos decrecientes:
+¿Cuántas iteraciones por movimiento necesita MCTS para jugar bien? La figura muestra la **tasa de victorias de MCTS (jugando como Negro)** en Hex 5×5 contra dos oponentes, variando el presupuesto $M$ — es decir, cuántas veces se ejecuta el ciclo selección→expansión→simulación→retropropagación *antes de elegir cada jugada*.
 
 ![Tasa de victorias vs presupuesto de iteraciones]({{ '/18_montecarlo_search/images/14_iteration_budget.png' | url }})
 
-| Iteraciones por movimiento | Tasa de victorias vs Aleatorio | Tasa de victorias vs Alpha-beta (d=3) |
-|:---:|:---:|:---:|
-| 100 | 78% | 35% |
-| 500 | 89% | 55% |
-| 1000 | 93% | 64% |
-| 2000 | 97% | 71% |
-| 5000 | 98% | 79% |
-| 10000 | 99% | 85% |
+- **Vs Aleatorio** (verde): MCTS ya domina con $M = 50$ iteraciones (~100% de victorias). Un oponente sin estrategia es fácil de superar incluso con poca búsqueda.
+- **Vs Alpha-beta d=3** (rojo): el oponente es mucho más fuerte, así que MCTS necesita más presupuesto. Con $M = 50$ apenas gana el 60%, pero con $M = 200$ ya alcanza ~100%. El salto más grande ocurre entre 50 y 200 iteraciones — ahí es donde MCTS acumula suficientes rollouts para que UCT identifique las ramas buenas.
 
-**Observación clave**: el salto más grande ocurre entre 100 y 1000 iteraciones. Después de 2000, los rendimientos son decrecientes. En un torneo con tiempo limitado, la asignación inteligente del presupuesto importa tanto como el número total.
+**¿Por qué hay rendimientos decrecientes?** Cada iteración adicional refina la estimación $Q/N$, pero el error disminuye como $O(1/\sqrt{M})$ (§12.2). Duplicar el presupuesto no duplica la calidad — la mejora es cada vez más marginal. En un torneo con tiempo limitado, asignar bien el presupuesto importa tanto como tener muchas iteraciones.
 
 ---
 
