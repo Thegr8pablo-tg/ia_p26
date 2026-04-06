@@ -1398,42 +1398,33 @@ def plot_20_puct_vs_uct():
 
 
 def plot_09c_uct_selection_trace():
-    """Concrete UCT selection trace through a 3-level tree with numbers."""
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 8))
+    """Complete iteration trace: selection→expansion→rollout→backprop."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 9))
 
-    c = 1.41
+    c_val = 1.41
 
-    # --- Helper to draw a node circle with N/Q label ---
-    def _draw_node(ax, x, y, N, Q, radius=0.28, highlight=False, is_new=False,
-                   uct_label=None, uct_color=None):
+    def _draw_node(ax, x, y, N, Q, radius=0.30, highlight=False, is_new=False,
+                   backprop=False, uct_label=None, uct_color=None):
         color = COLORS["light"]
         ec = COLORS["dark"]
         lw = 1.5
         if highlight:
             color = COLORS["blue"]
-            ec = COLORS["dark"]
             lw = 2.5
         if is_new:
             color = COLORS["green"]
             lw = 2.5
+        if backprop:
+            color = COLORS["purple"]
+            lw = 2.5
         circle = plt.Circle((x, y), radius, facecolor=color, edgecolor=ec,
                              linewidth=lw, zorder=3)
         ax.add_patch(circle)
-        # N/Q text inside
-        txt_color = "white" if highlight else COLORS["dark"]
-        if N > 0:
-            wr = Q / N
-            ax.text(x, y + 0.06, f"N={N}", ha='center', va='center',
-                    fontsize=8, fontweight='bold', color=txt_color, zorder=4)
-            ax.text(x, y - 0.1, f"Q={Q}", ha='center', va='center',
-                    fontsize=8, color=txt_color, zorder=4)
-        elif is_new:
-            ax.text(x, y, "N=0\nnuevo", ha='center', va='center',
-                    fontsize=7, fontweight='bold', color=COLORS["dark"], zorder=4)
-        else:
-            ax.text(x, y, f"N={N}\nQ={Q}", ha='center', va='center',
-                    fontsize=8, color=txt_color, zorder=4)
-        # UCT label above/below
+        txt_color = "white" if (highlight or backprop) else COLORS["dark"]
+        ax.text(x, y + 0.06, f"N={N}", ha='center', va='center',
+                fontsize=8, fontweight='bold', color=txt_color, zorder=4)
+        ax.text(x, y - 0.10, f"Q={Q}", ha='center', va='center',
+                fontsize=8, color=txt_color, zorder=4)
         if uct_label is not None:
             col = uct_color if uct_color else COLORS["gray"]
             ax.text(x, y + radius + 0.15, uct_label, ha='center', va='center',
@@ -1449,203 +1440,189 @@ def plot_09c_uct_selection_trace():
                 zorder=1)
 
     # =========================================================================
-    # Panel 1: Iteration 101 — exploration bonus dominates for a₃
+    # Consistent tree layout used in both panels
     # =========================================================================
-    ax = ax1
-    # Tree layout:  root at top, 3 children, a₁ has 2 grandchildren
-    # Root
-    root_x, root_y = 3.0, 6.5
-    # Children
-    a1_x, a1_y = 1.2, 4.5
-    a2_x, a2_y = 3.0, 4.5
-    a3_x, a3_y = 4.8, 4.5
-    # Grandchildren of a₁
-    g1_x, g1_y = 0.5, 2.5
-    g2_x, g2_y = 1.9, 2.5
-    # Grandchild of a₂ (one expanded)
-    g3_x, g3_y = 3.0, 2.5
+    root_x, root_y = 3.0, 7.0
+    a1_x, a1_y = 1.0, 5.0      # child: action a₁
+    a2_x, a2_y = 3.0, 5.0      # child: action a₂
+    a3_x, a3_y = 5.0, 5.0      # child: action a₃
+    b1_x, b1_y = 0.3, 3.0      # grandchild of a₁
+    b2_x, b2_y = 1.7, 3.0      # grandchild of a₁
+    # b2 has one unexpanded action → new node
+    new_x, new_y = 1.7, 1.2    # new node from expansion
 
-    # Compute UCT values at root level (parent N=100)
     def uct_val(Q, N, Np):
         if N == 0:
             return float('inf')
-        return Q / N + c * math.sqrt(math.log(Np) / N)
+        return Q / N + c_val * math.sqrt(math.log(Np) / N)
 
-    uct_a1 = uct_val(30, 45, 100)  # 0.667 + 1.41*0.320 = 1.118
-    uct_a2 = uct_val(25, 50, 100)  # 0.500 + 1.41*0.303 = 0.928
-    uct_a3 = uct_val(3, 5, 100)    # 0.600 + 1.41*0.959 = 1.952
-
-    # Edges
-    _draw_edge(ax, root_x, root_y, a1_x, a1_y)
-    _draw_edge(ax, root_x, root_y, a2_x, a2_y)
-    _draw_edge(ax, root_x, root_y, a3_x, a3_y, highlight=True)
-    _draw_edge(ax, a1_x, a1_y, g1_x, g1_y)
-    _draw_edge(ax, a1_x, a1_y, g2_x, g2_y)
-    _draw_edge(ax, a2_x, a2_y, g3_x, g3_y)
-
-    # Nodes — root
-    _draw_node(ax, root_x, root_y, 100, 58, radius=0.35)
-    ax.text(root_x, root_y + 0.55, "Raíz", ha='center', va='center',
-            fontsize=11, fontweight='bold', color=COLORS["dark"])
-
-    # Level 1 labels: show action name + UCT breakdown
-    fmt = "UCT = {:.2f}"
-    winner_fmt = "UCT = {:.2f}  <--"
-    _draw_node(ax, a1_x, a1_y, 45, 30,
-               uct_label=fmt.format(uct_a1), uct_color=COLORS["blue"])
-    _draw_node(ax, a2_x, a2_y, 50, 25,
-               uct_label=fmt.format(uct_a2), uct_color=COLORS["blue"])
-    _draw_node(ax, a3_x, a3_y, 5, 3, highlight=True,
-               uct_label=winner_fmt.format(uct_a3), uct_color=COLORS["green"])
-
-    # Action labels
-    ax.text(a1_x, a1_y - 0.42, "$a_1$", ha='center', fontsize=11, color=COLORS["dark"])
-    ax.text(a2_x, a2_y - 0.42, "$a_2$", ha='center', fontsize=11, color=COLORS["dark"])
-    ax.text(a3_x, a3_y - 0.42, "$a_3$", ha='center', fontsize=11, color=COLORS["dark"])
-
-    # Grandchildren (context only)
-    _draw_node(ax, g1_x, g1_y, 20, 14, radius=0.25)
-    _draw_node(ax, g2_x, g2_y, 22, 15, radius=0.25)
-    _draw_node(ax, g3_x, g3_y, 30, 12, radius=0.25)
-
-    # Annotation: breakdown for a₃
-    ax.annotate(
-        "$\\frac{3}{5} + 1.41\\sqrt{\\frac{\\ln 100}{5}}$\n"
-        "= 0.60 + 1.35 = 1.95",
-        xy=(a3_x + 0.3, a3_y), xytext=(a3_x + 1.2, a3_y - 0.9),
-        fontsize=9, color=COLORS["green"], fontweight='bold',
-        ha='center',
-        arrowprops=dict(arrowstyle='->', color=COLORS["green"], lw=1.5),
-        bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
-                  edgecolor=COLORS["green"], alpha=0.95))
-
-    # Annotation: breakdown for a₁ (smaller)
-    ax.annotate(
-        "$\\frac{30}{45} + 1.41\\sqrt{\\frac{\\ln 100}{45}}$\n"
-        "= 0.67 + 0.45 = 1.12",
-        xy=(a1_x - 0.3, a1_y), xytext=(a1_x - 1.3, a1_y - 0.9),
-        fontsize=8, color=COLORS["gray"],
-        ha='center',
-        arrowprops=dict(arrowstyle='->', color=COLORS["gray"], lw=1),
-        bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
-                  edgecolor=COLORS["gray"], alpha=0.9))
-
-    # Level labels on the right
-    ax.text(6.2, root_y, "Nivel 0\n(raíz)", fontsize=9, color=COLORS["gray"],
-            ha='center', va='center', style='italic')
-    ax.text(6.2, a1_y, "Nivel 1\n(hijos)", fontsize=9, color=COLORS["gray"],
-            ha='center', va='center', style='italic')
-    ax.text(6.2, g1_y, "Nivel 2\n(nietos)", fontsize=9, color=COLORS["gray"],
-            ha='center', va='center', style='italic')
-
-    # Bottom note
-    ax.text(3.0, 1.3,
-            "$a_3$ tiene solo 5 visitas → bonus de exploración enorme (1.35)\n"
-            "UCT la selecciona aunque su tasa de éxito (60%) no es la mejor",
-            ha='center', va='center', fontsize=9, color=COLORS["dark"],
-            bbox=dict(boxstyle='round,pad=0.4', facecolor=COLORS["light"],
-                      edgecolor=COLORS["gray"], alpha=0.8))
-
-    ax.set_xlim(-0.8, 7.0)
-    ax.set_ylim(0.7, 7.6)
-    ax.set_aspect('equal')
-    ax.axis('off')
-    ax.set_title("Iteración 101: exploración domina\n($a_3$ poco visitada → bonus alto)",
-                 fontsize=12, fontweight='bold', color=COLORS["dark"])
+    fmt = "UCT={:.2f}"
+    sel_fmt = "UCT={:.2f}  <--"
 
     # =========================================================================
-    # Panel 2: Iteration 120 — after a₃ got more visits, selection goes deeper
+    # Panel 1: BEFORE iteration 101 — tree state with UCT values shown
     # =========================================================================
-    ax = ax2
+    ax = ax1
 
-    # Updated stats: a₃ got ~20 more visits, now N=25
-    uct_a1b = uct_val(34, 50, 120)
-    uct_a2b = uct_val(21, 45, 120)
-    uct_a3b = uct_val(14, 25, 120)
-
-    # a₁ is now selected at root level, then UCT applied again at level 2
-    # a₁'s children: g1 and g2
-    uct_g1 = uct_val(14, 20, 50)
-    uct_g2 = uct_val(15, 22, 50)
-    # g2 has an unexpanded child → expansion happens there
-    g2c_x, g2c_y = 2.3, 0.8  # new node
-
-    # Edges
+    # Edges (a₁ branch highlighted = selection path)
     _draw_edge(ax, root_x, root_y, a1_x, a1_y, highlight=True)
     _draw_edge(ax, root_x, root_y, a2_x, a2_y)
     _draw_edge(ax, root_x, root_y, a3_x, a3_y)
-    _draw_edge(ax, a1_x, a1_y, g1_x, g1_y)
-    _draw_edge(ax, a1_x, a1_y, g2_x, g2_y, highlight=True)
-    _draw_edge(ax, a2_x, a2_y, g3_x, g3_y)
-    _draw_edge(ax, g2_x, g2_y, g2c_x, g2c_y, highlight=True)
+    _draw_edge(ax, a1_x, a1_y, b1_x, b1_y)
+    _draw_edge(ax, a1_x, a1_y, b2_x, b2_y, highlight=True)
 
-    # Nodes — root
-    _draw_node(ax, root_x, root_y, 120, 68, radius=0.35)
-    ax.text(root_x, root_y + 0.55, "Raíz", ha='center', va='center',
-            fontsize=11, fontweight='bold', color=COLORS["dark"])
+    # Root
+    _draw_node(ax, root_x, root_y, 100, 58, radius=0.35)
+    ax.text(root_x, root_y + 0.55, "Raiz (N=100)", ha='center',
+            fontsize=10, fontweight='bold', color=COLORS["dark"])
 
-    # Level 1 — a₁ wins this time
-    _draw_node(ax, a1_x, a1_y, 50, 34, highlight=True,
-               uct_label=winner_fmt.format(uct_a1b), uct_color=COLORS["green"])
-    _draw_node(ax, a2_x, a2_y, 45, 21,
-               uct_label=fmt.format(uct_a2b), uct_color=COLORS["blue"])
+    # Children — UCT computed with parent N=100
+    uct_a1 = uct_val(30, 45, 100)  # 0.67+0.45=1.12
+    uct_a2 = uct_val(25, 50, 100)  # 0.50+0.43=0.93
+    uct_a3 = uct_val(3, 5, 100)    # 0.60+1.35=1.95
+
+    # a₁ has the highest UCT in this scenario (we want to show multi-level)
+    # Actually a₃ has highest UCT. Let's use values where a₁ wins so we go deeper.
+    # Adjust: a₃ already got explored, now a₁ leads
+    # Use: a₁(N=40,Q=28), a₂(N=35,Q=15), a₃(N=25,Q=14)
+    uct_a1 = uct_val(28, 40, 100)  # 0.70+0.48=1.18
+    uct_a2 = uct_val(15, 35, 100)  # 0.43+0.51=0.94
+    uct_a3 = uct_val(14, 25, 100)  # 0.56+0.61=1.17
+
+    _draw_node(ax, a1_x, a1_y, 40, 28, highlight=True,
+               uct_label=sel_fmt.format(uct_a1), uct_color=COLORS["green"])
+    _draw_node(ax, a2_x, a2_y, 35, 15,
+               uct_label=fmt.format(uct_a2), uct_color=COLORS["gray"])
     _draw_node(ax, a3_x, a3_y, 25, 14,
-               uct_label=fmt.format(uct_a3b), uct_color=COLORS["blue"])
+               uct_label=fmt.format(uct_a3), uct_color=COLORS["gray"])
 
-    ax.text(a1_x, a1_y - 0.42, "$a_1$", ha='center', fontsize=11, color=COLORS["dark"])
-    ax.text(a2_x, a2_y - 0.42, "$a_2$", ha='center', fontsize=11, color=COLORS["dark"])
-    ax.text(a3_x, a3_y - 0.42, "$a_3$", ha='center', fontsize=11, color=COLORS["dark"])
+    ax.text(a1_x, a1_y - 0.44, "$a_1$", ha='center', fontsize=11,
+            color=COLORS["dark"])
+    ax.text(a2_x, a2_y - 0.44, "$a_2$", ha='center', fontsize=11,
+            color=COLORS["dark"])
+    ax.text(a3_x, a3_y - 0.44, "$a_3$", ha='center', fontsize=11,
+            color=COLORS["dark"])
 
-    # Level 2 — UCT computed again with parent=a₁ (N=50)
-    _draw_node(ax, g1_x, g1_y, 20, 14, radius=0.25,
-               uct_label=fmt.format(uct_g1), uct_color=COLORS["blue"])
-    _draw_node(ax, g2_x, g2_y, 22, 15, radius=0.25, highlight=True,
-               uct_label=winner_fmt.format(uct_g2), uct_color=COLORS["green"])
-    _draw_node(ax, g3_x, g3_y, 30, 12, radius=0.25)
+    # Grandchildren — UCT computed with parent N=40 (a₁'s N)
+    uct_b1 = uct_val(10, 18, 40)   # 0.56+0.64=1.20
+    uct_b2 = uct_val(15, 20, 40)   # 0.75+0.61=1.36
 
-    # Level 3 — new node (expansion)
-    _draw_node(ax, g2c_x, g2c_y, 0, 0, radius=0.22, is_new=True)
+    _draw_node(ax, b1_x, b1_y, 18, 10, radius=0.27,
+               uct_label=fmt.format(uct_b1), uct_color=COLORS["gray"])
+    _draw_node(ax, b2_x, b2_y, 20, 15, radius=0.27, highlight=True,
+               uct_label=sel_fmt.format(uct_b2), uct_color=COLORS["green"])
 
-    # Annotation for level-2 UCT
-    ax.annotate(
-        "Nivel 2: padre es $a_1$ (N=50)\n"
-        "$\\frac{15}{22} + 1.41\\sqrt{\\frac{\\ln 50}{22}}$\n"
-        "= 0.68 + 0.61 = 1.29",
-        xy=(g2_x + 0.3, g2_y), xytext=(g2_x + 2.0, g2_y - 0.3),
-        fontsize=8, color=COLORS["green"],
-        ha='center',
-        arrowprops=dict(arrowstyle='->', color=COLORS["green"], lw=1.5),
-        bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
-                  edgecolor=COLORS["green"], alpha=0.95))
+    ax.text(b1_x, b1_y - 0.40, "$b_1$", ha='center', fontsize=10,
+            color=COLORS["dark"])
+    ax.text(b2_x, b2_y - 0.40, "$b_2$", ha='center', fontsize=10,
+            color=COLORS["dark"])
 
-    # Level labels
-    ax.text(6.2, root_y, "Nivel 0\nUCT elige $a_1$", fontsize=9,
-            color=COLORS["gray"], ha='center', va='center', style='italic')
-    ax.text(6.2, a1_y, "Nivel 1\nUCT elige $g_2$", fontsize=9,
-            color=COLORS["gray"], ha='center', va='center', style='italic')
-    ax.text(6.2, g1_y, "Nivel 2\n(nietos)", fontsize=9,
-            color=COLORS["gray"], ha='center', va='center', style='italic')
-    ax.text(6.2, g2c_y, "Nivel 3\n[M2] expandir", fontsize=9,
-            color=COLORS["green"], ha='center', va='center', style='italic')
+    # Phase labels on the right
+    ax.text(6.5, root_y, "[M1] Nivel 0\nUCT elige $a_1$",
+            fontsize=9, color=COLORS["blue"], ha='center', va='center',
+            fontweight='bold')
+    ax.text(6.5, a1_y, "[M1] Nivel 1\nUCT elige $b_2$",
+            fontsize=9, color=COLORS["blue"], ha='center', va='center',
+            fontweight='bold')
+    ax.text(6.5, b1_y, "[M2] $b_2$ tiene\nhijo sin expandir\n-> expandir",
+            fontsize=9, color=COLORS["green"], ha='center', va='center',
+            fontweight='bold')
 
-    # Bottom note
-    ax.text(3.0, 1.3 - 0.5,
-            "UCT se aplica en cada nivel: raíz → $a_1$ → $g_2$ → nodo nuevo\n"
-            "En cada nodo intermedio, $N(\\mathrm{padre})$ es el N del nodo actual",
-            ha='center', va='center', fontsize=9, color=COLORS["dark"],
-            bbox=dict(boxstyle='round,pad=0.4', facecolor=COLORS["light"],
-                      edgecolor=COLORS["gray"], alpha=0.8))
+    # New node from expansion
+    _draw_edge(ax, b2_x, b2_y, new_x, new_y, highlight=True)
+    _draw_node(ax, new_x, new_y, 0, 0, radius=0.25, is_new=True)
+    ax.text(new_x, new_y - 0.40, "nuevo", ha='center', fontsize=9,
+            color=COLORS["green"], fontweight='bold')
 
-    ax.set_xlim(-0.8, 7.0)
-    ax.set_ylim(-0.3, 7.6)
+    # Rollout squiggly from new node
+    rs = np.random.RandomState(42)
+    roll_ys = np.linspace(new_y - 0.3, new_y - 1.4, 12)
+    roll_xs = new_x + rs.uniform(-0.15, 0.15, 12)
+    ax.plot(roll_xs, roll_ys, '--', color=COLORS["orange"], linewidth=2, zorder=2)
+    ax.text(new_x, new_y - 1.7, "[M3] Rollout\nresultado: +1",
+            ha='center', fontsize=9, color=COLORS["orange"], fontweight='bold')
+
+    ax.set_xlim(-1.0, 7.5)
+    ax.set_ylim(-1.2, 8.0)
     ax.set_aspect('equal')
     ax.axis('off')
-    ax.set_title("Iteración 120: selección baja por el árbol\n"
-                 "(UCT se aplica en cada nodo intermedio)",
-                 fontsize=12, fontweight='bold', color=COLORS["dark"])
+    ax.set_title("Iteracion 101: seleccion + expansion + rollout\n"
+                 "[M1] baja por el arbol, [M2] expande, [M3] simula",
+                 fontsize=11, fontweight='bold', color=COLORS["dark"])
 
-    fig.suptitle("UCT en acción: selección nivel por nivel",
-                 fontsize=14, fontweight='bold', y=1.02)
+    # =========================================================================
+    # Panel 2: AFTER — backpropagation updates, then the tree AFTER iter 101
+    # =========================================================================
+    ax = ax2
+
+    # Same tree, but now show backpropagation: all nodes on the path
+    # get N+=1, Q+=1 (the rollout returned +1)
+    # Path: new → b₂ → a₁ → root
+
+    # Edges (backprop path highlighted in purple)
+    _draw_edge(ax, root_x, root_y, a1_x, a1_y)
+    _draw_edge(ax, root_x, root_y, a2_x, a2_y)
+    _draw_edge(ax, root_x, root_y, a3_x, a3_y)
+    _draw_edge(ax, a1_x, a1_y, b1_x, b1_y)
+    _draw_edge(ax, a1_x, a1_y, b2_x, b2_y)
+    _draw_edge(ax, b2_x, b2_y, new_x, new_y)
+    # Backprop arrows
+    for (x1, y1, x2, y2) in [(new_x, new_y, b2_x, b2_y),
+                               (b2_x, b2_y, a1_x, a1_y),
+                               (a1_x, a1_y, root_x, root_y)]:
+        ax.annotate('', xy=(x2, y2 - 0.30), xytext=(x1, y1 + 0.30),
+                    arrowprops=dict(arrowstyle='->', color=COLORS["purple"],
+                                   lw=2.5, connectionstyle='arc3,rad=-0.15'))
+
+    # Updated nodes: N+=1, Q+=1 on the path
+    _draw_node(ax, root_x, root_y, 101, 59, radius=0.35, backprop=True)
+    ax.text(root_x, root_y + 0.55, "Raiz: 100->101, 58->59",
+            ha='center', fontsize=8, fontweight='bold', color=COLORS["purple"])
+
+    _draw_node(ax, a1_x, a1_y, 41, 29, backprop=True)
+    ax.text(a1_x, a1_y - 0.44, "$a_1$: 40->41, 28->29",
+            ha='center', fontsize=8, color=COLORS["purple"], fontweight='bold')
+
+    _draw_node(ax, a2_x, a2_y, 35, 15)
+    ax.text(a2_x, a2_y - 0.44, "$a_2$: sin cambios",
+            ha='center', fontsize=8, color=COLORS["gray"])
+
+    _draw_node(ax, a3_x, a3_y, 25, 14)
+    ax.text(a3_x, a3_y - 0.44, "$a_3$: sin cambios",
+            ha='center', fontsize=8, color=COLORS["gray"])
+
+    _draw_node(ax, b1_x, b1_y, 18, 10, radius=0.27)
+    ax.text(b1_x, b1_y - 0.40, "$b_1$: sin cambios",
+            ha='center', fontsize=8, color=COLORS["gray"])
+
+    _draw_node(ax, b2_x, b2_y, 21, 16, radius=0.27, backprop=True)
+    ax.text(b2_x, b2_y - 0.40, "$b_2$: 20->21, 15->16",
+            ha='center', fontsize=8, color=COLORS["purple"], fontweight='bold')
+
+    _draw_node(ax, new_x, new_y, 1, 1, radius=0.25, backprop=True)
+    ax.text(new_x, new_y - 0.40, "nuevo: 0->1, 0->1",
+            ha='center', fontsize=8, color=COLORS["purple"], fontweight='bold')
+
+    # Phase label
+    ax.text(6.5, 4.0, "[M4] Retropropagacion\n\nEl resultado (+1)\nsube por el camino:\n"
+                       "nuevo -> $b_2$ -> $a_1$ -> raiz\n\n"
+                       "Cada nodo en el\ncamino recibe:\n"
+                       "  N += 1\n  Q += 1",
+            fontsize=9, color=COLORS["purple"], ha='center', va='center',
+            fontweight='bold',
+            bbox=dict(boxstyle='round,pad=0.5', facecolor='white',
+                      edgecolor=COLORS["purple"], alpha=0.9))
+
+    ax.set_xlim(-1.0, 7.5)
+    ax.set_ylim(-1.2, 8.0)
+    ax.set_aspect('equal')
+    ax.axis('off')
+    ax.set_title("Iteracion 101: retropropagacion\n"
+                 "[M4] el resultado (+1) sube actualizando N y Q",
+                 fontsize=11, fontweight='bold', color=COLORS["dark"])
+
+    fig.suptitle("Una iteracion completa de MCTS con UCT",
+                 fontsize=14, fontweight='bold', y=1.01)
     plt.tight_layout()
     _save(fig, "09c_uct_selection_trace.png")
 

@@ -43,6 +43,19 @@ UCT usa la **misma estructura** para elegir qué hijo visitar.
 
 ## 2. La fórmula UCT
 
+### 2.1. Recordatorio: $N$, $Q$ y qué es una "visita"
+
+Antes de ver la fórmula, aclaremos la terminología. Cada nodo $v$ del árbol almacena dos contadores:
+
+- $N(v)$: el **número de visitas** — cuántas veces un rollout ha pasado *a través de* este nodo (es decir, cuántas veces este nodo estuvo en el camino selección → expansión → simulación → retropropagación)
+- $Q(v)$: la **suma de recompensas** acumuladas por esos rollouts (cada rollout aporta $+1$ si ganó o $-1$ si perdió)
+
+Una **visita** no es solo "mirar" un nodo — es un ciclo completo `[M1]→[M2]→[M3]→[M4]` que *pasó por* ese nodo. Cuando decimos "el nodo tiene $N = 40$", significa que 40 iteraciones completas de MCTS incluyeron ese nodo en su camino de selección.
+
+La **tasa de éxito** de un nodo es $Q(v)/N(v)$: la fracción de rollouts que resultaron en victoria. Si $N = 40$ y $Q = 28$, entonces $Q/N = 0.70$ — el 70% de los rollouts que pasaron por ese nodo terminaron ganando.
+
+### 2.2. La fórmula
+
 En cada nodo durante la fase de selección `[M1]`, elegimos el hijo $v$ que maximiza:
 
 $$\text{UCT}(v) = \frac{Q(v)}{N(v)} + c \sqrt{\frac{\ln N(\text{padre})}{N(v)}}$$
@@ -50,6 +63,8 @@ $$\text{UCT}(v) = \frac{Q(v)}{N(v)} + c \sqrt{\frac{\ln N(\text{padre})}{N(v)}}$
 donde el primer término es la **explotación** y el segundo es la **exploración**.
 
 ![Descomposición de la fórmula UCT]({{ '/18_montecarlo_search/images/09_uct_formula.png' | url }})
+
+### 2.3. Término por término
 
 **Término de explotación** $Q(v)/N(v)$: la tasa de éxito promedio del nodo. Favorece nodos con buenos resultados — los que han ganado más rollouts.
 
@@ -69,38 +84,110 @@ donde el primer término es la **explotación** y el segundo es la **exploració
 
 En la práctica, $c$ se ajusta empíricamente. Para recompensas en $[0, 1]$, valores de $c$ entre 0.5 y 1.5 suelen funcionar bien.
 
-### Ejemplo concreto: UCT nivel por nivel
+### 2.4. Una iteración completa, paso a paso
 
-Para entender cómo funciona la selección, tracemos una iteración completa con números reales. Usaremos $c = 1.41$.
+Para entender cómo funciona UCT en la práctica, tracemos la **iteración 101** de MCTS con $c = 1.41$ en un árbol que ya tiene 100 iteraciones acumuladas. Esta traza cubre las cuatro fases — selección, expansión, simulación y retropropagación — en un solo ciclo completo.
 
-![UCT en acción: selección nivel por nivel]({{ '/18_montecarlo_search/images/09c_uct_selection_trace.png' | url }})
+![UCT en acción: una iteración completa]({{ '/18_montecarlo_search/images/09c_uct_selection_trace.png' | url }})
 
-**Panel izquierdo — Iteración 101: la exploración domina.**
+El estado del árbol **antes** de la iteración 101 es:
 
-La raíz tiene $N = 100$ y tres hijos. Calculamos UCT para cada uno:
+```
+                Raíz (N=100, Q=58)
+               /       |        \
+         a₁(40,28)  a₂(35,15)  a₃(25,14)
+         /     \
+    b₁(18,10) b₂(20,15)
+```
 
-| Hijo | $N(v)$ | $Q(v)$ | $Q/N$ (explotación) | $c\sqrt{\ln(100)/N}$ (exploración) | UCT |
+Cada par $(N, Q)$ representa las visitas y victorias acumuladas en 100 iteraciones previas. Veamos qué pasa en la iteración 101.
+
+#### Paso 1 — `[M1]` Selección, nivel 0: la raíz
+
+La selección empieza en la raíz. Todos sus hijos están expandidos, así que calculamos UCT para cada uno usando $N(\text{padre}) = N(\text{raíz}) = 100$:
+
+| Hijo | $N(v)$ | $Q(v)$ | $\frac{Q}{N}$ | $1.41\sqrt{\frac{\ln(100)}{N}}$ | UCT |
 |:---:|:---:|:---:|:---:|:---:|:---:|
-| $a_1$ | 45 | 30 | 0.67 | $1.41 \times \sqrt{4.6/45} = 0.45$ | **1.12** |
-| $a_2$ | 50 | 25 | 0.50 | $1.41 \times \sqrt{4.6/50} = 0.43$ | 0.93 |
-| $a_3$ | 5 | 3 | 0.60 | $1.41 \times \sqrt{4.6/5} = 1.35$ | **1.95** |
+| $a_1$ | 40 | 28 | 0.70 | $1.41 \times \sqrt{4.60/40} = 0.48$ | **1.18** |
+| $a_2$ | 35 | 15 | 0.43 | $1.41 \times \sqrt{4.60/35} = 0.51$ | 0.94 |
+| $a_3$ | 25 | 14 | 0.56 | $1.41 \times \sqrt{4.60/25} = 0.60$ | 1.16 |
 
-El nodo $a_3$ tiene una tasa de éxito mediocre (60%, menor que el 67% de $a_1$), pero solo tiene 5 visitas. Su bonus de exploración es **enorme** (1.35 vs 0.45 de $a_1$). UCT dice: "apenas probaste esta opción — dale más oportunidades antes de descartarla."
+$a_1$ gana con UCT $= 1.18$. Tiene la mejor tasa de éxito (70%) y visitas suficientes para que su estimación sea confiable. **La selección baja a $a_1$.**
 
-**Panel derecho — Iteración 120: la selección baja por el árbol.**
+Observa que $a_3$ tiene un bonus de exploración mayor que $a_1$ (0.60 vs 0.48) porque tiene menos visitas (25 vs 40), pero no le alcanza para compensar la diferencia en explotación. Si $a_3$ tuviera, digamos, solo 5 visitas, su bonus sería $\approx 1.35$ y ganaría por lejos — UCT obligaría a explorarlo antes de descartarlo.
 
-Veinte iteraciones después, $a_3$ ya acumuló 25 visitas. Su bonus se redujo y ahora $a_1$ gana en la raíz. Pero la selección **no se detiene ahí** — UCT se aplica de nuevo en $a_1$ para elegir entre sus hijos, usando $N(a_1) = 50$ como el nuevo $N(\text{padre})$:
+#### Paso 2 — `[M1]` Selección, nivel 1: dentro de $a_1$
 
-| Nieto | $N(v)$ | $Q(v)$ | $Q/N$ | $c\sqrt{\ln(50)/N}$ | UCT |
+Ahora estamos en $a_1$. La selección se repite con un **nuevo $N(\text{padre})$**: esta vez es $N(a_1) = 40$, no el $N$ de la raíz. Los hijos de $a_1$ son $b_1$ y $b_2$:
+
+| Nieto | $N(v)$ | $Q(v)$ | $\frac{Q}{N}$ | $1.41\sqrt{\frac{\ln(40)}{N}}$ | UCT |
 |:---:|:---:|:---:|:---:|:---:|:---:|
-| $g_1$ | 20 | 14 | 0.70 | $1.41 \times \sqrt{3.9/20} = 0.62$ | 1.32 |
-| $g_2$ | 22 | 15 | 0.68 | $1.41 \times \sqrt{3.9/22} = 0.59$ | **1.27** |
+| $b_1$ | 18 | 10 | 0.56 | $1.41 \times \sqrt{3.69/18} = 0.64$ | 1.19 |
+| $b_2$ | 20 | 15 | 0.75 | $1.41 \times \sqrt{3.69/20} = 0.61$ | **1.36** |
 
-La selección elige $g_1$, y si $g_1$ tiene un hijo no expandido, se pasa a expansión `[M2]`. Si todos sus hijos ya existen, UCT se aplica *otra vez* en $g_1$ con $N(g_1)$ como padre — y así sucesivamente hasta encontrar un nodo con hijos sin expandir.
+$b_2$ gana con UCT $= 1.36$. Tiene mejor tasa de éxito (75% vs 56%) y un bonus de exploración similar. **La selección baja a $b_2$.**
 
-**Lo importante**: UCT no se aplica solo en la raíz. Se aplica en **cada nodo intermedio** del camino de selección, desde la raíz hasta llegar a un nodo con acciones no expandidas. En cada nivel, $N(\text{padre})$ es el $N$ del nodo actual, no el de la raíz.
+**Lo crucial**: en cada nivel, $N(\text{padre})$ cambia. En la raíz usamos $N = 100$; en $a_1$ usamos $N = 40$. Cada nodo es un bandido independiente con su propio "reloj".
 
-**Caso borde — $N(v) = 0$**: si un hijo nunca ha sido visitado, UCT $= \infty$. Los nodos no visitados **siempre** tienen prioridad absoluta. Por eso la expansión `[M2]` funciona: un nodo recién creado salta automáticamente al frente de la cola.
+#### Paso 3 — `[M2]` Expansión: $b_2$ tiene un hijo sin expandir
+
+La selección llega a $b_2$ y encuentra que tiene una acción legal que **aún no tiene nodo en el árbol**. Aquí la selección se detiene y pasamos a la fase de expansión: creamos un **nuevo nodo** como hijo de $b_2$, con $N = 0$ y $Q = 0$.
+
+```
+    b₂(20,15)
+       |
+    nuevo(0,0)   <-- nodo recién creado
+```
+
+#### Paso 4 — `[M3]` Simulación (rollout)
+
+Desde el estado del nodo recién creado, ejecutamos un **rollout**: jugamos movimientos aleatorios hasta que la partida termine. En este ejemplo, el rollout termina con **victoria** para nuestro jugador → resultado $= +1$.
+
+#### Paso 5 — `[M4]` Retropropagación
+
+El resultado del rollout ($+1$) **sube por el camino** que recorrimos: nuevo → $b_2$ → $a_1$ → raíz. Cada nodo en el camino recibe:
+
+- $N \mathrel{+}= 1$ (una visita más)
+- $Q \mathrel{+}= 1$ (una victoria más, porque el rollout dio $+1$)
+
+Los nodos que **no** están en el camino ($a_2$, $a_3$, $b_1$) no se modifican.
+
+| Nodo | Antes | Después | Cambio |
+|:---:|:---:|:---:|---|
+| Raíz | $(100, 58)$ | $(101, 59)$ | $N{+}1, Q{+}1$ |
+| $a_1$ | $(40, 28)$ | $(41, 29)$ | $N{+}1, Q{+}1$ |
+| $b_2$ | $(20, 15)$ | $(21, 16)$ | $N{+}1, Q{+}1$ |
+| nuevo | $(0, 0)$ | $(1, 1)$ | $N{+}1, Q{+}1$ |
+| $a_2$ | $(35, 15)$ | $(35, 15)$ | sin cambios |
+| $a_3$ | $(25, 14)$ | $(25, 14)$ | sin cambios |
+| $b_1$ | $(18, 10)$ | $(18, 10)$ | sin cambios |
+
+Si el rollout hubiera dado $-1$ (derrota), los nodos en el camino recibirían $N \mathrel{+}= 1$ pero $Q \mathrel{-}= 1$: la visita se cuenta, pero la recompensa es negativa.
+
+Esto es **una** iteración. MCTS repite este ciclo $M$ veces (típicamente 500–2000), y cada iteración actualiza una rama distinta del árbol, acumulando evidencia sobre qué acciones son buenas.
+
+### 2.5. Caso borde — $N(v) = 0$
+
+¿Qué pasa si un hijo nunca ha sido visitado? El denominador $N(v) = 0$ haría la fracción indefinida. La convención es:
+
+$$N(v) = 0 \implies \text{UCT}(v) = +\infty$$
+
+Los nodos no visitados tienen **prioridad absoluta**. Si un nodo padre tiene 3 hijos expandidos y uno con $N = 0$, ese hijo se elige sin calcular nada más. Esto tiene una consecuencia práctica: cada vez que `[M2]` crea un nodo nuevo, la siguiente iteración que pase por su padre lo visitará inmediatamente (porque tiene $\text{UCT} = \infty$).
+
+En la traza anterior, el nodo "nuevo" quedó con $N = 1$ después de la retropropagación. En la iteración 102, si la selección vuelve a $b_2$ y $b_2$ tiene otro hijo sin expandir, ese hijo tendría $N = 0$ y se elegiría automáticamente — sin importar que el nodo "nuevo" tenga $Q/N = 1.0$.
+
+### 2.6. La constante $c$ y el balance exploración-explotación
+
+Para cerrar, veamos cómo $c$ afecta la selección en el mismo árbol de nuestro ejemplo:
+
+| $c$ | UCT($a_1$) | UCT($a_2$) | UCT($a_3$) | Elegido | Comportamiento |
+|:---:|:---:|:---:|:---:|:---:|---|
+| 0 | 0.70 | 0.43 | 0.56 | $a_1$ | Pura explotación: siempre el mejor $Q/N$ |
+| 0.5 | 0.87 | 0.61 | 0.77 | $a_1$ | Explotación domina, pero con algo de corrección |
+| 1.41 | 1.18 | 0.94 | 1.16 | $a_1$ | Balance — $a_3$ está cerca, será explorado pronto |
+| 5.0 | 2.40 | 2.24 | 2.71 | $a_3$ | Exploración domina: el menos visitado gana |
+
+Con $c = 0$, MCTS siempre elige $a_1$ (mejor $Q/N$) y **nunca descubre** si $a_2$ o $a_3$ son mejores — es el problema de pura explotación del módulo 17. Con $c = 5$, siempre elige el menos visitado, gastando rollouts en acciones malas. El valor $c = \sqrt{2} \approx 1.41$ mantiene las diferencias entre nodos mientras da oportunidades proporcionales a la incertidumbre.
 
 ---
 
