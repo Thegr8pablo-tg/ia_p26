@@ -234,14 +234,15 @@ La única diferencia con la versión de §18.3 es la función `uct_value` en `[U
 
 ## 6. UCT vs selección naive
 
+Para hacer la comparación concreta, usamos Hex 3×3 — lo suficientemente pequeño para conocer la **respuesta exacta por minimax**. De las 9 celdas, 5 son primer movimiento ganador (minimax $= +1$, en verde) y 4 son perdedoras (minimax $= -1$, en rojo). Ambos algoritmos reciben el mismo presupuesto: 500 iteraciones.
+
 ![UCT vs selección uniforme]({{ '/18_montecarlo_search/images/10_uct_vs_uniform.png' | url }})
 
-La figura muestra el mismo presupuesto de iteraciones (500) en la misma posición de Hex 3×3, con dos políticas de selección:
+**Naive** (mayor $Q/N$): la selección se engancha con el primer nodo que tuvo un buen rollout — en este caso $(0,2)$ — y le dedica **481 de 500 visitas** (96% del presupuesto). Las otras 8 acciones reciben entre 1 y 6 visitas cada una. Varias acciones ganadoras como $(1,0)$, $(1,1)$ y $(1,2)$ solo tienen 1–3 visitas, así que el algoritmo **no sabe** que también son ganadoras. Peor aún: con tan pocas visitas, sus estimaciones $Q/N$ son ruidosas y poco confiables ($\pm 1.00$ o $\pm 0.33$). Naive acertó aquí por suerte — si el primer rollout de $(0,2)$ hubiera dado $-1$, se habría enganchado con otra celda y posiblemente con una perdedora.
 
-- **Naive** (mayor $Q/N$): las visitas se concentran en los primeros nodos que tuvieron buen rollout. Ramas prometedoras descubiertas tarde quedan sub-exploradas
-- **UCT** ($c = \sqrt{2}$): las visitas se distribuyen de forma más inteligente. Nodos poco visitados reciben un bonus que garantiza exploración. Conforme acumulan visitas, el bonus decrece y la explotación domina
+**UCT** ($c = \sqrt{2}$): las visitas se distribuyen de forma más inteligente. Las acciones ganadoras (verde) tienden a acumular más visitas — $(0,2)$ tiene 98, $(1,1)$ tiene 87, $(2,0)$ tiene 46 — mientras que las perdedoras (rojo) reciben menos — $(0,0)$ solo 10, $(2,2)$ solo 21. UCT no sabe cuáles son ganadoras *a priori*, pero el bonus de exploración le obligó a probar todas al menos ~10 veces, y después la explotación concentró el esfuerzo en las que mostraron mejores resultados. Observa que las estimaciones $Q/N$ de UCT son más moderadas (entre $-0.20$ y $+0.55$) porque reflejan la probabilidad de ganar con *juego aleatorio*, no con juego óptimo — pero el **ranking** es informativo.
 
-El resultado: UCT converge más rápido a la acción óptima porque evita **tanto** el error de explorar demasiado poco (perder la mejor acción) **como** el de explorar demasiado (desperdiciar rollouts).
+**El contraste clave**: naive sabe mucho sobre *una* acción y casi nada sobre las demás. UCT sabe *algo* sobre todas y *más* sobre las mejores. Esto es exactamente el balance exploración-explotación de UCB1 (§17.3) aplicado al árbol.
 
 ---
 

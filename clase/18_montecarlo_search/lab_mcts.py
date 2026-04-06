@@ -766,12 +766,20 @@ def plot_09_mcts_trace():
 # ---------------------------------------------------------------------------
 
 def plot_10_uct_vs_uniform():
-    """Compare UCT vs naive selection on Hex 3x3."""
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    """Compare UCT vs naive selection on Hex 3x3, with minimax ground truth."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+    # Minimax ground truth for Hex 3x3 first move (precomputed)
+    # +1 = winning for Black (player 1), -1 = losing
+    minimax_val = {
+        (0, 0): -1, (0, 1): -1, (0, 2): +1,
+        (1, 0): +1, (1, 1): +1, (1, 2): +1,
+        (2, 0): +1, (2, 1): -1, (2, 2): -1,
+    }
 
     for ax, title, runner in [
         (ax1, "Naive (mayor Q/N)", lambda s, it, p: _run_mcts_naive(s, it, p)),
-        (ax2, "UCT (c = √2)", lambda s, it, p: _run_mcts(s, it, p, c=1.41))
+        (ax2, "UCT (c = $\\sqrt{2}$)", lambda s, it, p: _run_mcts(s, it, p, c=1.41))
     ]:
         random.seed(42)
         state = Hex(3)
@@ -781,20 +789,38 @@ def plot_10_uct_vs_uniform():
         qn = [root.children[a].Q / root.children[a].N if root.children[a].N > 0 else 0
               for a in actions]
         labels = [f"({r},{c})" for r, c in actions]
-        colors = [COLORS["blue"] if v > 0 else COLORS["red"] for v in qn]
-        ax.bar(range(len(actions)), visits, color=colors, alpha=0.8,
-               edgecolor=COLORS["dark"])
+
+        # Color by minimax ground truth: green=winning, red=losing
+        colors = [COLORS["green"] if minimax_val[a] == 1 else COLORS["red"]
+                  for a in actions]
+        bars = ax.bar(range(len(actions)), visits, color=colors, alpha=0.75,
+                      edgecolor=COLORS["dark"], linewidth=0.8)
         ax.set_xticks(range(len(actions)))
         ax.set_xticklabels(labels, rotation=45, fontsize=9)
-        ax.set_ylabel("Visitas N(v)")
+        ax.set_ylabel("Visitas N(v)", fontsize=11)
         ax.set_title(title, fontsize=12, fontweight='bold')
-        # Annotate Q/N on top
-        for j, (v, q) in enumerate(zip(visits, qn)):
-            ax.text(j, v + 2, f"{q:.2f}", ha='center', fontsize=8, color=COLORS["gray"])
 
-    fig.suptitle("Selección UCT vs Naive — 500 iteraciones en Hex 3×3",
-                 fontsize=14, fontweight='bold')
-    plt.tight_layout()
+        # Annotate Q/N on top of each bar
+        max_v = max(visits) if visits else 1
+        for j, (v, q) in enumerate(zip(visits, qn)):
+            ax.text(j, v + max_v * 0.02, f"Q/N={q:+.2f}",
+                    ha='center', fontsize=7.5, color=COLORS["dark"])
+
+    # Legend (shared)
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor=COLORS["green"], alpha=0.75, edgecolor=COLORS["dark"],
+              label='Minimax ganadora (+1)'),
+        Patch(facecolor=COLORS["red"], alpha=0.75, edgecolor=COLORS["dark"],
+              label='Minimax perdedora (-1)'),
+    ]
+    fig.legend(handles=legend_elements, loc='lower center', ncol=2,
+               fontsize=10, frameon=True, bbox_to_anchor=(0.5, -0.02))
+
+    fig.suptitle("UCT vs Naive — 500 iteraciones en Hex 3$\\times$3\n"
+                 "(colores = valor minimax real de cada primer movimiento)",
+                 fontsize=13, fontweight='bold')
+    plt.tight_layout(rect=[0, 0.05, 1, 0.95])
     _save(fig, "10_uct_vs_uniform.png")
 
 
