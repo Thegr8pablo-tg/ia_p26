@@ -827,31 +827,38 @@ def plot_10_uct_vs_uniform():
 
 
 def plot_11_uct_c_effect():
-    """Win rate vs exploration constant c on Hex 5x5."""
+    """Win rate vs exploration constant c — MCTS vs alpha-beta on Hex 5x5."""
     fig, ax = plt.subplots(1, 1, figsize=(10, 6))
 
-    c_values = [0.1, 0.25, 0.5, 0.75, 1.0, 1.41, 2.0, 3.0, 5.0]
-    n_games = 40
-    iters_per_move = 200
+    c_values = [0.01, 0.1, 0.25, 0.5, 0.75, 1.0, 1.41, 2.0, 3.0, 5.0, 10.0]
+    n_games = 50
+    iters_per_move = 100
+    ab_agent = _alphabeta_agent(3)
     win_rates = []
 
     for c in c_values:
         wins = 0
         for g in range(n_games):
-            random.seed(g * 100)
-            result = _play_game(5, _mcts_agent(iters_per_move, c), _random_agent)
-            if result == 1:
-                wins += 1
+            # Alternate who plays first for fairness
+            random.seed(g * 100 + int(c * 100))
+            if g % 2 == 0:
+                result = _play_game(5, _mcts_agent(iters_per_move, c), ab_agent)
+                if result == 1:
+                    wins += 1
+            else:
+                result = _play_game(5, ab_agent, _mcts_agent(iters_per_move, c))
+                if result == -1:
+                    wins += 1
         win_rates.append(wins / n_games)
-        print(f"  c={c:.2f}: {wins}/{n_games} wins")
+        print(f"  c={c:.2f}: {wins}/{n_games} wins vs alpha-beta")
 
     ax.plot(c_values, win_rates, 'o-', color=COLORS["blue"], linewidth=2.5,
             markersize=8, markerfacecolor=COLORS["blue"])
     ax.axvline(x=1.41, color=COLORS["red"], linestyle='--', alpha=0.7,
-               label=f"c = √2 ≈ 1.41")
-    ax.set_xlabel("Constante de exploración c", fontsize=12)
-    ax.set_ylabel("Tasa de victorias vs aleatorio", fontsize=12)
-    ax.set_title("Efecto de c en MCTS con UCT (Hex 5×5, 200 iter/movimiento)",
+               label="$c = \\sqrt{2} \\approx 1.41$")
+    ax.set_xlabel("Constante de exploración $c$", fontsize=12)
+    ax.set_ylabel("Tasa de victorias vs Alpha-beta (d=3)", fontsize=12)
+    ax.set_title("Efecto de $c$ en MCTS con UCT (Hex 5$\\times$5, 100 iter/mov, vs Alpha-beta)",
                  fontsize=13, fontweight='bold')
     ax.legend(fontsize=11)
     ax.set_ylim(0, 1.05)

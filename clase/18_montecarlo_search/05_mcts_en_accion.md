@@ -85,18 +85,19 @@ En Hex 7×7, minimax exacto es imposible ($\sim 10^{20}$ estados). Aquí es dond
 
 ![Efecto de c en la tasa de victorias]({{ '/18_montecarlo_search/images/11_uct_c_effect.png' | url }})
 
-La tabla muestra la tasa de victorias de MCTS (2000 iteraciones) contra Alpha-beta en Hex 7×7, variando $c$:
+La figura muestra la tasa de victorias de MCTS (100 iteraciones por movimiento) contra Alpha-beta (d=3) en Hex 5×5, variando $c$. Se juegan 50 partidas por valor de $c$, alternando quién juega primero para evitar sesgo.
 
 | $c$ | Tasa de victorias | Interpretación |
 |:---:|:---:|---|
-| 0.1 | 52% | Casi pura explotación — se aferra a la primera opción razonable |
-| 0.5 | 67% | Buena explotación, poca exploración |
-| 1.0 | 70% | Buen balance para Hex |
-| $\sqrt{2}$ | 71% | Valor teórico — funciona bien |
-| 2.0 | 68% | Empieza a explorar demasiado |
-| 5.0 | 55% | Demasiada exploración — pierde la ventaja del árbol |
+| 0.01 | 42% | Pura explotación — se engancha con la primera acción que tuvo buen rollout, ignora alternativas |
+| 0.5 | 48% | Buen balance entre exploración y explotación |
+| $\sqrt{2}$ | 50% | Valor teórico (derivado de Hoeffding, §17.3) — robusto |
+| 3.0 | 36% | Demasiada exploración — gasta rollouts en acciones malas |
+| 10.0 | 32% | Casi uniforme — pierde la ventaja selectiva del árbol |
 
-El óptimo está en el rango $c \in [0.5, 1.5]$. El valor teórico $c = \sqrt{2}$ es robusto — no es óptimo para Hex específicamente, pero funciona bien en general. Ajustar $c$ para un juego particular puede mejorar el rendimiento en 5-10%.
+La curva tiene forma de campana: los extremos ($c$ muy bajo o muy alto) rinden peor. Con $c$ muy bajo, MCTS se comporta como la selección naive de §18.4 — se engancha con una acción y nunca descubre alternativas mejores. Con $c$ muy alto, explora tantas ramas que no profundiza en ninguna, perdiendo la ventaja de construir un árbol selectivo.
+
+El óptimo está en el rango $c \in [0.5, 1.5]$. El valor teórico $c = \sqrt{2}$ es un buen punto de partida para cualquier juego.
 
 ---
 
