@@ -109,9 +109,14 @@ La demostración es elegante y no constructiva — prueba que la estrategia *exi
 
 **Teorema.** Una partida de Hex no puede terminar en empate.
 
-La intuición: cuando todas las celdas están ocupadas, el tablero está completamente dividido entre Negro y Blanco. Por la topología del rombo, cualquier "muro" de piedras blancas que bloquee la conexión de Negro necesariamente conecta los lados de Blanco — y viceversa. Es como un mapa con dos países: si uno de ellos no logra cruzar de un lado a otro, el otro necesariamente lo hace.
+Para entender por qué, pensemos en un tablero completamente lleno — todas las celdas ocupadas, ninguna vacía. Cada celda es negra o blanca. Ahora consideremos qué pasa con la conexión de Negro (arriba↔abajo):
 
-Esto es una consecuencia del **teorema del juego hexagonal** (una variante discreta del teorema de Brouwer del punto fijo). La propiedad es exclusiva de la geometría hexagonal — en tableros cuadrados (como tic-tac-toe generalizado), los empates son posibles.
+- **Caso 1: Negro tiene un camino** de arriba a abajo → Negro gana.
+- **Caso 2: Negro NO tiene un camino** de arriba a abajo → entonces existe un "muro" continuo de piedras blancas que separa el lado superior del inferior. Pero ese muro, para bloquear *completamente* a Negro en un tablero hexagonal con forma de rombo, necesariamente toca el lado izquierdo y el lado derecho del tablero. Es decir, ese muro **es** un camino de Blanco de izquierda a derecha → Blanco gana.
+
+No hay un tercer caso: o Negro cruza de arriba a abajo, o Blanco cruza de izquierda a derecha. Siempre gana exactamente uno de los dos.
+
+¿Por qué esto no ocurre en tableros cuadrados? En una cuadrícula, dos caminos perpendiculares pueden cruzarse en una celda sin compartirla — cada uno pasa "por un lado" de la celda. En la geometría hexagonal, esto es imposible: si un camino de Negro cruza de arriba a abajo, *físicamente bloquea* cualquier camino de Blanco de izquierda a derecha y viceversa. Los hexágonos no dejan huecos por donde un camino pueda "escabullirse" alrededor del otro. Esto es lo que formalmente se conoce como el **teorema del juego hexagonal** (una variante discreta del teorema de Brouwer del punto fijo).
 
 **Consecuencia para el análisis**: como no hay empates, la utilidad es siempre $+1$ o $-1$. Esto simplifica los rollouts — cada simulación tiene un resultado binario, y el promedio de rollouts es directamente la probabilidad estimada de ganar.
 
