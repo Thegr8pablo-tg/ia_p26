@@ -531,21 +531,23 @@ def plot_05_hex_3x3_games():
     """Two completed 3x3 games side by side."""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
-    # Game 1: Black wins
-    b1 = [[1, 2, 0],
-           [2, 1, 0],
-           [0, 2, 1]]
-    win1 = [(0, 0), (1, 1), (2, 2)]
-    _draw_hex_board(ax1, b1, 3, hex_size=0.8, win_path=win1, edge_labels=False)
-    ax1.set_title("Negro gana (diagonal)", fontsize=12, fontweight='bold')
+    # Game 1: Black wins (top row → bottom row via diagonal path)
+    # B placed at (0,1), (1,1), (2,0) — connected chain from row 0 to row 2
+    b1 = [[2, 1, 0],
+           [0, 1, 2],
+           [1, 0, 0]]
+    win1 = [(0, 1), (1, 1), (2, 0)]
+    _draw_hex_board(ax1, b1, 3, win_path=win1, edge_labels=True)
+    ax1.set_title("Negro gana (arriba → abajo)", fontsize=12, fontweight='bold')
 
-    # Game 2: White wins
-    b2 = [[1, 2, 1],
-           [0, 2, 1],
-           [0, 2, 0]]
-    win2 = [(0, 1), (1, 1), (2, 1)]
-    _draw_hex_board(ax2, b2, 3, hex_size=0.8, win_path=win2, edge_labels=False)
-    ax2.set_title("Blanco gana (columna central)", fontsize=12, fontweight='bold')
+    # Game 2: White wins (left col → right col via middle row)
+    # W placed at (1,0), (1,1), (1,2) — connected chain from col 0 to col 2
+    b2 = [[1, 0, 1],
+           [2, 2, 2],
+           [0, 1, 0]]
+    win2 = [(1, 0), (1, 1), (1, 2)]
+    _draw_hex_board(ax2, b2, 3, win_path=win2, edge_labels=True)
+    ax2.set_title("Blanco gana (izquierda → derecha)", fontsize=12, fontweight='bold')
 
     fig.suptitle("Hex 3×3: dos partidas completas", fontsize=14, fontweight='bold')
     _save(fig, "05_hex_3x3_games.png")

@@ -77,7 +77,7 @@ El jugador Negro formó una cadena de piedras conectando su lado superior con su
 
 ![Dos partidas completas en Hex 3×3]({{ '/18_montecarlo_search/images/05_hex_3x3_games.png' | url }})
 
-Dos partidas en el tablero pequeño que usaremos para trazas. A la izquierda, una victoria de Negro; a la derecha, una victoria de Blanco. En 3×3, el juego dura como máximo 9 movimientos y el árbol completo tiene $\sim 10^3$ nodos — lo suficientemente pequeño para que minimax (o MCTS con pocas iteraciones) lo resuelva.
+Dos partidas en el tablero pequeño que usaremos para trazas. A la izquierda, Negro conecta su lado superior con su lado inferior a través de una cadena diagonal (resaltada en verde). A la derecha, Blanco conecta su lado izquierdo con su lado derecho cruzando por la fila central. En 3×3, el juego dura como máximo 9 movimientos y el árbol completo tiene $\sim 10^3$ nodos — lo suficientemente pequeño para que minimax (o MCTS con pocas iteraciones) lo resuelva.
 
 ---
 
