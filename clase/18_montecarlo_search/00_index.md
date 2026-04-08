@@ -2,7 +2,7 @@
 title: "Búsqueda Monte Carlo en Árboles"
 ---
 
-:::homework{id="hw-videos-markov" title="Videos: Cadenas de Markov y Cadenas de Markov Ocultas" due="2026-04-27" points="20"}
+:::homework{id="hw-videos-markov" title="Videos: Cadenas de Markov y Cadenas de Markov Ocultas" due="2026-04-13" points="20"}
 
 Ve los siguientes videos y escribe una reflexión personal sobre lo que aprendiste, qué te sorprendió y cómo conecta con lo visto en el curso. **Puede haber mini examen en clase basado en el contenido de los videos.**
 
