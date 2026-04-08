@@ -7,7 +7,7 @@ title: "Historia y Motivación"
 > *"I was drawn to this investigation not by applications, but by the desire to show, with a particularly clear example, that the mathematical results derived under the assumption of independence can also be obtained without that assumption."*
 > — A.A. Markov, 1913
 
-{% image "images/01_nekrasov_vs_markov.png", "Línea de tiempo: la disputa Nekrasov–Markov y el nacimiento de las cadenas de Markov" %}
+![Línea de tiempo: la disputa Nekrasov–Markov y el nacimiento de las cadenas de Markov]({{ '/19_cadenas_de_markov/images/01_nekrasov_vs_markov.png' | url }})
 
 ---
 
