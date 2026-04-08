@@ -272,15 +272,36 @@ Los dos caminos son **mutuamente excluyentes** (no puedes estar en $V$ y $C$ al 
 
 $P[V, V]$ es simplemente la entrada de la fila $V$, columna $V$ de la matriz $\mathbf{P}$ — es decir, la probabilidad de pasar de $V$ a $V$ en **un solo paso**. En general, $P[i, j]$ = probabilidad de ir de estado $i$ a estado $j$ en un paso.
 
-### La fórmula general
+### Por qué esto es exactamente multiplicación de matrices
 
-Para cualquier par de estados $i$ y $j$, la probabilidad de ir de $i$ a $j$ en **2 pasos** es:
+Recordemos cómo se multiplican dos matrices. La entrada $(i,j)$ del producto $\mathbf{A} \cdot \mathbf{B}$ se obtiene tomando el **renglón $i$ de $\mathbf{A}$** y la **columna $j$ de $\mathbf{B}$**, multiplicando término a término y sumando:
+
+$$(\mathbf{A} \cdot \mathbf{B})_{ij} = \sum_{k} A_{ik} \cdot B_{kj}$$
+
+Apliquemos esto a $\mathbf{P}^2 = \mathbf{P} \cdot \mathbf{P}$ con la cadena V/C. Para calcular la entrada $(V, V)$:
+
+```
+Renglón V de P  →  [ 0.35   0.65 ]    (probabilidades de salir de V en el paso 1)
+                        ×       ×
+Columna V de P  →  [ 0.35   0.52 ]    (probabilidades de llegar a V en el paso 2)
+                        +
+                   = 0.35×0.35 + 0.65×0.52 = 0.4605
+```
+
+¿Por qué el **renglón $V$** de $\mathbf{P}$? Ese renglón es la distribución de salida desde $V$: $P[V,V]=0.35$ y $P[V,C]=0.65$. Describe el **primer paso**.
+
+¿Por qué la **columna $V$** de $\mathbf{P}$? Esa columna contiene las probabilidades de llegar a $V$ desde cualquier estado: $P[V,V]=0.35$ y $P[C,V]=0.52$. Describe el **segundo paso**.
+
+Al multiplicar término a término y sumar, cada producto $P[V,k] \cdot P[k,V]$ es la probabilidad de usar el estado intermedio $k$:
+
+- $k = V$: probabilidad del camino $V \to V \to V$ es $P[V,V] \cdot P[V,V] = 0.35 \times 0.35$
+- $k = C$: probabilidad del camino $V \to C \to V$ es $P[V,C] \cdot P[C,V] = 0.65 \times 0.52$
+
+Sumar sobre todos los $k$ posibles da la probabilidad total de llegar a $V$ en 2 pasos desde $V$. Esto es exactamente la multiplicación renglón-por-columna:
 
 $$\mathbf{P}^2[i,\, j] = \sum_{k \in S} P[i, k] \cdot P[k, j]$$
 
-Es decir: para cada posible estado intermedio $k$, multiplico la probabilidad de llegar a $k$ desde $i$ por la probabilidad de llegar a $j$ desde $k$, y sumo sobre todos los intermedios posibles. Esto es exactamente la **multiplicación de matrices** — de ahí el nombre $\mathbf{P}^2 = \mathbf{P} \cdot \mathbf{P}$.
-
-En general, la probabilidad de ir de $i$ a $j$ en $n$ pasos es la entrada $(i, j)$ de la $n$-ésima potencia de la matriz:
+La multiplicación matricial suma automáticamente sobre todos los intermedios. No es una coincidencia — **es exactamente la misma operación**. Por eso $\mathbf{P}^2 = \mathbf{P} \cdot \mathbf{P}$ da las probabilidades de transición en 2 pasos, y en general:
 
 $$P(X_{t+n} = j \mid X_t = i) = (\mathbf{P}^n)_{ij}$$
 
