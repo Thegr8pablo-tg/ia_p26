@@ -42,7 +42,9 @@ Para una cadena de Markov finita que sea **irreducible** y **aperiódica**, con 
 
 2. **Convergencia del promedio temporal.** La fracción de tiempo que la cadena pasa en el estado $j$ converge a $\pi_j$. Si $\pi_j = 0.444$, entonces a largo plazo la cadena visita el estado $j$ aproximadamente el 44.4% del tiempo.
 
-3. **Promedios de funciones.** Para cualquier función $f$ definida sobre los estados, el promedio temporal $\frac{1}{T}\sum_{t=0}^{T-1} f(X_t)$ converge a $\mathbb{E}_\pi[f] = \sum_{j \in S} \pi_j \, f(j)$.
+3. **Promedios de funciones.** Para cualquier función $f$ definida sobre los estados, el promedio temporal converge al valor esperado bajo $\pi$:
+
+$$\frac{1}{T}\sum_{t=0}^{T-1} f(X_t) \;\xrightarrow{T \to \infty}\; \mathbb{E}_\pi[f] = \sum_{j \in S} \pi_j \, f(j)$$
 
 El tercer punto es el más poderoso: dice que podemos calcular valores esperados ejecutando **una sola cadena**. No necesitamos muestras independientes. No necesitamos reiniciar. Una trayectoria suficientemente larga basta.
 
