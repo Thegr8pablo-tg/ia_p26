@@ -69,6 +69,8 @@ $$\frac{1}{T} \sum_{t=0}^{T-1} f(X_t) \xrightarrow{T \to \infty} \sum_{j \in S} 
 
 La estructura es idéntica: un promedio empírico converge a un valor teórico. La diferencia es que en la LLN clásica las muestras son independientes, mientras que en el teorema ergódico las muestras forman una cadena con dependencia explícita. La convergencia es más lenta — la autocorrelación entre pasos consecutivos reduce la "información efectiva" de cada muestra — pero la convergencia **ocurre**.
 
+> **Nota histórica.** El teorema ergódico fue demostrado por **John von Neumann** en 1931 (versión de convergencia en $L^2$) y por **George Birkhoff** poco después (versión con probabilidad 1, que es la que aparece aquí). En cadenas de Markov finitas ambas versiones son equivalentes. Von Neumann consideraba este resultado uno de los teoremas más bellos de las matemáticas: unifica análisis, probabilidad y dinámica en un solo enunciado, y lo hace sin exigir independencia.
+
 ---
 
 ## 4. Prueba intuitiva: el argumento de acoplamiento (cadena de 2 estados)
