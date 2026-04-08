@@ -44,7 +44,7 @@ Para una cadena de Markov finita que sea **irreducible** y **aperiódica**, con 
 
 3. **Promedios de funciones.** Para cualquier función $f$ definida sobre los estados, el promedio temporal converge al valor esperado bajo $\pi$:
 
-$$\frac{1}{T}\sum_{t=0}^{T-1} f(X_t) \;\xrightarrow{T \to \infty}\; \mathbb{E}_\pi[f] = \sum_{j \in S} \pi_j \, f(j)$$
+$$\frac{1}{T}\sum_{t=0}^{T-1} f(X_t) \;\xrightarrow{T \to \infty}\; \mathbb E_\pi[f] = \sum_{j \in S} \pi_j \, f(j)$$
 
 El tercer punto es el más poderoso: dice que podemos calcular valores esperados ejecutando **una sola cadena**. No necesitamos muestras independientes. No necesitamos reiniciar. Una trayectoria suficientemente larga basta.
 
@@ -58,14 +58,14 @@ $$\frac{1}{T} \sum_{t=0}^{T-1} \mathbf{1}[X_t = j] \xrightarrow{T \to \infty} \p
 
 Más generalmente: para cualquier función $f : S \to \mathbb{R}$,
 
-$$\frac{1}{T} \sum_{t=0}^{T-1} f(X_t) \xrightarrow{T \to \infty} \sum_{j \in S} \pi_j \, f(j) = \mathbb{E}_\pi[f]$$
+$$\frac{1}{T} \sum_{t=0}^{T-1} f(X_t) \xrightarrow{T \to \infty} \sum_{j \in S} \pi_j \, f(j) = \mathbb E_\pi[f]$$
 
 ### Comparación con la LLN clásica
 
 | | LLN clásica (Módulo 5) | Teorema Ergódico (Módulo 19) |
 |---|---|---|
 | Muestras | $X_1, \ldots, X_n$ i.i.d. | $X_0, X_1, \ldots, X_{T-1}$ dependientes |
-| Convergencia | $\frac{1}{n}\sum f(X_i) \to \mathbb{E}[f]$ | $\frac{1}{T}\sum f(X_t) \to \mathbb{E}_\pi[f]$ |
+| Convergencia | $\frac{1}{n}\sum f(X_i) \to \mathbb{E}[f]$ | $\frac{1}{T}\sum f(X_t) \to \mathbb E_\pi[f]$ |
 | Requisito | Independencia | Ergodicidad (irreducible + aperiódica) |
 | Velocidad | $O(1/\sqrt{n})$ | $O(1/\sqrt{T})$ (más lenta por autocorrelación) |
 
@@ -142,10 +142,10 @@ El teorema ergódico requiere que la cadena sea **irreducible** y **aperiódica*
 
 Consideremos una cadena con dos estados $\{A, B\}$ y matriz de transición:
 
-$$\mathbf{P} = \begin{pmatrix}
-0 & 1 \\
-1 & 0
-\end{pmatrix}$$
+| | a $A$ | a $B$ |
+|---|:---:|:---:|
+| desde $A$ | 0 | 1 |
+| desde $B$ | 1 | 0 |
 
 La cadena alterna determinísticamente: $A \to B \to A \to B \to \cdots$
 
@@ -160,12 +160,12 @@ La periodicidad impide la convergencia de la distribución, aunque no destruye c
 
 Consideremos una cadena con cuatro estados $\{A, B, C, D\}$ donde $\{A, B\}$ y $\{C, D\}$ forman dos componentes desconectadas:
 
-$$\mathbf{P} = \begin{pmatrix}
-0.7 & 0.3 & 0   & 0   \\
-0.4 & 0.6 & 0   & 0   \\
-0   & 0   & 0.5 & 0.5 \\
-0   & 0   & 0.8 & 0.2
-\end{pmatrix}$$
+| | a $A$ | a $B$ | a $C$ | a $D$ |
+|---|:---:|:---:|:---:|:---:|
+| desde $A$ | 0.7 | 0.3 | 0 | 0 |
+| desde $B$ | 0.4 | 0.6 | 0 | 0 |
+| desde $C$ | 0 | 0 | 0.5 | 0.5 |
+| desde $D$ | 0 | 0 | 0.8 | 0.2 |
 
 - Si empiezas en $\{A, B\}$, te quedas en $\{A, B\}$ para siempre.
 - Si empiezas en $\{C, D\}$, te quedas en $\{C, D\}$ para siempre.

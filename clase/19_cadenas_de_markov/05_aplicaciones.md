@@ -42,9 +42,9 @@ Resultado típico:
 
 Notablemente mejor. Las secuencias son reconocibles como fragmentos de español: las consonantes se combinan con vocales de forma natural, los espacios aparecen en posiciones razonables, y emergen fragmentos que parecen palabras reales.
 
-**Nivel 3 — Cadena de orden superior.** Condicionamos en las 2 (o más) letras anteriores:
+**Nivel 3 — Cadena de orden superior.** Condicionamos en las 2 (o más) letras anteriores, denotando $X_t$ la letra en la posición $t$:
 
-$$P(\text{letra}_t \mid \text{letra}_{t-1}, \text{letra}_{t-2})$$
+$$P(X_t \mid X_{t-1}, X_{t-2})$$
 
 El texto generado es aún más legible: aparecen palabras completas reconocibles, la estructura silábica es casi perfecta, y ocasionalmente se forman frases con sentido parcial.
 
@@ -78,11 +78,11 @@ Los mercados financieros no tienen un solo comportamiento — alternan entre **r
 
 Modelamos estos regímenes como una cadena de Markov con tres estados. La matriz de transición se estima a partir de datos históricos:
 
-$$\mathbf{P} = \begin{pmatrix}
-0.70 & 0.15 & 0.15 \\
-0.10 & 0.65 & 0.25 \\
-0.20 & 0.15 & 0.65
-\end{pmatrix}$$
+| | Alcista | Bajista | Lateral |
+|---|:---:|:---:|:---:|
+| **desde Alcista** | 0.70 | 0.15 | 0.15 |
+| **desde Bajista** | 0.10 | 0.65 | 0.25 |
+| **desde Lateral** | 0.20 | 0.15 | 0.65 |
 
 Esta cadena es irreducible (cualquier régimen puede alcanzar cualquier otro) y aperiódica (los valores diagonales son positivos), por lo que el teorema ergódico aplica. La distribución estacionaria nos da información práctica sobre el comportamiento a largo plazo del mercado.
 
@@ -102,7 +102,7 @@ Esto se deduce de que la duración en un estado sigue una distribución geométr
 
 **Retorno promedio de largo plazo.** Si $r_j$ es el retorno promedio mensual en el régimen $j$, el teorema ergódico garantiza que el retorno promedio de largo plazo es:
 
-$$\mathbb{E}_\pi[\text{retorno}] = \sum_{j \in S} \pi_j \cdot r_j$$
+$$\mathbb E_\pi(\text{retorno}) = \sum_{j \in S} \pi_j \cdot r_j$$
 
 Por ejemplo, con $r_{\text{Bull}} = +2\%$, $r_{\text{Bear}} = -3\%$, $r_{\text{Flat}} = +0.2\%$:
 
