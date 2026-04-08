@@ -204,9 +204,14 @@ Las cadenas de Markov aparecen naturalmente en finanzas. Un modelo clásico desc
 
 **Matriz de transición**:
 
-$$\mathbf{P} = \begin{pmatrix} 0.70 & 0.15 & 0.15 \\ 0.10 & 0.65 & 0.25 \\ 0.20 & 0.15 & 0.65 \end{pmatrix}$$
+$$\mathbf{P} = \begin{array}{r|ccc}
+ & \text{a Alcista} & \text{a Bajista} & \text{a Lateral} \\\hline
+\text{desde Alcista} & 0.70 & 0.15 & 0.15 \\
+\text{desde Bajista} & 0.10 & 0.65 & 0.25 \\
+\text{desde Lateral} & 0.20 & 0.15 & 0.65
+\end{array}$$
 
-donde las filas corresponden a Alcista, Bajista y Lateral, en ese orden.
+**Cómo leer la matriz:** cada **fila** es el régimen actual; cada **columna** es el régimen siguiente. La entrada $P_{ij}$ es la probabilidad de pasar del régimen $i$ al régimen $j$ en un período.
 
 Observaciones:
 - Los valores diagonales son altos (0.70, 0.65, 0.65) — los regímenes tienden a **persistir**.
