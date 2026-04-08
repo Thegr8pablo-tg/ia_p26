@@ -84,11 +84,10 @@ Este ejemplo está directamente inspirado en el trabajo original de Markov (1913
 
 **Matriz de transición** (estimada a partir de texto en español):
 
-$$\mathbf{P} = \begin{array}{r|cc}
- & \text{a } V & \text{a } C \\\hline
-\text{desde } V & 0.35 & 0.65 \\
-\text{desde } C & 0.52 & 0.48
-\end{array}$$
+| | a $V$ | a $C$ |
+|---|:---:|:---:|
+| desde $V$ | 0.35 | 0.65 |
+| desde $C$ | 0.52 | 0.48 |
 
 **Cómo leer la matriz:** cada **fila** es el estado actual (de dónde vienes); cada **columna** es el estado siguiente (a dónde vas). La entrada $P_{ij}$ es la probabilidad de pasar del estado $i$ al estado $j$ en un paso. Es decir:
 
@@ -204,12 +203,11 @@ Las cadenas de Markov aparecen naturalmente en finanzas. Un modelo clásico desc
 
 **Matriz de transición**:
 
-$$\mathbf{P} = \begin{array}{r|ccc}
- & \text{a Alcista} & \text{a Bajista} & \text{a Lateral} \\\hline
-\text{desde Alcista} & 0.70 & 0.15 & 0.15 \\
-\text{desde Bajista} & 0.10 & 0.65 & 0.25 \\
-\text{desde Lateral} & 0.20 & 0.15 & 0.65
-\end{array}$$
+| | a Alcista | a Bajista | a Lateral |
+|---|:---:|:---:|:---:|
+| desde Alcista | 0.70 | 0.15 | 0.15 |
+| desde Bajista | 0.10 | 0.65 | 0.25 |
+| desde Lateral | 0.20 | 0.15 | 0.65 |
 
 **Cómo leer la matriz:** cada **fila** es el régimen actual; cada **columna** es el régimen siguiente. La entrada $P_{ij}$ es la probabilidad de pasar del régimen $i$ al régimen $j$ en un período.
 

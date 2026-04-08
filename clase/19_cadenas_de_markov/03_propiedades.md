@@ -170,7 +170,10 @@ Interpretación: imagina un número muy grande de partículas distribuidas entre
 
 La cadena V/C tiene la matriz de transición:
 
-$$\mathbf{P} = \begin{pmatrix} 0.35 & 0.65 \\ 0.52 & 0.48 \end{pmatrix}$$
+$$\mathbf{P} = \begin{pmatrix}
+0.35 & 0.65 \\
+0.52 & 0.48
+\end{pmatrix}$$
 
 Buscamos $\pi = (\pi_V, \pi_C)$ tal que $\pi \mathbf{P} = \pi$ y $\pi_V + \pi_C = 1$.
 
