@@ -142,7 +142,10 @@ El teorema ergódico requiere que la cadena sea **irreducible** y **aperiódica*
 
 Consideremos una cadena con dos estados $\{A, B\}$ y matriz de transición:
 
-$$\mathbf{P} = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$$
+$$\mathbf{P} = \begin{pmatrix}
+0 & 1 \\
+1 & 0
+\end{pmatrix}$$
 
 La cadena alterna determinísticamente: $A \to B \to A \to B \to \cdots$
 
@@ -157,7 +160,12 @@ La periodicidad impide la convergencia de la distribución, aunque no destruye c
 
 Consideremos una cadena con cuatro estados $\{A, B, C, D\}$ donde $\{A, B\}$ y $\{C, D\}$ forman dos componentes desconectadas:
 
-$$\mathbf{P} = \begin{pmatrix} 0.7 & 0.3 & 0 & 0 \\ 0.4 & 0.6 & 0 & 0 \\ 0 & 0 & 0.5 & 0.5 \\ 0 & 0 & 0.8 & 0.2 \end{pmatrix}$$
+$$\mathbf{P} = \begin{pmatrix}
+0.7 & 0.3 & 0   & 0   \\
+0.4 & 0.6 & 0   & 0   \\
+0   & 0   & 0.5 & 0.5 \\
+0   & 0   & 0.8 & 0.2
+\end{pmatrix}$$
 
 - Si empiezas en $\{A, B\}$, te quedas en $\{A, B\}$ para siempre.
 - Si empiezas en $\{C, D\}$, te quedas en $\{C, D\}$ para siempre.

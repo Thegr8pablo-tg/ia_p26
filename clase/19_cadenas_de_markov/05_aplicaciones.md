@@ -78,7 +78,11 @@ Los mercados financieros no tienen un solo comportamiento — alternan entre **r
 
 Modelamos estos regímenes como una cadena de Markov con tres estados. La matriz de transición se estima a partir de datos históricos:
 
-$$\mathbf{P} = \begin{pmatrix} 0.70 & 0.15 & 0.15 \\ 0.10 & 0.65 & 0.25 \\ 0.20 & 0.15 & 0.65 \end{pmatrix}$$
+$$\mathbf{P} = \begin{pmatrix}
+0.70 & 0.15 & 0.15 \\
+0.10 & 0.65 & 0.25 \\
+0.20 & 0.15 & 0.65
+\end{pmatrix}$$
 
 Esta cadena es irreducible (cualquier régimen puede alcanzar cualquier otro) y aperiódica (los valores diagonales son positivos), por lo que el teorema ergódico aplica. La distribución estacionaria nos da información práctica sobre el comportamiento a largo plazo del mercado.
 
