@@ -22,13 +22,13 @@ Esta sección responde la pregunta: **¿qué condiciones debe cumplir una cadena
 
 ## 1. Clasificación de estados
 
-Cada estado de una cadena de Markov se comporta de manera diferente a largo plazo. Clasificamos los estados según qué tan frecuentemente la cadena regresa a ellos.
+Cada estado de una cadena de Markov se comporta de manera diferente a largo plazo. Clasificamos los estados según la probabilidad de que la cadena regrese a ellos después de salir.
 
-**Estado transitorio.** Un estado es **transitorio** si la cadena lo visita un número finito de veces. Eventualmente, la cadena lo abandona para siempre y nunca regresa. La probabilidad de retorno es estrictamente menor que 1.
+**Estado transitorio.** Un estado (i) es **transitorio** si, comenzando en (i), la probabilidad de regresar a (i) alguna vez es **estrictamente menor que 1**. Equivalentemente, existe una probabilidad positiva de que, una vez que la cadena salga de (i), nunca vuelva a ese estado. Por ello, un estado transitorio solo puede ser visitado un número **finito de veces con probabilidad 1**.
 
-**Estado recurrente.** Un estado es **recurrente** si la cadena lo visita infinitas veces. Cada vez que la cadena sale de un estado recurrente, está garantizado que regresará. La probabilidad de retorno es exactamente 1.
+**Estado recurrente.** Un estado (i) es **recurrente** si, comenzando en (i), la probabilidad de regresar a (i) alguna vez es **exactamente 1**. Equivalentemente, si la cadena sale de (i), volverá a ese estado **con probabilidad 1**. Por ello, un estado recurrente será visitado **infinitas veces con probabilidad 1**.
 
-**Estado absorbente.** Un estado es **absorbente** si, una vez que la cadena entra en él, nunca sale. Formalmente, $P(i \to i) = 1$ — la probabilidad de transición de $i$ a sí mismo es 1, y a cualquier otro estado es 0. Un estado absorbente es un caso particular de estado recurrente: la cadena "regresa" trivialmente porque nunca se va.
+**Estado absorbente.** Un estado (i) es **absorbente** si, una vez que la cadena entra en él, nunca sale. Formalmente, ($P(i \to i) = 1$), es decir, la probabilidad de transición de (i) a sí mismo es 1, y a cualquier otro estado es 0. Un estado absorbente es un caso particular de estado recurrente, porque una vez que la cadena entra en él, permanece allí para siempre.
 
 ### Ejemplo: modelo de progresión estudiantil
 
