@@ -6,17 +6,17 @@ title: "Búsqueda Monte Carlo en Árboles"
 
 **Repositorio:** [ia_p26_hex_tournament](https://github.com/sonder-art/ia_p26_hex_tournament)
 
-Implementa una estrategia que juegue Hex en un tablero 11x11 en dos variantes: **classic** (información completa) y **dark** (fog of war — solo ves tus propias piedras). Tu estrategia compite en un torneo contra 6 niveles de dificultad: Random y 5 tiers de MCTS (binarios opacos que solo corren en Docker).
+Implementa una estrategia que juegue Hex en un tablero 11x11 en dos variantes: **classic** (información completa) y **dark** (fog of war — solo ves tus propias piedras). El torneo usa formato **liga round-robin**: todas las estrategias (estudiantes + 6 modelos default) juegan contra todas en ambas variantes. Los modelos default (Random + 5 tiers de MCTS) son binarios opacos que solo corren en Docker.
 
 **Entregables (via Pull Request al repositorio del torneo):**
 1. `estudiantes/<tu_equipo>/strategy.py` — tu estrategia (único archivo evaluado en el torneo)
 2. `estudiantes/<tu_equipo>/README.md` — explicación detallada de qué hace tu estrategia, cómo la diseñaron, qué alternativas consideraron y por qué tomaron las decisiones que tomaron
 
-**Calificación** (tu nota = puntos del tier más alto que venzas):
+**Calificación** — se suman tus puntos de liga classic + liga dark. Vences a un modelo si tus puntos totales $\geq$ los suyos. Tu nota = puntos del modelo más alto que venzas:
 
-| Tier vencido | Puntos |
+| Modelo vencido en liga | Nota |
 |-----------|--------|
-| No ganas contra nadie | 0 |
+| Ninguno | 0 |
 | Random | 5 |
 | MCTS_Tier_1 | 6 |
 | MCTS_Tier_2 | 7 |
@@ -24,7 +24,7 @@ Implementa una estrategia que juegue Hex en un tablero 11x11 en dos variantes: *
 | MCTS_Tier_4 | 9 |
 | MCTS_Tier_5 o top 3 del torneo | 10 |
 
-Consulta el README del repositorio para instrucciones de setup, Docker, restricciones de recursos (15s por jugada, solo numpy + stdlib) e ideas de estrategias.
+**Restricciones:** 15s por jugada (exceder = turno saltado), solo `numpy` + stdlib, Docker obligatorio para tiers MCTS. Consulta el README del repositorio para setup, comandos y estrategias sugeridas.
 
 :::
 
