@@ -251,51 +251,72 @@ El mecanismo es idéntico al ejemplo anterior — la única diferencia es que co
 
 ## 6. Predicción a múltiples pasos: potencias de la matriz
 
-Hasta ahora hemos calculado transiciones de **un solo paso**: $P(X_{t+1} = j \mid X_t = i) = p_{ij}$, la entrada $(i, j)$ de $\mathbf{P}$.
+Hasta ahora hemos calculado transiciones de **un solo paso**: dado que estoy en $V$ ahora, ¿cuál es la probabilidad de estar en $C$ en el siguiente paso? Eso es simplemente leer la entrada correspondiente de $\mathbf{P}$.
 
-¿Y si queremos la probabilidad de ir de $i$ a $j$ en exactamente $n$ pasos? La respuesta es elegante:
+Pero ¿qué pasa si quiero saber la probabilidad de ir de $V$ a $C$ en **2 pasos**? ¿O en 10 pasos?
+
+### La idea: sumar sobre todos los caminos intermedios
+
+Para ir de $V$ a $V$ en **2 pasos**, debo pasar por algún estado intermedio en el paso 1. Ese estado intermedio puede ser $V$ o $C$ — no hay otra opción. Entonces:
+
+```
+Camino 1: V ──0.35──▶ V ──0.35──▶ V     probabilidad = 0.35 × 0.35 = 0.1225
+Camino 2: V ──0.65──▶ C ──0.52──▶ V     probabilidad = 0.65 × 0.52 = 0.3380
+                                          ─────────────────────────────────────
+                          Total P²[V,V] =                              0.4605
+```
+
+Los dos caminos son **mutuamente excluyentes** (no puedes estar en $V$ y $C$ al mismo tiempo en el paso 1), así que simplemente **sumamos** sus probabilidades.
+
+### Notación: ¿qué es $P[V, V]$?
+
+$P[V, V]$ es simplemente la entrada de la fila $V$, columna $V$ de la matriz $\mathbf{P}$ — es decir, la probabilidad de pasar de $V$ a $V$ en **un solo paso**. En general, $P[i, j]$ = probabilidad de ir de estado $i$ a estado $j$ en un paso.
+
+### La fórmula general
+
+Para cualquier par de estados $i$ y $j$, la probabilidad de ir de $i$ a $j$ en **2 pasos** es:
+
+$$\mathbf{P}^2[i,\, j] = \sum_{k \in S} P[i, k] \cdot P[k, j]$$
+
+Es decir: para cada posible estado intermedio $k$, multiplico la probabilidad de llegar a $k$ desde $i$ por la probabilidad de llegar a $j$ desde $k$, y sumo sobre todos los intermedios posibles. Esto es exactamente la **multiplicación de matrices** — de ahí el nombre $\mathbf{P}^2 = \mathbf{P} \cdot \mathbf{P}$.
+
+En general, la probabilidad de ir de $i$ a $j$ en $n$ pasos es la entrada $(i, j)$ de la $n$-ésima potencia de la matriz:
 
 $$P(X_{t+n} = j \mid X_t = i) = (\mathbf{P}^n)_{ij}$$
 
-La probabilidad de transición en $n$ pasos es la entrada $(i, j)$ de la **$n$-ésima potencia** de la matriz de transición.
+### Cálculo completo de $\mathbf{P}^2$ para V/C
 
-### Cálculo guiado: $\mathbf{P}^2$ para V/C
+Aplicando la fórmula a las 4 entradas (la cadena V/C tiene 2 estados, así que $\mathbf{P}^2$ es una matriz $2 \times 2$):
 
-Calculemos $\mathbf{P}^2 = \mathbf{P} \cdot \mathbf{P}$ a mano para la cadena de vocales y consonantes.
+**$\mathbf{P}^2[V, V]$** — probabilidad de $V \to \text{(algo)} \to V$:
 
-**Entrada $\mathbf{P}^2[V, V]$** — probabilidad de $V \to ? \to V$ en dos pasos:
+$$\mathbf{P}^2[V, V] = \underbrace{P[V,V] \cdot P[V,V]}_{\text{vía } V} + \underbrace{P[V,C] \cdot P[C,V]}_{\text{vía } C} = 0.35 \times 0.35 + 0.65 \times 0.52 = 0.1225 + 0.338 = 0.4605$$
 
-$$\mathbf{P}^2[V, V] = P[V,V] \cdot P[V,V] + P[V,C] \cdot P[C,V]$$
-$$= 0.35 \times 0.35 + 0.65 \times 0.52$$
-$$= 0.1225 + 0.338$$
-$$= 0.4605$$
+**$\mathbf{P}^2[V, C]$** — probabilidad de $V \to \text{(algo)} \to C$:
 
-Interpretación: hay dos caminos de $V$ a $V$ en dos pasos — pasar por $V$ (probabilidad $0.35 \times 0.35$) o pasar por $C$ (probabilidad $0.65 \times 0.52$). Sumamos ambos.
+$$\mathbf{P}^2[V, C] = \underbrace{P[V,V] \cdot P[V,C]}_{\text{vía } V} + \underbrace{P[V,C] \cdot P[C,C]}_{\text{vía } C} = 0.35 \times 0.65 + 0.65 \times 0.48 = 0.2275 + 0.312 = 0.5395$$
 
-**Entrada $\mathbf{P}^2[V, C]$** — probabilidad de $V \to ? \to C$ en dos pasos:
+> **Verificación**: $0.4605 + 0.5395 = 1.0$ $\checkmark$ — la fila de $\mathbf{P}^2$ también debe sumar 1, porque en 2 pasos desde $V$ debes terminar en algún estado.
 
-$$\mathbf{P}^2[V, C] = P[V,V] \cdot P[V,C] + P[V,C] \cdot P[C,C]$$
-$$= 0.35 \times 0.65 + 0.65 \times 0.48$$
-$$= 0.2275 + 0.312$$
-$$= 0.5395$$
+**$\mathbf{P}^2[C, V]$** — probabilidad de $C \to \text{(algo)} \to V$:
 
-**Verificación**: $0.4605 + 0.5395 = 1.0$ $\checkmark$ — la fila sigue sumando 1, como debe ser.
+$$\mathbf{P}^2[C, V] = \underbrace{P[C,V] \cdot P[V,V]}_{\text{vía } V} + \underbrace{P[C,C] \cdot P[C,V]}_{\text{vía } C} = 0.52 \times 0.35 + 0.48 \times 0.52 = 0.182 + 0.2496 = 0.4316$$
 
-**Entrada $\mathbf{P}^2[C, V]$**:
+**$\mathbf{P}^2[C, C]$** — probabilidad de $C \to \text{(algo)} \to C$:
 
-$$\mathbf{P}^2[C, V] = P[C,V] \cdot P[V,V] + P[C,C] \cdot P[C,V]$$
-$$= 0.52 \times 0.35 + 0.48 \times 0.52$$
-$$= 0.182 + 0.2496$$
-$$= 0.4316$$
+$$\mathbf{P}^2[C, C] = \underbrace{P[C,V] \cdot P[V,C]}_{\text{vía } V} + \underbrace{P[C,C] \cdot P[C,C]}_{\text{vía } C} = 0.52 \times 0.65 + 0.48 \times 0.48 = 0.338 + 0.2304 = 0.5684$$
 
-**Entrada $\mathbf{P}^2[C, C]$**:
+> **Verificación**: $0.4316 + 0.5684 = 1.0$ $\checkmark$
 
-$$\mathbf{P}^2[C, C] = P[C,V] \cdot P[V,C] + P[C,C] \cdot P[C,C]$$
-$$= 0.52 \times 0.65 + 0.48 \times 0.48$$
-$$= 0.338 + 0.2304$$
-$$= 0.5684$$
+La matriz resultado es:
 
-**Verificación**: $0.4316 + 0.5684 = 1.0$ $\checkmark$
+$$\mathbf{P}^2 = \begin{array}{r|cc}
+ & \text{a } V & \text{a } C \\\hline
+\text{desde } V & 0.4605 & 0.5395 \\
+\text{desde } C & 0.4316 & 0.5684
+\end{array}$$
+
+Nota que las filas de $\mathbf{P}^2$ son más **parecidas entre sí** que las de $\mathbf{P}$ original — la influencia del estado inicial ya se está diluyendo.
 
 ### Convergencia de $\mathbf{P}^n$
 
