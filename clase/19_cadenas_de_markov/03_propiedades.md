@@ -75,39 +75,82 @@ Esta es la primera razón por la que no todas las cadenas convergen: si la caden
 
 ---
 
-## 3. Aperiodicidad: "sin reloj interno"
+## 3. Aperiodicidad: "sin ritmo forzado"
 
-El **periodo** de un estado $i$ es el máximo común divisor de todos los tiempos en los que es posible regresar a $i$:
+### La intuición
+
+Imagina una cadena que va $A \to B \to A \to B \to \ldots$ para siempre. Si empezaste en $A$, sabes con certeza que en tiempos pares (2, 4, 6, ...) estás en $A$ y en tiempos impares estás en $B$. La cadena tiene un **ritmo forzado** — un "reloj interno" que determina dónde puedes estar según la paridad del tiempo.
+
+Esto es un problema porque **impide la convergencia**: las potencias $\mathbf{P}^n$ no se estabilizan, sino que oscilan entre distintas matrices indefinidamente. No existe una distribución límite.
+
+Una cadena **aperiódica** es exactamente lo opuesto: no tiene ritmo forzado. Desde cualquier estado puedes regresar a él en distintos tiempos sin que haya un patrón de múltiplos obligatorio. Esto permite que $\mathbf{P}^n$ converja.
+
+### Definición formal
+
+El **periodo** de un estado $i$ es el máximo común divisor de todos los tiempos posibles de retorno:
 
 $$d(i) = \gcd\{n \geq 1 : (\mathbf{P}^n)_{ii} > 0\}$$
 
-Un estado tiene periodo $d$ si solo puede ser revisitado en tiempos que son múltiplos de $d$. Una cadena es **aperiódica** si todos sus estados tienen periodo $d = 1$.
+- $d(i) = 1$: el estado es **aperiódico** — puede ser revisitado en tiempos sin un patrón de múltiplos forzado.
+- $d(i) = 2$: solo se puede volver en tiempos pares ($2, 4, 6, \ldots$).
+- $d(i) = k$: solo se puede volver en múltiplos de $k$.
 
-### Contraejemplo: cadena periódica (periodo 2)
+Una cadena es **aperiódica** si todos sus estados tienen $d = 1$.
 
-Consideremos la cadena más simple que ilustra el problema. Estados $\{A, B\}$ con:
+### Contraejemplo: cadena periódica con periodo 2
 
-$$\mathbf{P} = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}$$
+Estados $\{A, B\}$, cada uno fuerza al otro:
 
-Es decir, $P(A \to B) = 1$ y $P(B \to A) = 1$. La cadena va $A \to B \to A \to B \to \ldots$ de forma determinista. El periodo de $A$ es 2: solo se puede regresar a $A$ en tiempos pares (2, 4, 6, ...).
+$$\mathbf{P} = \begin{pmatrix}
+0 & 1 \\
+1 & 0
+\end{pmatrix}$$
 
-¿Qué pasa con las potencias de $\mathbf{P}$?
+$P(A \to B) = 1$ y $P(B \to A) = 1$. No hay otra opción — la trayectoria es determinista: $A \to B \to A \to B \to \ldots$
 
-$$\mathbf{P}^2 = \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}, \quad \mathbf{P}^3 = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix}, \quad \mathbf{P}^4 = \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix}, \quad \ldots$$
+Calculemos las primeras potencias para ver qué pasa:
 
-$\mathbf{P}^n$ **oscila** entre dos matrices y **nunca converge**. En tiempos pares estás seguro de estar en el estado inicial; en tiempos impares estás seguro de estar en el otro. No hay un límite estable.
+$$\mathbf{P}^2 = \begin{pmatrix}
+1 & 0 \\
+0 & 1
+\end{pmatrix}, \qquad
+\mathbf{P}^3 = \begin{pmatrix}
+0 & 1 \\
+1 & 0
+\end{pmatrix}, \qquad
+\mathbf{P}^4 = \begin{pmatrix}
+1 & 0 \\
+0 & 1
+\end{pmatrix}, \qquad \ldots$$
 
-### La solución: un self-loop rompe la periodicidad
+$\mathbf{P}^n$ **oscila entre la identidad y la matriz original** — nunca se estabiliza. Interpetación: si empezaste en $A$, en tiempo par estás con certeza en $A$; en tiempo impar estás con certeza en $B$. No existe una distribución límite porque tu ubicación depende de la paridad del tiempo, no de cuánto tiempo ha pasado.
 
-Si modificamos la cadena para que $P(A \to A) = 0.1$ (un self-loop), entonces:
+El periodo de $A$ es 2 porque los únicos tiempos de retorno posibles son $\{2, 4, 6, \ldots\}$ y $\gcd(2, 4, 6, \ldots) = 2$.
 
-$$\mathbf{P} = \begin{pmatrix} 0.1 & 0.9 \\ 1 & 0 \end{pmatrix}$$
+### Por qué la aperiodicidad importa: necesitas poder regresar en distintos tiempos
 
-Ahora la cadena puede regresar a $A$ en 1 paso (vía el self-loop, con probabilidad 0.1) y también en 2 pasos (vía $A \to B \to A$). Como $\gcd(1, 2) = 1$, el periodo es 1 y la cadena es aperiódica. Basta con que **un** estado tenga un self-loop con probabilidad positiva para romper la periodicidad en una cadena irreducible.
+Para que $\mathbf{P}^n$ converja, necesitas que desde cualquier estado puedas regresar a él en **tiempos de distintas longitudes sin un factor común mayor que 1**. Si puedes regresar en tiempos 1 y 2, entonces $\gcd(1, 2) = 1$ y el periodo es 1. Si puedes regresar solo en $\{3, 6, 9, \ldots\}$, el periodo es 3 y las potencias oscilan con ese ritmo.
+
+### La solución: un self-loop rompe el ritmo
+
+Un **self-loop** — probabilidad positiva de quedarse en el mismo estado — introduce un tiempo de retorno de longitud 1. Eso es suficiente para romper cualquier periodicidad.
+
+Si añadimos $P(A \to A) = 0.1$:
+
+$$\mathbf{P} = \begin{pmatrix}
+0.1 & 0.9 \\
+1 & 0
+\end{pmatrix}$$
+
+Ahora desde $A$ puedo regresar a $A$ en 1 paso (self-loop) y también en 2 pasos ($A \to B \to A$). Los tiempos de retorno posibles incluyen $\{1, 2, 3, \ldots\}$, y $\gcd(1, 2) = 1$. Periodo = 1. La cadena es aperiódica.
+
+> **Regla práctica**: en una cadena irreducible, basta con que **un solo estado** tenga un self-loop (probabilidad de quedarse $> 0$) para que toda la cadena sea aperiódica.
 
 ### La cadena V/C es aperiódica
 
-$P(V \to V) = 0.35 > 0$. Desde $V$ se puede regresar a $V$ en 1 paso (vía self-loop) y en 2 pasos (vía $V \to C \to V$). Como $\gcd(1, 2) = 1$, el periodo es 1. Lo mismo aplica para $C$ ($P(C \to C) = 0.48 > 0$).
+$P(V \to V) = 0.35 > 0$ — hay self-loop en $V$. Los tiempos de retorno a $V$ incluyen 1 (self-loop directo) y 2 (vía $V \to C \to V$). Como $\gcd(1, 2) = 1$, el periodo es 1. Lo mismo aplica a $C$: $P(C \to C) = 0.48 > 0$.
+
+La cadena V/C es aperiódica — y por eso sus potencias $\mathbf{P}^n$ convergen en lugar de oscilar.
 
 ![Periódica vs aperiódica]({{ '/19_cadenas_de_markov/images/09_periodic_vs_aperiodic.png' | url }})
 
