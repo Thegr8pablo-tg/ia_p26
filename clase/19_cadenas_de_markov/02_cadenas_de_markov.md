@@ -290,31 +290,40 @@ Aplicando la fórmula a las 4 entradas (la cadena V/C tiene 2 estados, así que 
 
 **$\mathbf{P}^2[V, V]$** — probabilidad de $V \to \text{(algo)} \to V$:
 
-$$\mathbf{P}^2[V, V] = \underbrace{P[V,V] \cdot P[V,V]}_{\text{vía } V} + \underbrace{P[V,C] \cdot P[C,V]}_{\text{vía } C} = 0.35 \times 0.35 + 0.65 \times 0.52 = 0.1225 + 0.338 = 0.4605$$
+$$\mathbf{P}^2[V, V] = P[V,V] \cdot P[V,V] + P[V,C] \cdot P[C,V]$$
+
+$$= 0.35 \times 0.35 + 0.65 \times 0.52 = 0.1225 + 0.338 = 0.4605$$
+
+El primer término es el camino $V \to V \to V$; el segundo es $V \to C \to V$. Se suman porque son caminos mutuamente excluyentes.
 
 **$\mathbf{P}^2[V, C]$** — probabilidad de $V \to \text{(algo)} \to C$:
 
-$$\mathbf{P}^2[V, C] = \underbrace{P[V,V] \cdot P[V,C]}_{\text{vía } V} + \underbrace{P[V,C] \cdot P[C,C]}_{\text{vía } C} = 0.35 \times 0.65 + 0.65 \times 0.48 = 0.2275 + 0.312 = 0.5395$$
+$$\mathbf{P}^2[V, C] = P[V,V] \cdot P[V,C] + P[V,C] \cdot P[C,C]$$
 
-> **Verificación**: $0.4605 + 0.5395 = 1.0$ $\checkmark$ — la fila de $\mathbf{P}^2$ también debe sumar 1, porque en 2 pasos desde $V$ debes terminar en algún estado.
+$$= 0.35 \times 0.65 + 0.65 \times 0.48 = 0.2275 + 0.312 = 0.5395$$
+
+> **Verificación**: $0.4605 + 0.5395 = 1.0$ $\checkmark$ — la fila de $\mathbf{P}^2$ también debe sumar 1.
 
 **$\mathbf{P}^2[C, V]$** — probabilidad de $C \to \text{(algo)} \to V$:
 
-$$\mathbf{P}^2[C, V] = \underbrace{P[C,V] \cdot P[V,V]}_{\text{vía } V} + \underbrace{P[C,C] \cdot P[C,V]}_{\text{vía } C} = 0.52 \times 0.35 + 0.48 \times 0.52 = 0.182 + 0.2496 = 0.4316$$
+$$\mathbf{P}^2[C, V] = P[C,V] \cdot P[V,V] + P[C,C] \cdot P[C,V]$$
+
+$$= 0.52 \times 0.35 + 0.48 \times 0.52 = 0.182 + 0.2496 = 0.4316$$
 
 **$\mathbf{P}^2[C, C]$** — probabilidad de $C \to \text{(algo)} \to C$:
 
-$$\mathbf{P}^2[C, C] = \underbrace{P[C,V] \cdot P[V,C]}_{\text{vía } V} + \underbrace{P[C,C] \cdot P[C,C]}_{\text{vía } C} = 0.52 \times 0.65 + 0.48 \times 0.48 = 0.338 + 0.2304 = 0.5684$$
+$$\mathbf{P}^2[C, C] = P[C,V] \cdot P[V,C] + P[C,C] \cdot P[C,C]$$
+
+$$= 0.52 \times 0.65 + 0.48 \times 0.48 = 0.338 + 0.2304 = 0.5684$$
 
 > **Verificación**: $0.4316 + 0.5684 = 1.0$ $\checkmark$
 
 La matriz resultado es:
 
-$$\mathbf{P}^2 = \begin{array}{r|cc}
- & \text{a } V & \text{a } C \\\hline
-\text{desde } V & 0.4605 & 0.5395 \\
-\text{desde } C & 0.4316 & 0.5684
-\end{array}$$
+| | a $V$ | a $C$ |
+|---|:---:|:---:|
+| desde $V$ | 0.4605 | 0.5395 |
+| desde $C$ | 0.4316 | 0.5684 |
 
 Nota que las filas de $\mathbf{P}^2$ son más **parecidas entre sí** que las de $\mathbf{P}$ original — la influencia del estado inicial ya se está diluyendo.
 
