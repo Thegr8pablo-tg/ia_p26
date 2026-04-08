@@ -84,14 +84,18 @@ Este ejemplo está directamente inspirado en el trabajo original de Markov (1913
 
 **Matriz de transición** (estimada a partir de texto en español):
 
-$$\mathbf{P} = \begin{pmatrix} 0.35 & 0.65 \\ 0.52 & 0.48 \end{pmatrix}$$
+$$\mathbf{P} = \begin{array}{r|cc}
+ & \text{a } V & \text{a } C \\\hline
+\text{desde } V & 0.35 & 0.65 \\
+\text{desde } C & 0.52 & 0.48
+\end{array}$$
 
-donde la primera fila corresponde a $V$ y la segunda a $C$. Es decir:
+**Cómo leer la matriz:** cada **fila** es el estado actual (de dónde vienes); cada **columna** es el estado siguiente (a dónde vas). La entrada $P_{ij}$ es la probabilidad de pasar del estado $i$ al estado $j$ en un paso. Es decir:
 
 - $P(V \to V) = 0.35$, $P(V \to C) = 0.65$ — después de una vocal, es más probable que siga una consonante.
 - $P(C \to V) = 0.52$, $P(C \to C) = 0.48$ — después de una consonante, vocal y consonante son casi equiprobables, con ligera ventaja para vocal.
 
-Verificación: $0.35 + 0.65 = 1.0$ y $0.52 + 0.48 = 1.0$. Ambas filas suman 1. $\checkmark$
+Verificación: $0.35 + 0.65 = 1.0$ y $0.52 + 0.48 = 1.0$. Cada fila suma 1 (las probabilidades de salir de un estado deben sumar 1). $\checkmark$
 
 ![Cadena V/C]({{ '/19_cadenas_de_markov/images/03_vc_chain_diagram.png' | url }})
 
