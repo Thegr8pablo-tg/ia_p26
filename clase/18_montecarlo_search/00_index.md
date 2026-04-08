@@ -2,12 +2,12 @@
 title: "Búsqueda Monte Carlo en Árboles"
 ---
 
-:::homework{id="hw-videos-ia" title="Videos: IA y el futuro" due="2026-04-27" points="20"}
+:::homework{id="hw-videos-markov" title="Videos: Cadenas de Markov y Cadenas de Markov Ocultas" due="2026-04-27" points="20"}
 
 Ve los siguientes videos y escribe una reflexión personal sobre lo que aprendiste, qué te sorprendió y cómo conecta con lo visto en el curso. **Puede haber mini examen en clase basado en el contenido de los videos.**
 
-1. [Demis Hassabis — Solving Intelligence](https://www.youtube.com/watch?v=KZeIEiBrT_w&t=277s)
-2. [The Inside Story of ChatGPT's Astonishing Potential](https://www.youtube.com/watch?v=fX5bYmnHqqE)
+1. [Cadenas de Markov](https://www.youtube.com/watch?v=KZeIEiBrT_w&t=277s)
+2. [Cadenas de Markov Ocultas](https://www.youtube.com/watch?v=fX5bYmnHqqE)
 
 **Entregable:** sube tu reflexión (mínimo 400 palabras) como `estudiantes/<tu_usuario>/reflexion_videos_ia.md` vía Pull Request antes de la fecha límite.
 
