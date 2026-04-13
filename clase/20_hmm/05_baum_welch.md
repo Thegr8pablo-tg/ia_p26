@@ -70,13 +70,13 @@ $$P(O \mid \lambda) = 0.10007$$
 
 **Valores $\gamma$:**
 
-| $t$ | $\gamma_t(S)$ | $\gamma_t(R)$ |
+| $t$ | $\gamma_t(S)$ | $\gamma_t(\mathrm{R})$ |
 |:---:|:-------------:|:-------------:|
 | 1 | $\frac{0.540 \times 0.1465}{0.10007} = 0.7906$ | $\frac{0.080 \times 0.2620}{0.10007} = 0.2094$ |
 | 2 | $\frac{0.041 \times 0.310}{0.10007} = 0.1270$ | $\frac{0.168 \times 0.520}{0.10007} = 0.8730$ |
 | 3 | $\frac{0.00959 \times 1.0}{0.10007} = 0.0958$ | $\frac{0.09048 \times 1.0}{0.10007} = 0.9042$ |
 
-Verificación: $\gamma_t(S) + \gamma_t(R) = 1$ para todo $t$. ✓
+Verificación: $\gamma_t(S) + \gamma_t(\mathrm{R}) = 1$ para todo $t$. ✓
 
 **Valores $\xi$ en $t=1$** (observación futura $O_2 = 1$):
 
@@ -106,7 +106,7 @@ $$\xi_2(R,R) = \frac{0.168 \times 0.6 \times 0.8 \times 1.0}{0.10007} = \frac{0.
 
 **Actualización de $\pi$:**
 
-$$\hat{\pi}_S = \gamma_1(S) = 0.791, \qquad \hat{\pi}_R = \gamma_1(R) = 0.209$$
+$$\hat{\pi}_S = \gamma_1(S) = 0.791, \qquad \hat{\pi}_R = \gamma_1(\mathrm{R}) = 0.209$$
 
 **Actualización de $A$:** (denominadores usan $t=1$ y $t=2$, es decir, $T-1=2$ términos)
 
@@ -114,9 +114,9 @@ $$\hat{A}_{SS} = \frac{\xi_1(S,S) + \xi_2(S,S)}{\gamma_1(S) + \gamma_2(S)} = \fr
 
 $$\hat{A}_{SR} = \frac{\xi_1(S,R) + \xi_2(S,R)}{\gamma_1(S) + \gamma_2(S)} = \frac{0.6735 + 0.0983}{0.9176} = \frac{0.7718}{0.9176} = 0.841$$
 
-$$\hat{A}_{RS} = \frac{\xi_1(R,S) + \xi_2(R,S)}{\gamma_1(R) + \gamma_2(R)} = \frac{0.0099 + 0.0672}{0.2094 + 0.8730} = \frac{0.0771}{1.0824} = 0.071$$
+$$\hat{A}_{RS} = \frac{\xi_1(R,S) + \xi_2(R,S)}{\gamma_1(\mathrm{R}) + \gamma_2(\mathrm{R})} = \frac{0.0099 + 0.0672}{0.2094 + 0.8730} = \frac{0.0771}{1.0824} = 0.071$$
 
-$$\hat{A}_{RR} = \frac{\xi_1(R,R) + \xi_2(R,R)}{\gamma_1(R) + \gamma_2(R)} = \frac{0.1995 + 0.8058}{1.0824} = \frac{1.0053}{1.0824} = 0.929$$
+$$\hat{A}_{RR} = \frac{\xi_1(R,R) + \xi_2(R,R)}{\gamma_1(\mathrm{R}) + \gamma_2(\mathrm{R})} = \frac{0.1995 + 0.8058}{1.0824} = \frac{1.0053}{1.0824} = 0.929$$
 
 Verificación: $\hat{A}_{SS} + \hat{A}_{SR} = 0.159 + 0.841 = 1.000$ ✓ y $\hat{A}_{RS} + \hat{A}_{RR} = 0.071 + 0.929 = 1.000$ ✓
 
@@ -128,9 +128,9 @@ $$\hat{B}_{S,0} = \frac{\gamma_1(S)}{\gamma_1(S)+\gamma_2(S)+\gamma_3(S)} = \fra
 
 $$\hat{B}_{S,1} = \frac{\gamma_2(S)+\gamma_3(S)}{1.0134} = \frac{0.1270+0.0958}{1.0134} = \frac{0.2228}{1.0134} = 0.220$$
 
-$$\hat{B}_{R,0} = \frac{\gamma_1(R)}{\gamma_1(R)+\gamma_2(R)+\gamma_3(R)} = \frac{0.2094}{0.2094+0.8730+0.9042} = \frac{0.2094}{1.9866} = 0.105$$
+$$\hat{B}_{R,0} = \frac{\gamma_1(\mathrm{R})}{\gamma_1(\mathrm{R})+\gamma_2(\mathrm{R})+\gamma_3(\mathrm{R})} = \frac{0.2094}{0.2094+0.8730+0.9042} = \frac{0.2094}{1.9866} = 0.105$$
 
-$$\hat{B}_{R,1} = \frac{\gamma_2(R)+\gamma_3(R)}{1.9866} = \frac{0.8730+0.9042}{1.9866} = \frac{1.7772}{1.9866} = 0.895$$
+$$\hat{B}_{R,1} = \frac{\gamma_2(\mathrm{R})+\gamma_3(\mathrm{R})}{1.9866} = \frac{0.8730+0.9042}{1.9866} = \frac{1.7772}{1.9866} = 0.895$$
 
 **Tabla comparativa — antes y después de una iteración:**
 
@@ -149,7 +149,7 @@ $$\hat{B}_{R,1} = \frac{\gamma_2(R)+\gamma_3(R)}{1.9866} = \frac{0.8730+0.9042}{
 
 ¿Tiene sentido? La secuencia $(0,1,1)$ tiene dos días con paraguas. Después de una iteración:
 - El modelo aprendió que la lluvia es más "pegajosa" ($A_{RR}$: 0.60 → 0.93) — los dos últimos días son casi con certeza lluviosos y se siguen uno al otro.
-- $A_{SS}$ **bajó** (0.70 → 0.16): no es que el sol sea menos persistente en general, sino que en esta secuencia corta el único día soleado (t=1, con $\gamma_1(S)=0.79$) es seguido inmediatamente de lluvia (t=2, con $\gamma_2(R)=0.87$). Esa única transición S→R eleva $A_{SR}$ y hunde $A_{SS}$.
+- $A_{SS}$ **bajó** (0.70 → 0.16): no es que el sol sea menos persistente en general, sino que en esta secuencia corta el único día soleado (t=1, con $\gamma_1(S)=0.79$) es seguido inmediatamente de lluvia (t=2, con $\gamma_2(\mathrm{R})=0.87$). Esa única transición S→R eleva $A_{SR}$ y hunde $A_{SS}$.
 - La lluvia es más distinguible ($B_{R,1}$: 0.80 → 0.895) — los dos días con paraguas son casi seguramente lluviosos, lo que refuerza la asociación lluvia↔paraguas.
 
 ![Parámetros antes y después]({{ '/20_hmm/images/09_parametros_antes_despues.png' | url }})

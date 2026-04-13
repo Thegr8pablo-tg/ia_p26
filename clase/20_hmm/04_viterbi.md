@@ -100,10 +100,10 @@ Secuencia óptima: S → R → R
 Parámetros: $\pi = (0.6, 0.4)$, $O = (0, 1, 1)$
 
 $$A = \begin{pmatrix}
-0.7 & 0.3 \\
+0.7 & 0.3 \\\\
 0.4 & 0.6
 \end{pmatrix}, \qquad B = \begin{pmatrix}
-0.9 & 0.1 \\
+0.9 & 0.1 \\\\
 0.2 & 0.8
 \end{pmatrix}$$
 
@@ -111,41 +111,41 @@ $$A = \begin{pmatrix}
 
 $$\delta_1(S) = \pi_S \cdot B_{S,0} = 0.6 \times 0.9 = 0.540, \qquad \psi_1(S) = 0$$
 
-$$\delta_1(R) = \pi_R \cdot B_{R,0} = 0.4 \times 0.2 = 0.080, \qquad \psi_1(R) = 0$$
+$$\delta_1(\mathrm{R}) = \pi_R \cdot B_{R,0} = 0.4 \times 0.2 = 0.080, \qquad \psi_1(\mathrm{R}) = 0$$
 
 **Paso 2 — Recursión** ($O_2 = 1$):
 
 Para el estado $S$ en $t=2$:
 
-$$\delta_2(S) = \max(\delta_1(S) \cdot A_{SS},\; \delta_1(R) \cdot A_{RS}) \cdot B_{S,1}$$
-$$= \max(0.540 \times 0.7,\; 0.080 \times 0.4) \times 0.1 = \max(0.378,\; 0.032) \times 0.1 = 0.0378$$
-$$\psi_2(S) = \arg\max(0.378,\; 0.032) = S \text{ (índice 0)}$$
+$$\delta_2(S) = \max(\delta_1(S) \cdot A_{SS}, \delta_1(\mathrm{R}) \cdot A_{RS}) \cdot B_{S,1}$$
+$$= \max(0.540 \times 0.7, 0.080 \times 0.4) \times 0.1 = \max(0.378, 0.032) \times 0.1 = 0.0378$$
+$$\psi_2(S) = \arg\max(0.378, 0.032) = S \text{ (índice 0)}$$
 
 Para el estado $R$ en $t=2$:
 
-$$\delta_2(R) = \max(\delta_1(S) \cdot A_{SR},\; \delta_1(R) \cdot A_{RR}) \cdot B_{R,1}$$
-$$= \max(0.540 \times 0.3,\; 0.080 \times 0.6) \times 0.8 = \max(0.162,\; 0.048) \times 0.8 = 0.1296$$
-$$\psi_2(R) = \arg\max(0.162,\; 0.048) = S \text{ (índice 0)}$$
+$$\delta_2(\mathrm{R}) = \max(\delta_1(S) \cdot A_{SR}, \delta_1(\mathrm{R}) \cdot A_{RR}) \cdot B_{R,1}$$
+$$= \max(0.540 \times 0.3, 0.080 \times 0.6) \times 0.8 = \max(0.162, 0.048) \times 0.8 = 0.1296$$
+$$\psi_2(\mathrm{R}) = \arg\max(0.162, 0.048) = S \text{ (índice 0)}$$
 
-Intuición: en $t=2$, el mejor camino a ambos estados pasa por $S$ en $t=1$ (porque $\delta_1(S)$ es mucho mayor que $\delta_1(R)$).
+Intuición: en $t=2$, el mejor camino a ambos estados pasa por $S$ en $t=1$ (porque $\delta_1(S)$ es mucho mayor que $\delta_1(\mathrm{R})$).
 
 **Paso 3 — Recursión** ($O_3 = 1$):
 
 Para el estado $S$ en $t=3$:
 
-$$\delta_3(S) = \max(\delta_2(S) \cdot A_{SS},\; \delta_2(R) \cdot A_{RS}) \cdot B_{S,1}$$
-$$= \max(0.0378 \times 0.7,\; 0.1296 \times 0.4) \times 0.1 = \max(0.02646,\; 0.05184) \times 0.1 = 0.005184$$
-$$\psi_3(S) = \arg\max(0.02646,\; 0.05184) = R \text{ (índice 1)}$$
+$$\delta_3(S) = \max(\delta_2(S) \cdot A_{SS}, \delta_2(\mathrm{R}) \cdot A_{RS}) \cdot B_{S,1}$$
+$$= \max(0.0378 \times 0.7, 0.1296 \times 0.4) \times 0.1 = \max(0.02646, 0.05184) \times 0.1 = 0.005184$$
+$$\psi_3(S) = \arg\max(0.02646, 0.05184) = R \text{ (índice 1)}$$
 
 Para el estado $R$ en $t=3$:
 
-$$\delta_3(R) = \max(\delta_2(S) \cdot A_{SR},\; \delta_2(R) \cdot A_{RR}) \cdot B_{R,1}$$
-$$= \max(0.0378 \times 0.3,\; 0.1296 \times 0.6) \times 0.8 = \max(0.01134,\; 0.07776) \times 0.8 = 0.06221$$
-$$\psi_3(R) = \arg\max(0.01134,\; 0.07776) = R \text{ (índice 1)}$$
+$$\delta_3(\mathrm{R}) = \max(\delta_2(S) \cdot A_{SR}, \delta_2(\mathrm{R}) \cdot A_{RR}) \cdot B_{R,1}$$
+$$= \max(0.0378 \times 0.3, 0.1296 \times 0.6) \times 0.8 = \max(0.01134, 0.07776) \times 0.8 = 0.06221$$
+$$\psi_3(\mathrm{R}) = \arg\max(0.01134, 0.07776) = R \text{ (índice 1)}$$
 
 **Tabla resumen de $\delta$ y $\psi$:**
 
-| $t$ | $O_t$ | $\delta_t(S)$ | $\psi_t(S)$ | $\delta_t(R)$ | $\psi_t(R)$ |
+| $t$ | $O_t$ | $\delta_t(S)$ | $\psi_t(S)$ | $\delta_t(\mathrm{R})$ | $\psi_t(\mathrm{R})$ |
 |:---:|:-----:|:-------------:|:-----------:|:-------------:|:-----------:|
 | 1 | 0 | 0.54000 | — | 0.08000 | — |
 | 2 | 1 | 0.03780 | S | 0.12960 | S |
@@ -153,9 +153,9 @@ $$\psi_3(R) = \arg\max(0.01134,\; 0.07776) = R \text{ (índice 1)}$$
 
 **Backtracking:**
 
-1. Mejor estado en $t=3$: $q_3^∗ = \arg\max(\delta_3(S), \delta_3(R)) = \arg\max(0.00518, 0.06221) = R$
-2. $q_2^∗ = \psi_3(R) = R$
-3. $q_1^∗ = \psi_2(R) = S$
+1. Mejor estado en $t=3$: $q_3^∗ = \arg\max(\delta_3(S), \delta_3(\mathrm{R})) = \arg\max(0.00518, 0.06221) = R$
+2. $q_2^∗ = \psi_3(\mathrm{R}) = R$
+3. $q_1^∗ = \psi_2(\mathrm{R}) = S$
 
 **Secuencia óptima: $S \to R \to R$**
 

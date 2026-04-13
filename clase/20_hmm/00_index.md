@@ -12,6 +12,7 @@ Eso es exactamente lo que resuelven los **Modelos Ocultos de Markov (HMM)**.
 
 ---
 
+
 ## Tres preguntas, un modelo
 
 Un HMM bien definido permite responder tres tipos de preguntas fundamentales:

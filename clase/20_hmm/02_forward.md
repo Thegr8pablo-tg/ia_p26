@@ -8,174 +8,257 @@ title: "Algoritmo Forward"
 
 ---
 
-## 1. ¿Por qué no es trivial?
+## 1. ¿Para qué sirve $P(O \mid \lambda)$?
 
-La pregunta parece simple: calcular $P(O \mid \lambda)$. Pero para obtenerla necesitamos sumar sobre **todas las posibles secuencias de estados ocultos**:
+Antes de calcular nada, conviene entender **para qué necesitamos** $P(O \mid \lambda)$.
+
+**Comparar modelos.** Supón que tienes dos HMMs entrenados: $\lambda_1$ para reconocer la palabra "hola" y $\lambda_2$ para "adiós". Llega una nueva grabación de audio $O$. ¿Qué palabra es? Calculas $P(O \mid \lambda_1)$ y $P(O \mid \lambda_2)$ y eliges la mayor. Así funciona el núcleo del reconocimiento de voz clásico.
+
+**Detectar anomalías.** Si $P(O \mid \lambda)$ es muy pequeño, la secuencia observada es improbable bajo el modelo entrenado — señal de que algo inusual ocurrió (fraude, falla de hardware, etc.).
+
+**Subroutine de aprendizaje.** El algoritmo Baum-Welch (sección 20.5) necesita $P(O \mid \lambda)$ en cada iteración para actualizar los parámetros.
+
+En todos los casos la pregunta es la misma: dado el modelo $\lambda = (\pi, A, B)$ y la secuencia observada $O = (O_1, \ldots, O_T)$, calcula $P(O \mid \lambda)$.
+
+---
+
+## 2. ¿Por qué el cálculo directo no funciona?
+
+La definición formal de $P(O \mid \lambda)$ requiere sumar sobre **todas** las trayectorias de estados ocultos posibles:
 
 $$P(O \mid \lambda) = \sum_{q_1} \sum_{q_2} \cdots \sum_{q_T} P(O, q_1, \ldots, q_T \mid \lambda)$$
 
-donde cada término de la suma es la probabilidad conjunta de la sección 20.1:
+donde la probabilidad conjunta de cada trayectoria específica (sección 20.1) es:
 
-$$P(O, q \mid \lambda) = \pi_{q_1} \cdot B_{q_1, O_1} \cdot A_{q_1, q_2} \cdot B_{q_2, O_2} \cdots A_{q_{T-1}, q_T} \cdot B_{q_T, O_T}$$
+$$P(O, q \mid \lambda) = \pi_{q_1} \cdot B_{q_1,O_1} \cdot A_{q_1,q_2} \cdot B_{q_2,O_2} \cdots A_{q_{T-1},q_T} \cdot B_{q_T,O_T}$$
 
-Con $N$ estados y $T$ pasos de tiempo, hay $N^T$ secuencias posibles — una suma de $N^T$ términos, cada uno con $T$ factores. Para el ejemplo de Lain ($N=2$, $T=3$) son $2^3 = 8$ términos — manejable. Pero con $N=10$ estados y $T=100$ pasos hay $10^{100}$ términos. Es imposible enumerarlos.
+Con $N$ estados y $T$ pasos de tiempo hay $N^T$ trayectorias. Para $N=2$, $T=3$ son $2^3=8$ — manejable. Para $N=10$ estados y $T=100$ pasos hay $10^{100}$ términos: imposible.
 
-El algoritmo Forward evita esta explosión usando **programación dinámica**: observa que muchos de esos $N^T$ términos comparten factores comunes, y reutiliza los cálculos previos en lugar de repetirlos.
-
----
-
-## 2. La variable forward $\alpha_t(i)$
-
-Definimos la **variable forward** como:
-
-$$\alpha_t(i) = P(O_1, O_2, \ldots, O_t,\; q_t = i \mid \lambda)$$
-
-En palabras: $\alpha_t(i)$ es la probabilidad de haber observado las primeras $t$ observaciones **y** de encontrarse en el estado $i$ en el instante $t$, dado el modelo $\lambda$.
-
-Intuición: $\alpha_t(i)$ acumula toda la "evidencia" de las observaciones pasadas ($O_1$ hasta $O_t$) y la concentra en un único número por estado. No necesitamos recordar cada trayectoria — solo el resumen numérico en el tiempo $t$.
+El algoritmo Forward evita esta explosión con **programación dinámica**: observa que muchos de esos $N^T$ términos comparten sub-trayectorias comunes y reutiliza los cálculos en lugar de repetirlos. El costo baja de $O(N^T \cdot T)$ a $O(N^2 T)$.
 
 ---
 
-## 3. Inicialización, recursión y terminación
+## 3. La variable forward $\alpha_t(i)$
 
-El algoritmo tiene tres fases:
+La clave del DP es definir un subproblema que capture exactamente lo que necesitamos en cada paso:
+
+$$\alpha_t(i) = P(O_1, O_2, \ldots, O_t, q_t = i \mid \lambda)$$
+
+**En palabras:** la probabilidad de que, al llegar al instante $t$, se hayan observado exactamente $O_1, \ldots, O_t$ **y** el sistema esté en el estado $i$.
+
+Intuición operacional: $\alpha_t(i)$ es un **acumulador**. En vez de recordar las $N^{t-1}$ trayectorias que llegan a $(t, i)$, comprime toda esa información en un único número. Cuando calculamos $\alpha_t$, ya no necesitamos $\alpha_{t-2}, \alpha_{t-3}, \ldots$ — solo $\alpha_{t-1}$.
+
+Nota: $\alpha_t(i)$ es una probabilidad **conjunta** (observaciones + estado), no condicional. En particular $\sum_i \alpha_t(i) \neq 1$ en general — solo en $t=T$ la suma da $P(O \mid \lambda)$.
+
+---
+
+## 4. Los tres pasos del algoritmo
 
 **[P1] Inicialización** ($t = 1$):
 
 $$\alpha_1(i) = \pi_i \cdot B_{i,O_1} \qquad \text{para todo } i = 1, \ldots, N$$
 
-Interpretación: la probabilidad de estar en el estado $i$ al inicio es $\pi_i$; la probabilidad de haber observado $O_1$ desde ese estado es $B_{i,O_1}$. El producto da la probabilidad conjunta.
+- $\pi_i$: probabilidad de que el estado inicial sea $i$.
+- $B_{i,O_1}$: probabilidad de emitir la primera observación desde el estado $i$. Aquí $O_1$ es el **valor** de la primera observación (por ejemplo, si $O_1 = 0$, entonces $B_{i,O_1} = B_{i,0}$, la columna 0 de la fila $i$ de la matriz $B$).
 
 **[P2] Recursión** ($t = 2, 3, \ldots, T$):
 
 $$\alpha_t(j) = \left[\sum_{i=1}^{N} \alpha_{t-1}(i) \cdot A_{ij}\right] \cdot B_{j,O_t} \qquad \text{para todo } j = 1, \ldots, N$$
 
-Interpretación: para llegar al estado $j$ en el instante $t$, necesitamos:
-1. Haber llegado a algún estado $i$ en $t-1$ (eso cuesta $\alpha_{t-1}(i)$)
-2. Haber transitado de $i$ a $j$ (eso cuesta $A_{ij}$)
-3. Haber emitido la observación $O_t$ desde el estado $j$ (eso cuesta $B_{j,O_t}$)
+Desglose para el estado destino $j$ en el instante $t$:
 
-Sumamos sobre todos los estados $i$ posibles (venimos de cualquier estado anterior).
+1. Desde cada estado de origen $i$ en $t-1$, tomo la probabilidad acumulada $\alpha_{t-1}(i)$.
+2. La pondero por la probabilidad de transitar de $i$ a $j$: $A_{ij}$.
+3. Sumo sobre **todos** los posibles estados de origen $i$ — no hay que elegir, todas las rutas contribuyen.
+4. Multiplico por $B_{j,O_t}$: la probabilidad de emitir la observación $O_t$ desde $j$.
 
 **[P3] Terminación**:
 
 $$P(O \mid \lambda) = \sum_{i=1}^{N} \alpha_T(i)$$
 
-La probabilidad total de la secuencia es la suma de las variables forward en el último instante.
+En el último instante el sistema puede estar en cualquier estado. La probabilidad total de toda la secuencia es la suma sobre todos los estados finales posibles.
 
 ---
 
-## 4. Visualización: el trellis forward
+## 5. El trellis: cómo visualizar el cómputo
 
-La estructura de cómputo se llama **trellis** (cuadrícula de enrejado). Cada nodo es un par (estado, tiempo); cada arista representa una transición posible.
+El **trellis** (enrejado) es la estructura de datos del algoritmo. Entenderlo hace que la recursión sea obvia.
+
+**Estructura del trellis:**
+
+```
+           t=1          t=2          t=3
+         ┌──────┐     ┌──────┐     ┌──────┐
+  S  ──  │α₁(S) │ ──→ │α₂(S) │ ──→ │α₃(S) │
+         └──────┘ ↘   └──────┘ ↘   └──────┘
+                   ↘ ↗           ↘ ↗
+         ┌──────┐ ↗   ┌──────┐ ↗   ┌──────┐
+  R  ──  │α₁(R) │ ──→ │α₂(R) │ ──→ │α₃(R) │
+         └──────┘     └──────┘     └──────┘
+           O₁=0         O₂=1         O₃=1
+```
+
+**Qué significa cada elemento:**
+
+- **Columna** = un instante de tiempo $t$.
+- **Fila** = un estado oculto (S o R en nuestro ejemplo).
+- **Nodo** $(t, i)$ = almacena el valor $\alpha_t(i)$.
+- **Flecha** de $(t-1, i)$ a $(t, j)$ = la contribución $\alpha_{t-1}(i) \cdot A_{ij}$ que el nodo anterior aporta al nodo actual. **Hay $N \times N$ flechas entre cada par de columnas** — todos los estados anteriores contribuyen a todos los estados siguientes.
+
+**Cómo se calcula cada nodo:**
+
+El nodo $\alpha_t(j)$ recibe contribuciones de **todos** los nodos de la columna anterior (eso es la suma $\sum_i \alpha_{t-1}(i) \cdot A_{ij}$), y luego multiplica por la emisión $B_{j,O_t}$ de ese instante. Las flechas que "cruzan" (S→R y R→S) representan las transiciones $A_{SR}$ y $A_{RS}$ — también se suman.
+
+**Dirección del cómputo:** siempre de izquierda a derecha (pasado → futuro). Cada columna depende solo de la columna inmediatamente anterior.
+
+**Por qué se llama trellis:** su forma de rejilla recuerda a una celosía (trellis en inglés) — una estructura periódica con cruces entre filas.
+
+Con valores del ejemplo de Lain:
 
 ```
 Estado │  t=1          t=2            t=3
-───────┼──────────────────────────────────────────
-  S    │  α₁(S)=0.540  α₂(S)=0.041   α₃(S)=0.00959
-       │    ↘↗            ↘↗
-  R    │  α₁(R)=0.080  α₂(R)=0.168   α₃(R)=0.09048
-       
-  O_t  │   O₁=0         O₂=1          O₃=1
-        ────────────────────────────────→  tiempo
+───────┼────────────────────────────────────────────
+  S    │  0.54000  ────→  0.04100  ────→  0.00959
+       │         ╲  ↗ ╲             ↗
+       │          ╲╱   ╲           ╱
+       │          ╱╲    ╲         ╱
+  R    │  0.08000  ────→  0.16800  ────→  0.09048
+       │                         (también hay flechas cruzadas)
+  O_t  │   O₁=0         O₂=1           O₃=1
+        ────────────────────────────────────→  tiempo
 ```
 
-Las flechas en cada columna representan: desde cada nodo en $t$, se contribuye a todos los nodos en $t+1$ mediante la transición $A_{ij}$, y luego se multiplica por la emisión del nuevo estado.
+Resultado final: $P(O \mid \lambda) = 0.00959 + 0.09048 = 0.10007$
 
 ![Forward Trellis]({{ '/20_hmm/images/03_forward_trellis.png' | url }})
 
 ---
 
-## 5. Traza completa: el ejemplo de Lain
+## 6. Traza completa: el ejemplo de Lain
 
 Parámetros: $\pi = (0.6, 0.4)$, $O = (0, 1, 1)$
 
+Las matrices con sus entradas etiquetadas explícitamente:
+
 $$A = \begin{pmatrix}
-0.7 & 0.3 \\
+A_{SS} & A_{SR} \\\\
+A_{RS} & A_{RR}
+\end{pmatrix}
+= \begin{pmatrix}
+0.7 & 0.3 \\\\
 0.4 & 0.6
-\end{pmatrix}, \qquad B = \begin{pmatrix}
-0.9 & 0.1 \\
+\end{pmatrix}, \qquad
+B = \begin{pmatrix}
+B_{S,0} & B_{S,1} \\\\
+B_{R,0} & B_{R,1}
+\end{pmatrix}
+= \begin{pmatrix}
+0.9 & 0.1 \\\\
 0.2 & 0.8
 \end{pmatrix}$$
 
-**Paso 1 — Inicialización** (observación $O_1 = 0$):
+---
+
+**Paso 1 — Inicialización** ($O_1 = 0$, usamos la columna 0 de $B$):
 
 $$\alpha_1(S) = \pi_S \cdot B_{S,0} = 0.6 \times 0.9 = 0.540$$
+$$\alpha_1(\mathrm{R}) = \pi_R \cdot B_{R,0} = 0.4 \times 0.2 = 0.080$$
 
-$$\alpha_1(R) = \pi_R \cdot B_{R,0} = 0.4 \times 0.2 = 0.080$$
+Intuición: el día 1 no hay paraguas ($O_1=0$). Alta probabilidad en "Soleado" porque $\pi_S=0.6$ y $B_{S,0}=0.9$ son ambos altos.
 
-Intuición: el día 1 no llueve (O=0). Lain asigna alta probabilidad a "Soleado" porque: (a) es el estado inicial más probable y (b) cuando es soleado la probabilidad de no paraguas es 0.9.
+---
 
-**Paso 2 — Recursión** (observación $O_2 = 1$):
+**Paso 2 — Recursión** ($O_2 = 1$, usamos la columna 1 de $B$):
 
-$$\alpha_2(S) = [\alpha_1(S) \cdot A_{SS} + \alpha_1(R) \cdot A_{RS}] \cdot B_{S,1}$$
-$$= [0.540 \times 0.7 + 0.080 \times 0.4] \times 0.1 = [0.378 + 0.032] \times 0.1 = 0.041$$
+Para el estado $S$ en $t=2$ — ¿de qué estados anteriores puedo venir?
 
-$$\alpha_2(R) = [\alpha_1(S) \cdot A_{SR} + \alpha_1(R) \cdot A_{RR}] \cdot B_{R,1}$$
-$$= [0.540 \times 0.3 + 0.080 \times 0.6] \times 0.8 = [0.162 + 0.048] \times 0.8 = 0.168$$
+$$\alpha_2(S) = \bigl[\underbrace{\alpha_1(S)}_{0.540} \cdot \underbrace{A_{SS}}_{0.7} + \underbrace{\alpha_1(\mathrm{R})}_{0.080} \cdot \underbrace{A_{RS}}_{0.4}\bigr] \cdot \underbrace{B_{S,1}}_{0.1}$$
+$$= [0.378 + 0.032] \times 0.1 = 0.410 \times 0.1 = 0.041$$
 
-Intuición: el día 2 hay paraguas (O=1). Ahora "Lluvioso" toma ventaja: $\alpha_2(R) \gg \alpha_2(S)$.
+Para el estado $R$ en $t=2$:
 
-**Paso 3 — Recursión** (observación $O_3 = 1$):
+$$\alpha_2(\mathrm{R}) = \bigl[\underbrace{\alpha_1(S)}_{0.540} \cdot \underbrace{A_{SR}}_{0.3} + \underbrace{\alpha_1(\mathrm{R})}_{0.080} \cdot \underbrace{A_{RR}}_{0.6}\bigr] \cdot \underbrace{B_{R,1}}_{0.8}$$
+$$= [0.162 + 0.048] \times 0.8 = 0.210 \times 0.8 = 0.168$$
 
-$$\alpha_3(S) = [\alpha_2(S) \cdot A_{SS} + \alpha_2(R) \cdot A_{RS}] \cdot B_{S,1}$$
-$$= [0.041 \times 0.7 + 0.168 \times 0.4] \times 0.1 = [0.0287 + 0.0672] \times 0.1 = 0.00959$$
+Intuición: el día 2 hay paraguas ($O_2=1$). "Lluvioso" toma ventaja: $\alpha_2(\mathrm{R}) = 0.168 \gg \alpha_2(S) = 0.041$.
 
-$$\alpha_3(R) = [\alpha_2(S) \cdot A_{SR} + \alpha_2(R) \cdot A_{RR}] \cdot B_{R,1}$$
-$$= [0.041 \times 0.3 + 0.168 \times 0.6] \times 0.8 = [0.0123 + 0.1008] \times 0.8 = 0.09048$$
+---
+
+**Paso 3 — Recursión** ($O_3 = 1$, columna 1 de $B$ otra vez):
+
+$$\alpha_3(S) = \bigl[\underbrace{\alpha_2(S)}_{0.041} \cdot \underbrace{A_{SS}}_{0.7} + \underbrace{\alpha_2(\mathrm{R})}_{0.168} \cdot \underbrace{A_{RS}}_{0.4}\bigr] \cdot \underbrace{B_{S,1}}_{0.1}$$
+$$= [0.0287 + 0.0672] \times 0.1 = 0.0959 \times 0.1 = 0.00959$$
+
+$$\alpha_3(\mathrm{R}) = \bigl[\underbrace{\alpha_2(S)}_{0.041} \cdot \underbrace{A_{SR}}_{0.3} + \underbrace{\alpha_2(\mathrm{R})}_{0.168} \cdot \underbrace{A_{RR}}_{0.6}\bigr] \cdot \underbrace{B_{R,1}}_{0.8}$$
+$$= [0.0123 + 0.1008] \times 0.8 = 0.1131 \times 0.8 = 0.09048$$
+
+---
 
 **Terminación:**
 
-$$P(O \mid \lambda) = \alpha_3(S) + \alpha_3(R) = 0.00959 + 0.09048 = \mathbf{0.10007}$$
+$$P(O \mid \lambda) = \alpha_3(S) + \alpha_3(\mathrm{R}) = 0.00959 + 0.09048 = \mathbf{0.10007}$$
 
 **Tabla resumen:**
 
-| $t$ | $O_t$ | $\alpha_t(S)$ | $\alpha_t(R)$ | $\alpha_t(S) + \alpha_t(R)$ |
-|:---:|:-----:|:-------------:|:-------------:|:---------------------------:|
+| $t$ | $O_t$ | $\alpha_t(S)$ | $\alpha_t(\mathrm{R})$ | Suma |
+|:---:|:-----:|:-------------:|:-------------:|:----:|
 | 1 | 0 | 0.54000 | 0.08000 | 0.62000 |
 | 2 | 1 | 0.04100 | 0.16800 | 0.20900 |
 | 3 | 1 | 0.00959 | 0.09048 | **0.10007** |
 
-La columna de suma no tiene por qué ser 1 — los $\alpha_t$ son probabilidades **conjuntas** (de observación + estado), no condicionales. Solo en $t=T$ la suma da $P(O \mid \lambda)$.
+La suma por fila no tiene por qué ser 1 — los $\alpha_t$ son probabilidades **conjuntas** (estado + observaciones hasta $t$). Solo en $t=T$ la suma da exactamente $P(O \mid \lambda)$.
 
 ---
 
-## 6. Pseudocódigo
+## 7. Pseudocódigo
 
 ```
 función FORWARD(O, π, A, B):
-    T ← longitud(O)
-    N ← número de estados
+    T ← longitud(O)      # número de observaciones en la secuencia
+    N ← número de estados ocultos posibles
 
-    [P1] Inicialización:
-        para i = 1 hasta N:
-            α[1][i] ← π[i] × B[i][O[1]]
+    # ── [P1] Inicialización ────────────────────────────────────────────────────
+    # Caso base: en t=1 no hay estado anterior.
+    # α[1][i] = prob. de iniciar en estado i × prob. de emitir O[1] desde i.
+    para i = 1 hasta N:
+        α[1][i] ← π[i] × B[i][O[1]]
+        #          ↑         ↑
+        #     prob. inicio  B indexada por el VALOR de la observación O[1]
 
-    [P2] Recursión:
-        para t = 2 hasta T:
-            para j = 1 hasta N:
-                α[t][j] ← 0
-                para i = 1 hasta N:
-                    α[t][j] ← α[t][j] + α[t-1][i] × A[i][j]
-                α[t][j] ← α[t][j] × B[j][O[t]]
+    # ── [P2] Recursión ─────────────────────────────────────────────────────────
+    # Avanzamos columna por columna, de t=2 hasta T.
+    # Para cada estado destino j, acumulamos las contribuciones de TODOS
+    # los estados de origen i (bucle interno), ponderadas por A[i][j].
+    # Luego multiplicamos por la emisión B[j][O[t]].
+    para t = 2 hasta T:
+        para j = 1 hasta N:                    # j = estado destino en t
+            suma ← 0
+            para i = 1 hasta N:                # i = estado de origen en t-1
+                suma ← suma + α[t-1][i] × A[i][j]
+                #             ↑ α pasado    ↑ transición i→j
+            α[t][j] ← suma × B[j][O[t]]
+            #                ↑ emitir O[t] desde j
+            # Nota: B[j][O[t]] usa el VALOR de la observación como índice de columna
 
-    [P3] Terminación:
-        P_obs ← 0
-        para i = 1 hasta N:
-            P_obs ← P_obs + α[T][i]
+    # ── [P3] Terminación ───────────────────────────────────────────────────────
+    # Sumamos sobre todos los estados finales posibles.
+    # El sistema puede terminar en cualquier estado, así que sumamos todo.
+    P_obs ← 0
+    para i = 1 hasta N:
+        P_obs ← P_obs + α[T][i]
 
-    retornar α, P_obs
+    retornar α, P_obs   # α contiene todos los valores; P_obs = P(O | λ)
 ```
 
 ---
 
-## 7. Complejidad
+## 8. Complejidad
 
-| Algoritmo | Complejidad temporal | Complejidad espacial |
-|-----------|:--------------------:|:--------------------:|
-| Ingenuo (enumerar todas las secuencias) | $O(N^T \cdot T)$ | $O(N^T)$ |
-| Forward (programación dinámica) | $O(N^2 T)$ | $O(N T)$ |
+| Método | Tiempo | Espacio |
+|--------|:------:|:-------:|
+| Ingenuo — enumerar las $N^T$ trayectorias | $O(N^T \cdot T)$ | $O(N^T)$ |
+| Forward — programación dinámica | $O(N^2 T)$ | $O(N T)$ |
 
-El ahorro es exponencial: para $N=10$, $T=100$, el método ingenuo requiere $10^{102}$ operaciones; Forward solo $100{,}000$.
+El ahorro es exponencial: para $N=10$, $T=100$, el método ingenuo requiere $\sim 10^{102}$ operaciones; Forward solo $100{,}000$.
 
-El costo viene del doble bucle: para cada uno de los $T$ pasos de tiempo, para cada uno de los $N$ estados destino, sumamos sobre los $N$ estados origen. Eso es $N \times N$ operaciones por paso → $N^2 T$ en total.
+De dónde viene $N^2 T$: en cada uno de los $T$ pasos de tiempo, para cada uno de los $N$ estados destino $j$, sumamos sobre los $N$ estados de origen $i$. Eso es $N \times N$ operaciones por paso de tiempo → $N^2 T$ en total.
