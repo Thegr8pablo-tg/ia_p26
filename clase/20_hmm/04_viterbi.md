@@ -99,7 +99,13 @@ Secuencia óptima: S → R → R
 
 Parámetros: $\pi = (0.6, 0.4)$, $O = (0, 1, 1)$
 
-$$A = \begin{pmatrix} 0.7 & 0.3 \\ 0.4 & 0.6 \end{pmatrix}, \qquad B = \begin{pmatrix} 0.9 & 0.1 \\ 0.2 & 0.8 \end{pmatrix}$$
+$$A = \begin{pmatrix}
+0.7 & 0.3 \\
+0.4 & 0.6
+\end{pmatrix}, \qquad B = \begin{pmatrix}
+0.9 & 0.1 \\
+0.2 & 0.8
+\end{pmatrix}$$
 
 **Paso 1 — Inicialización** ($O_1 = 0$):
 

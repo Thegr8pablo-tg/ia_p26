@@ -115,13 +115,29 @@ Interpretación: el 60 % de los días Lain asume que comienza soleado.
 
 **Matriz de transición** $A$:
 
-$$A = \begin{pmatrix} 0.7 & 0.3 \\ 0.4 & 0.6 \end{pmatrix} \qquad \begin{array}{l} \text{fila S: } P(S \to S)=0.7,\; P(S \to R)=0.3 \\ \text{fila R: } P(R \to S)=0.4,\; P(R \to R)=0.6 \end{array}$$
+$$A = \begin{pmatrix}
+0.7 & 0.3 \\
+0.4 & 0.6
+\end{pmatrix}
+\qquad
+\begin{array}{l}
+\text{fila S: } P(S \to S)=0.7,\quad P(S \to R)=0.3 \\
+\text{fila R: } P(R \to S)=0.4,\quad P(R \to R)=0.6
+\end{array}$$
 
 Interpretación: si hoy es soleado, mañana hay 70 % de chance de que siga soleado. Si hoy llueve, hay 60 % de chance de que siga lloviendo.
 
 **Matriz de emisión** $B$:
 
-$$B = \begin{pmatrix} 0.9 & 0.1 \\ 0.2 & 0.8 \end{pmatrix} \qquad \begin{array}{l} \text{fila S: } P(O=0 \mid S)=0.9,\; P(O=1 \mid S)=0.1 \\ \text{fila R: } P(O=0 \mid R)=0.2,\; P(O=1 \mid R)=0.8 \end{array}$$
+$$B = \begin{pmatrix}
+0.9 & 0.1 \\
+0.2 & 0.8
+\end{pmatrix}
+\qquad
+\begin{array}{l}
+\text{fila S: } P(O=0 \mid S)=0.9,\quad P(O=1 \mid S)=0.1 \\
+\text{fila R: } P(O=0 \mid R)=0.2,\quad P(O=1 \mid R)=0.8
+\end{array}$$
 
 Interpretación: cuando el día es soleado, casi nadie lleva paraguas (90 %). Cuando llueve, la mayoría sí lleva paraguas (80 %).
 

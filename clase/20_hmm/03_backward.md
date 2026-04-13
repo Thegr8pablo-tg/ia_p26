@@ -81,7 +81,13 @@ Las flechas van de derecha a izquierda. Empezamos en $t=T$ (todos los $\beta$ so
 
 Parámetros: $O = (0, 1, 1)$
 
-$$A = \begin{pmatrix} 0.7 & 0.3 \\ 0.4 & 0.6 \end{pmatrix}, \qquad B = \begin{pmatrix} 0.9 & 0.1 \\ 0.2 & 0.8 \end{pmatrix}$$
+$$A = \begin{pmatrix}
+0.7 & 0.3 \\
+0.4 & 0.6
+\end{pmatrix}, \qquad B = \begin{pmatrix}
+0.9 & 0.1 \\
+0.2 & 0.8
+\end{pmatrix}$$
 
 **Paso 1 — Inicialización** ($t=3$):
 
