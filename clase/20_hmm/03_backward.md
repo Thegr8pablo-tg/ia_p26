@@ -152,13 +152,13 @@ Interpretación: no hay observaciones después del instante 3. La probabilidad d
 
 Para el estado $S$ en $t=2$ — si estoy en $S$, ¿a qué estados puedo ir en $t=3$?
 
-$$\beta_2(S) = \underbrace{A_{SS}}_{0.7} \cdot \underbrace{B_{S,1}}_{0.1} \cdot \underbrace{\beta_3(S)}_{1.0} + \underbrace{A_{SR}}_{0.3} \cdot \underbrace{B_{R,1}}_{0.8} \cdot \underbrace{\beta_3(\mathrm{R})}_{1.0}$$
-$$= 0.07 + 0.24 = 0.310$$
+$$\beta_2(S) = A_{SS} \cdot B_{S,1} \cdot \beta_3(S) + A_{SR} \cdot B_{R,1} \cdot \beta_3(\mathrm{R})$$
+$$= 0.7 \times 0.1 \times 1.0 + 0.3 \times 0.8 \times 1.0 = 0.07 + 0.24 = 0.310$$
 
 Para el estado $R$ en $t=2$ — si estoy en $R$, ¿a qué estados puedo ir en $t=3$?
 
-$$\beta_2(\mathrm{R}) = \underbrace{A_{RS}}_{0.4} \cdot \underbrace{B_{S,1}}_{0.1} \cdot \underbrace{\beta_3(S)}_{1.0} + \underbrace{A_{RR}}_{0.6} \cdot \underbrace{B_{R,1}}_{0.8} \cdot \underbrace{\beta_3(\mathrm{R})}_{1.0}$$
-$$= 0.04 + 0.48 = 0.520$$
+$$\beta_2(\mathrm{R}) = A_{RS} \cdot B_{S,1} \cdot \beta_3(S) + A_{RR} \cdot B_{R,1} \cdot \beta_3(\mathrm{R})$$
+$$= 0.4 \times 0.1 \times 1.0 + 0.6 \times 0.8 \times 1.0 = 0.04 + 0.48 = 0.520$$
 
 Intuición: si en $t=2$ estoy en $R$ (lluvioso), el futuro ($O_3=1$, paraguas) es más probable que si estoy en $S$ — de ahí que $\beta_2(\mathrm{R}) = 0.52 > \beta_2(S) = 0.31$.
 
@@ -168,13 +168,13 @@ Intuición: si en $t=2$ estoy en $R$ (lluvioso), el futuro ($O_3=1$, paraguas) e
 
 Para el estado $S$ en $t=1$:
 
-$$\beta_1(S) = \underbrace{A_{SS}}_{0.7} \cdot \underbrace{B_{S,1}}_{0.1} \cdot \underbrace{\beta_2(S)}_{0.31} + \underbrace{A_{SR}}_{0.3} \cdot \underbrace{B_{R,1}}_{0.8} \cdot \underbrace{\beta_2(\mathrm{R})}_{0.52}$$
-$$= 0.0217 + 0.1248 = 0.1465$$
+$$\beta_1(S) = A_{SS} \cdot B_{S,1} \cdot \beta_2(S) + A_{SR} \cdot B_{R,1} \cdot \beta_2(\mathrm{R})$$
+$$= 0.7 \times 0.1 \times 0.31 + 0.3 \times 0.8 \times 0.52 = 0.0217 + 0.1248 = 0.1465$$
 
 Para el estado $R$ en $t=1$:
 
-$$\beta_1(\mathrm{R}) = \underbrace{A_{RS}}_{0.4} \cdot \underbrace{B_{S,1}}_{0.1} \cdot \underbrace{\beta_2(S)}_{0.31} + \underbrace{A_{RR}}_{0.6} \cdot \underbrace{B_{R,1}}_{0.8} \cdot \underbrace{\beta_2(\mathrm{R})}_{0.52}$$
-$$= 0.0124 + 0.2496 = 0.2620$$
+$$\beta_1(\mathrm{R}) = A_{RS} \cdot B_{S,1} \cdot \beta_2(S) + A_{RR} \cdot B_{R,1} \cdot \beta_2(\mathrm{R})$$
+$$= 0.4 \times 0.1 \times 0.31 + 0.6 \times 0.8 \times 0.52 = 0.0124 + 0.2496 = 0.2620$$
 
 ---
 

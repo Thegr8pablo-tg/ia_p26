@@ -172,13 +172,13 @@ Intuición: el día 1 no hay paraguas ($O_1=0$). Alta probabilidad en "Soleado" 
 
 Para el estado $S$ en $t=2$ — ¿de qué estados anteriores puedo venir?
 
-$$\alpha_2(S) = \bigl[\underbrace{\alpha_1(S)}_{0.540} \cdot \underbrace{A_{SS}}_{0.7} + \underbrace{\alpha_1(\mathrm{R})}_{0.080} \cdot \underbrace{A_{RS}}_{0.4}\bigr] \cdot \underbrace{B_{S,1}}_{0.1}$$
-$$= [0.378 + 0.032] \times 0.1 = 0.410 \times 0.1 = 0.041$$
+$$\alpha_2(S) = [\alpha_1(S) \cdot A_{SS} + \alpha_1(\mathrm{R}) \cdot A_{RS}] \cdot B_{S,1}$$
+$$= [0.540 \times 0.7 + 0.080 \times 0.4] \times 0.1 = [0.378 + 0.032] \times 0.1 = 0.041$$
 
 Para el estado $R$ en $t=2$:
 
-$$\alpha_2(\mathrm{R}) = \bigl[\underbrace{\alpha_1(S)}_{0.540} \cdot \underbrace{A_{SR}}_{0.3} + \underbrace{\alpha_1(\mathrm{R})}_{0.080} \cdot \underbrace{A_{RR}}_{0.6}\bigr] \cdot \underbrace{B_{R,1}}_{0.8}$$
-$$= [0.162 + 0.048] \times 0.8 = 0.210 \times 0.8 = 0.168$$
+$$\alpha_2(\mathrm{R}) = [\alpha_1(S) \cdot A_{SR} + \alpha_1(\mathrm{R}) \cdot A_{RR}] \cdot B_{R,1}$$
+$$= [0.540 \times 0.3 + 0.080 \times 0.6] \times 0.8 = [0.162 + 0.048] \times 0.8 = 0.168$$
 
 Intuición: el día 2 hay paraguas ($O_2=1$). "Lluvioso" toma ventaja: $\alpha_2(\mathrm{R}) = 0.168 \gg \alpha_2(S) = 0.041$.
 
@@ -186,11 +186,11 @@ Intuición: el día 2 hay paraguas ($O_2=1$). "Lluvioso" toma ventaja: $\alpha_2
 
 **Paso 3 — Recursión** ($O_3 = 1$, columna 1 de $B$ otra vez):
 
-$$\alpha_3(S) = \bigl[\underbrace{\alpha_2(S)}_{0.041} \cdot \underbrace{A_{SS}}_{0.7} + \underbrace{\alpha_2(\mathrm{R})}_{0.168} \cdot \underbrace{A_{RS}}_{0.4}\bigr] \cdot \underbrace{B_{S,1}}_{0.1}$$
-$$= [0.0287 + 0.0672] \times 0.1 = 0.0959 \times 0.1 = 0.00959$$
+$$\alpha_3(S) = [\alpha_2(S) \cdot A_{SS} + \alpha_2(\mathrm{R}) \cdot A_{RS}] \cdot B_{S,1}$$
+$$= [0.041 \times 0.7 + 0.168 \times 0.4] \times 0.1 = [0.0287 + 0.0672] \times 0.1 = 0.00959$$
 
-$$\alpha_3(\mathrm{R}) = \bigl[\underbrace{\alpha_2(S)}_{0.041} \cdot \underbrace{A_{SR}}_{0.3} + \underbrace{\alpha_2(\mathrm{R})}_{0.168} \cdot \underbrace{A_{RR}}_{0.6}\bigr] \cdot \underbrace{B_{R,1}}_{0.8}$$
-$$= [0.0123 + 0.1008] \times 0.8 = 0.1131 \times 0.8 = 0.09048$$
+$$\alpha_3(\mathrm{R}) = [\alpha_2(S) \cdot A_{SR} + \alpha_2(\mathrm{R}) \cdot A_{RR}] \cdot B_{R,1}$$
+$$= [0.041 \times 0.3 + 0.168 \times 0.6] \times 0.8 = [0.0123 + 0.1008] \times 0.8 = 0.09048$$
 
 ---
 
