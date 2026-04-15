@@ -165,24 +165,35 @@ La log-verosimilitud es **no decreciente** en cada paso. El algoritmo converge a
 
 ## 6. Fórmulas del M-paso
 
-Con $\gamma$ y $\xi$ calculados, los nuevos parámetros son:
+Cada parámetro se actualiza como un ratio de conteos esperados. Para cada fórmula se muestra primero qué miden el numerador y el denominador, y luego la ecuación compacta.
 
-$$\hat\pi_i = \gamma_1(i)$$
+---
 
-*→ conteo suave de empezar en el estado $i$*
+**Distribución inicial $\hat\pi_i$**
 
-$$\hat A_{ij} = \frac{\sum_{t=1}^{T-1} \xi_t(i,j)}{\sum_{t=1}^{T-1} \gamma_t(i)}$$
+$$\hat\pi_i = \frac{\text{número esperado de inicios en el estado } i}{\text{número de secuencias}} = \gamma_1(i)$$
 
-*→ conteo suave de transiciones $i \to j$ / conteo suave de salidas de $i$*
+Solo hay un instante inicial ($t=1$). La probabilidad esperada de haber empezado en $i$, dada la secuencia observada, es directamente $\gamma_1(i)$.
 
-$$\hat B_{ik} = \frac{\sum_{t=1}^{T} \mathbf{1}[O_t = k] \cdot \gamma_t(i)}{\sum_{t=1}^{T} \gamma_t(i)}$$
+---
 
-*→ conteo suave de emitir $k$ desde $i$ / conteo suave de visitas a $i$*
+**Probabilidades de transición $\hat A_{ij}$**
 
-Interpretación:
-- $\hat\pi_i$: la probabilidad de empezar en el estado $i$ es la probabilidad (suavizada) de haber estado en $i$ al inicio.
-- $\hat A_{ij}$: el numerador cuenta el número esperado de transiciones de $i$ a $j$; el denominador, el número esperado total de salidas desde $i$ (solo hasta $T-1$ porque en $T$ no hay transición siguiente).
-- $\hat B_{ik}$: el numerador cuenta el número esperado de veces que estamos en el estado $i$ y observamos $k$; el denominador, el número esperado de veces que estamos en $i$ en total.
+$$\hat A_{ij} = \frac{\text{número esperado de transiciones } i \to j}{\text{número esperado de salidas desde } i \text{ (a cualquier estado)}}$$
+
+$$\hat A_{ij} = \frac{\displaystyle\sum_{t=1}^{T-1} \xi_t(i,j)}{\displaystyle\sum_{t=1}^{T-1} \gamma_t(i)}$$
+
+El numerador acumula los arcos $i \to j$ esperados a lo largo de la secuencia. El denominador acumula todos los arcos que salen de $i$ (hacia cualquier estado), que por la relación $\gamma_t(i) = \sum_j \xi_t(i,j)$ equivale a sumar sobre todos los destinos posibles. Ambas sumas van solo hasta $T-1$ porque en $t=T$ no hay transición siguiente.
+
+---
+
+**Probabilidades de emisión $\hat B_{ik}$**
+
+$$\hat B_{ik} = \frac{\text{número esperado de veces en estado } i \text{ y observando } k}{\text{número esperado de veces en estado } i \text{ (con cualquier observación)}}$$
+
+$$\hat B_{ik} = \frac{\displaystyle\sum_{\substack{t=1 \\ O_t=k}}^{T} \gamma_t(i)}{\displaystyle\sum_{t=1}^{T} \gamma_t(i)}$$
+
+El numerador suma $\gamma_t(i)$ **solo en los instantes donde se observó $k$** (los demás instantes no contribuyen). El denominador suma $\gamma_t(i)$ en todos los $T$ instantes, independientemente de la observación. El cociente da la fracción del tiempo esperado en $i$ durante la cual se emitió $k$.
 
 ---
 
