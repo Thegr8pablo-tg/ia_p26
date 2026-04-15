@@ -88,11 +88,11 @@ Piensa en el trellis de Viterbi. $\gamma_t(i)$ es la probabilidad de ocupar un *
                   ξ_t(i,j)
 ```
 
-La probabilidad de estar en el nodo $i$ es exactamente la suma de las probabilidades de todos los arcos que salen de él:
+Para $t < T$, la probabilidad de estar en el nodo $i$ es exactamente la suma de las probabilidades de todos los arcos que salen de él:
 
-$$\gamma_t(i) = \sum_{j} \xi_t(i,j)$$
+$$\gamma_t(i) = \sum_{j} \xi_t(i,j) \qquad (t = 1, \ldots, T-1)$$
 
-Esto se lee directamente del diagrama: estar en un nodo equivale a partir por alguno de los arcos salientes.
+Esto se lee directamente del diagrama: estar en un nodo equivale a partir por alguno de los arcos salientes. En $t=T$ no hay arcos salientes, así que $\xi$ solo se define para $t < T$.
 
 ---
 
