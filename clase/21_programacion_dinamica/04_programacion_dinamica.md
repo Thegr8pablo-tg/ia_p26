@@ -22,9 +22,12 @@ Supón que, en lugar de llenar la tabla, alguien te pide calcular $V(0)$ directa
 
 ```
 función OPTIMAL(i):
-    si i == N:
+    si i == N:                # estado meta, no falta pagar nada
         return 0
-    return c[i] + min(OPTIMAL(i+1), OPTIMAL(i+2))   # si i+2 ≤ N
+    opciones = [c[i+1] + OPTIMAL(i+1)]              # acción "subir 1"
+    si i+2 ≤ N:
+        opciones.append(c[i+2] + OPTIMAL(i+2))      # acción "saltar 2"
+    return min(opciones)
 ```
 
 Corre `OPTIMAL(0)` y te regresa 6. Correcto. ¿Cuál es el problema?
@@ -39,7 +42,7 @@ Los nodos del mismo color son **el mismo subproblema**. Cuéntalos. `OPTIMAL(3)`
 
 ¿Cuánto cuesta? Para esta escalera (acciones 1 o 2 pasos) el número de llamadas sigue una recurrencia tipo Fibonacci:
 
-$$C(N) \;=\; 1 + C(N-1) + C(N-2), \qquad C(0) = 1.$$
+$$C(N) = 1 + C(N-1) + C(N-2), \qquad C(0) = 1.$$
 
 Crece exponencialmente. Para $N = 30$, son **del orden de tres millones y medio de llamadas** — para un problema que tiene solo 30 estados. Es ridículo.
 
@@ -92,8 +95,11 @@ cache = {}
 
 función OPTIMAL(i):
     si i == N: return 0
-    si i en cache: return cache[i]          # ← la línea que cambia todo
-    mejor = c[i] + min(OPTIMAL(i+1), OPTIMAL(i+2))
+    si i en cache: return cache[i]                  # ← la línea que cambia todo
+    opciones = [c[i+1] + OPTIMAL(i+1)]
+    si i+2 ≤ N:
+        opciones.append(c[i+2] + OPTIMAL(i+2))
+    mejor = min(opciones)
     cache[i] = mejor
     return mejor
 
@@ -111,7 +117,10 @@ V = arreglo de tamaño N+1
 V[N] = 0
 
 para i desde N-1 hasta 0:
-    V[i] = c[i] + min(V[i+1], V[i+2] si i+2 ≤ N, si no V[i+1])
+    opciones = [c[i+1] + V[i+1]]                 # acción "subir 1"
+    si i+2 ≤ N:
+        opciones.append(c[i+2] + V[i+2])         # acción "saltar 2"
+    V[i] = min(opciones)
 
 return V[0]
 ```
@@ -121,23 +130,23 @@ No hay recursión, no hay caché explícito — el arreglo `V` **es** el caché.
 ### Las dos, lado a lado
 
 ```
-  MEMOIZACIÓN (top-down)             │  TABULACIÓN (bottom-up)
-  ─────────────────────────────────── │  ───────────────────────────────────
-  cache = {}                          │  V = arreglo[N+1]
-                                      │  V[N] = 0
-  función OPTIMAL(i):                 │
-    si i == N: return 0               │  para i desde N-1 hasta 0:
-    si i en cache: return cache[i]    │    V[i] = c[i] + min(V[i+1],
-    mejor = c[i] + min(               │                       V[i+2] si existe,
-              OPTIMAL(i+1),           │                       si no V[i+1])
-              OPTIMAL(i+2))           │
-    cache[i] = mejor                  │  return V[0]
-    return mejor                      │
-                                      │
-  return OPTIMAL(0)                   │
+  MEMOIZACIÓN (top-down)                  │  TABULACIÓN (bottom-up)
+  ─────────────────────────────────────── │  ───────────────────────────────────────
+  cache = {}                              │  V = arreglo[N+1]
+                                          │  V[N] = 0
+  función OPTIMAL(i):                     │
+    si i == N: return 0                   │  para i desde N-1 hasta 0:
+    si i en cache: return cache[i]        │    opts = [c[i+1] + V[i+1]]
+    opts = [c[i+1] + OPTIMAL(i+1)]        │    si i+2 ≤ N:
+    si i+2 ≤ N:                           │      opts.append(c[i+2] + V[i+2])
+      opts.append(c[i+2] + OPTIMAL(i+2))  │    V[i] = min(opts)
+    cache[i] = min(opts)                  │
+    return cache[i]                       │  return V[0]
+                                          │
+  return OPTIMAL(0)                       │
 ```
 
-Mira lo que hacen ambas: **calculan el mismo $V[i] = c_i + \min(V[i+1], V[i+2])$ exactamente una vez por cada $i$.** La única diferencia es *el orden en que lo hacen*:
+Mira lo que hacen ambas: **calculan el mismo $V(i) = \min_a \lbrace c(i, a) + V(T(i, a)) \rbrace$ exactamente una vez por cada $i$.** La única diferencia es *el orden en que lo hacen*:
 
 - **Memoización**: orden guiado por la recursión — DFS desde $V(0)$ hasta las hojas, cachea al regresar.
 - **Tabulación**: orden fijado por el loop — desde $V(N)$ hasta $V(0)$, sin recursión.
@@ -189,7 +198,7 @@ Para $N = 100$, la diferencia se vuelve astronómica: unos $10^{20}$ vs. $100$. 
 
 Hay una trampa. La función de valor $V(s)$ te dice *qué tan bueno* es estar en cada estado. Pero **no te dice qué hacer**. Para actuar, necesitas la política $\pi(s)$ — una función que, dado un estado, te diga cuál acción tomar.
 
-¿Cómo sale $\pi$ de $V$? Cuando calculaste $V(s) = \min_a \{\ldots\}$, hubo una acción que alcanzó ese mínimo. **Esa acción es $\pi^*(s)$** — la decisión óptima en $s$. Para guardarla, simplemente guarda el $\arg\min$ junto con el $\min$:
+¿Cómo sale $\pi$ de $V$? Cuando calculaste $V(s) = \min_a \lbrace\ldots\rbrace$, hubo una acción que alcanzó ese mínimo. **Esa acción es $\pi^*(s)$** — la decisión óptima en $s$. Para guardarla, simplemente guarda el $\arg\min$ junto con el $\min$:
 
 ```
 V = arreglo[N+1]
@@ -197,10 +206,9 @@ pi = arreglo[N+1]     # ← nuevo: política óptima
 V[N] = 0
 
 para i desde N-1 hasta 0:
-    opciones = [
-        ("subir 1", c[i] + V[i+1]),
-        ("saltar 2", c[i] + V[i+2]) si i+2 ≤ N
-    ]
+    opciones = [("subir 1", c[i+1] + V[i+1])]
+    si i+2 ≤ N:
+        opciones.append(("saltar 2", c[i+2] + V[i+2]))
     acción_mejor, valor_mejor = min(opciones por segundo elemento)
     V[i] = valor_mejor
     pi[i] = acción_mejor
@@ -222,14 +230,14 @@ En nuestra escalera:
 
 | $i$ | $V(i)$ | $\pi^*(i)$ |
 |:---:|:------:|:---------:|
-| 0 | 9 | saltar 2 |
-| 1 | 8 | subir 1 |
-| 2 | 6 | saltar 2 |
-| 3 | 10 | saltar 2 |
-| 4 | 1 | subir 1 |
+| 0 | 6 | saltar 2 |
+| 1 | 6 | subir 1 |
+| 2 | 1 | saltar 2 |
+| 3 | 0 | saltar 2 |
+| 4 | 0 | subir 1 |
 | 5 | 0 | — (meta) |
 
-Siguiendo la política desde el estado 0: **0 → 2 → 4 → 5**, costo total **9**. La política te da el plan concreto; la función de valor te dice cuánto te va a costar ejecutarlo.
+Siguiendo la política desde el estado 0: **0 → 2 → 4 → 5**, pagando $c_2 + c_4 + c_5 = 6$ en total. Coincide con $V(0) = 6$. La política te da el plan concreto; la función de valor te dice cuánto te va a costar ejecutarlo.
 
 ---
 

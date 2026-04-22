@@ -48,17 +48,19 @@ N_STATES    = len(COSTS)
 GOAL        = N_STATES - 1
 
 # ── Pre-verified deterministic values (see design doc D2) ──────────────────────
-V_DET       = np.array([9, 8, 6, 10, 1, 0])
+# V(i) = future cost from state i to goal, NOT including c_i.
+# Bellman: V(i) = min_a { c(i, a) + V(T(i, a)) }, where c(i, a) = c_{T(i, a)}.
+V_DET       = np.array([6, 6, 1, 0, 0, 0])
 POLICY_DET  = ["saltar 2", "subir 1", "saltar 2", "saltar 2", "subir 1", "—"]
 TRAJ_DET    = [0, 2, 4, 5]
-COST_DET    = 9
+COST_DET    = 6
 
 # ── Pre-verified stochastic values ─────────────────────────────────────────────
 # Action "saltar 2" lands at i+2 w.p. 0.8, slips to i+1 w.p. 0.2.
 # From state 4 only "subir 1" is available (i+2 > 5).
 P_SUCCESS   = 0.8
 P_SLIP      = 0.2
-V_STOCH     = np.array([11.24, 9.84, 7.84, 10.2, 1.0, 0.0])
+V_STOCH     = np.array([8.24, 7.84, 2.84, 0.2, 0.0, 0.0])
 POLICY_STOCH = ["saltar 2", "subir 1", "saltar 2", "saltar 2", "subir 1", "—"]
 
 
@@ -308,7 +310,7 @@ def plot_tabla_valores():
             style="italic")
 
     ax.text(x0 + N_STATES * col_w / 2, y0 + row_h * 2.3,
-            "Ecuación de Bellman:  $V(i) = c_i + \\min_a V(T(i,a))$",
+            "Ecuación de Bellman:  $V(i) = \\min_a \\lbrace c(i,a) + V(T(i,a)) \\rbrace$",
             ha="center", va="center", fontsize=12, color=COLORS["dark"])
 
     ax.set_xlim(x0 - col_w * 1.3, x0 + N_STATES * col_w + 0.8)
@@ -344,7 +346,7 @@ def plot_escalera_estocastica():
     ax.set_ylim(-0.2, N_STATES * 0.5 + 0.8)
     ax.set_aspect("equal")
     ax.set_axis_off()
-    ax.set_title("Determinista — $V(0) = 9$", color=COLORS["blue"], fontsize=12)
+    ax.set_title("Determinista — $V(0) = 6$", color=COLORS["blue"], fontsize=12)
 
     # Right panel — stochastic
     ax = axes[1]
@@ -381,7 +383,7 @@ def plot_escalera_estocastica():
     ax.set_ylim(-0.2, N_STATES * 0.5 + 0.8)
     ax.set_aspect("equal")
     ax.set_axis_off()
-    ax.set_title("Estocástico — $V(0) = 11.24$\n(precio de la incertidumbre: $11.24 - 9 = 2.24$)",
+    ax.set_title("Estocástico — $V(0) = 8.24$\n(precio de la incertidumbre: $8.24 - 6 = 2.24$)",
                  color=COLORS["red"], fontsize=12)
 
     fig.suptitle("Misma escalera, con probabilidad de resbalar",

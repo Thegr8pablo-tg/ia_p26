@@ -12,12 +12,12 @@ En la página anterior, todo el desarrollo descansó en cinco cantidades: estado
 
 Un MDP es simplemente una tupla:
 
-$$\text{MDP} = (S,\; A,\; T,\; R,\; \gamma)$$
+$$\text{MDP} = (S, A, T, R, \gamma)$$
 
 | Símbolo | Nombre | Significado | En la escalera |
 |:------:|--------|-------------|----------------|
-| $S$ | **Estados** | Todas las configuraciones posibles del sistema | $\{0, 1, 2, 3, 4, 5\}$ — los escalones |
-| $A$ | **Acciones** | Lo que el agente puede decidir hacer | $\{\text{subir 1},\; \text{saltar 2}\}$ |
+| $S$ | **Estados** | Todas las configuraciones posibles del sistema | $\lbrace0, 1, 2, 3, 4, 5\rbrace$ — los escalones |
+| $A$ | **Acciones** | Lo que el agente puede decidir hacer | $\lbrace\text{subir 1}, \text{saltar 2}\rbrace$ |
 | $T$ | **Transición** | Cómo cambia el estado al tomar una acción, $T(s' \mid s, a) = P(s' \mid s, a)$ | Determinista o con prob. 0.8/0.2 al resbalar |
 | $R$ | **Recompensa** o costo | Qué ganas (o pagas) por estar/actuar en cada estado, $R(s, a)$ o $c(s, a)$ | $c_i$ = costo del escalón $i$ |
 | $\gamma$ | **Descuento** | Peso del futuro en el presente, $\gamma \in [0, 1]$ | $0.95$ (en la versión con descuento) |
@@ -26,7 +26,9 @@ $$\text{MDP} = (S,\; A,\; T,\; R,\; \gamma)$$
 
 La ecuación de Bellman usa exactamente estos cinco objetos. Nada más, nada menos:
 
-$$V(s) = \min_a \Bigl\{\, R(s, a) + \gamma \sum_{s'} T(s' \mid s, a)\, V(s') \,\Bigr\}.$$
+$$V(s) = \min_a \sum_{s'} T(s' \mid s, a)\bigl[ R(s, a, s') + \gamma V(s')\bigr].$$
+
+Recuerda: $V(s)$ es el costo *futuro* desde $s$ — no incluye costo por estar en $s$. El costo se paga en la transición: pagas $R(s, a, s')$ cuando tomas la acción $a$ desde $s$ y aterrizas en $s'$.
 
 (O `max` en lugar de `min`, si el problema es de recompensas en vez de costos. La estructura es la misma.)
 
@@ -61,19 +63,19 @@ Un robot en un edificio tiene que entregar un paquete en una celda específica. 
 
 **Estados $S$**: el estado tiene que capturar todo lo que afecta decisiones futuras. Aquí necesitas la **posición del robot** y su **nivel de batería**:
 
-$$S = \{(c,\; b)\; :\; c \in \text{celdas},\; b \in \{0, 10, 20, \ldots, 100\}\}.$$
+$$S = \lbrace(c, b) : c \in \text{celdas}, b \in \lbrace0, 10, 20, \ldots, 100\rbrace\rbrace.$$
 
 Más la posición del paquete si puede cambiar, pero aquí es fija, así que no hace falta incluirla.
 
 **Acciones $A$**: lo que el agente controla desde cada estado:
 
-$$A = \{\text{norte},\; \text{sur},\; \text{este},\; \text{oeste}\}.$$
+$$A = \lbrace\text{norte}, \text{sur}, \text{este}, \text{oeste}\rbrace.$$
 
 (Algunas acciones pueden estar bloqueadas si llevarían al robot fuera de la cuadrícula.)
 
 **Transición $T$**: determinista. Si el robot está en celda $(x, y)$ con batería $b$ y toma "norte":
 
-$$T\bigl((x, y, b),\; \text{norte}\bigr) = \begin{cases} (x, y+1,\; 100) & \text{si } (x, y+1) = \text{estación de carga} \\ (x, y+1,\; b - 10) & \text{si no y } b > 0 \\ (x, y,\; 0) & \text{si } b = 0 \text{ (robot apagado)} \end{cases}$$
+$$T\bigl((x, y, b), \text{norte}\bigr) = \begin{cases} (x, y+1, 100) & \text{si } (x, y+1) = \text{estación de carga} \\ (x, y+1, b - 10) & \text{si no y } b > 0 \\ (x, y, 0) & \text{si } b = 0 \text{ (robot apagado)} \end{cases}$$
 
 **Recompensa (costo)** $R$:
 
@@ -81,9 +83,11 @@ $$R(s, a) = \begin{cases} 50 \text{ minutos (penalización)} & \text{si la acci�
 
 **Descuento** $\gamma$: como todas las acciones importan igual y la meta es alcanzable en tiempo finito, podemos usar $\gamma = 1$ (o $\gamma$ muy cercano a 1 por estabilidad numérica). En un problema donde el robot pudiera tardarse indefinidamente, $\gamma < 1$ ayudaría.
 
-**Ecuación de Bellman** para este problema:
+**Ecuación de Bellman** para este problema (determinista, $\gamma = 1$):
 
-$$V(c, b) = \min_{a \in A}\; \Bigl\{\, R\bigl((c, b),\, a\bigr) + V\bigl(T((c, b), a)\bigr) \,\Bigr\}.$$
+$$V(c, b) = \min_{a \in A} \bigl[ R\bigl((c, b), a\bigr) + V\bigl(T((c, b), a)\bigr)\bigr].$$
+
+$V(c, b)$ es el tiempo esperado *restante* para entregar el paquete, empezando en celda $c$ con batería $b$. El "tiempo ya gastado" antes de estar en $(c, b)$ no cuenta — ya no lo puedes evitar.
 
 **Conexión con el Módulo 2.** Los cinco componentes aquí son exactamente la descripción PEAS que hiciste hace semanas, solo reorganizada:
 
@@ -139,28 +143,28 @@ Finalmente: si estás en tormenta y te mojas, pagas un costo adicional de 5. La 
 
 **Estados $S$**: la decisión de qué hacer depende tanto de dónde estás (altitud) como del clima actual. El estado es entonces un par:
 
-$$S = \{\text{altitud}\} \times \{\text{clima}\} = \{\text{base}, \text{mitad}, \text{mirador}, \text{cumbre}\} \times \{\text{sol}, \text{lluvia}, \text{tormenta}\}.$$
+$$S = \lbrace\text{altitud}\rbrace \times \lbrace\text{clima}\rbrace = \lbrace\text{base}, \text{mitad}, \text{mirador}, \text{cumbre}\rbrace \times \lbrace\text{sol}, \text{lluvia}, \text{tormenta}\rbrace.$$
 
 Total: $4 \times 3 = 12$ estados.
 
-**Acciones $A$**: $\{\text{ruta A},\; \text{ruta B},\; \text{descansar}\}$.
+**Acciones $A$**: $\lbrace\text{ruta A}, \text{ruta B}, \text{descansar}\rbrace$.
 
 **Transición $T$**: se factoriza naturalmente en dos partes independientes:
 
-$$T\bigl((\text{alt}, \text{clim}) \to (\text{alt}', \text{clim}')\; \bigm|\; a\bigr) \;=\; P(\text{alt}' \mid \text{alt}, \text{clim}, a) \cdot P(\text{clim}' \mid \text{clim}).$$
+$$T\bigl((\text{alt}, \text{clim}) \to (\text{alt}', \text{clim}') \bigm| a\bigr) = P(\text{alt}' \mid \text{alt}, \text{clim}, a) \cdot P(\text{clim}' \mid \text{clim}).$$
 
 - $P(\text{alt}' \mid \text{alt}, \text{clim}, a)$ es la dinámica de la altitud (depende de la acción y del clima actual).
 - $P(\text{clim}' \mid \text{clim})$ es exactamente la **cadena de Markov del clima** (¡eso del Módulo 19!): no depende ni de la altitud ni de la acción.
 
-**Recompensa (costo)** $R$:
+**Recompensa (costo)** $R(s, a, s')$: el costo se paga en la transición. Tiene dos partes:
 
-$$R\bigl((\text{alt}, \text{clim}),\; a\bigr) = \underbrace{\text{costo de esfuerzo}(a)}_{\text{ruta A: 3, ruta B: 1, descansar: 0}} + \underbrace{5 \cdot \mathbb{1}[\text{clim} = \text{tormenta}]}_{\text{costo de mojarte}}.$$
+$$R\bigl((\text{alt}, \text{clim}), a, (\text{alt}', \text{clim}')\bigr) = \underbrace{\text{esfuerzo}(a)}_{\text{ruta A: 3, ruta B: 1, descansar: 0}} + \underbrace{5 \cdot \mathbb{1}[\text{clim}' = \text{tormenta}]}_{\text{costo de mojarte (al aterrizar en tormenta)}}.$$
 
 **Descuento** $\gamma = 0.95$.
 
 **Ecuación de Bellman para este problema:**
 
-$$V(\text{alt}, \text{clim}) = \min_{a \in A}\; \Biggl\{\, R\bigl((\text{alt}, \text{clim}),\, a\bigr) \;+\; \gamma \sum_{\text{alt}'} \sum_{\text{clim}'} P(\text{alt}' \mid \text{alt}, \text{clim}, a)\, P(\text{clim}' \mid \text{clim})\, V(\text{alt}',\text{clim}') \,\Biggr\}.$$
+$$V(\text{alt}, \text{clim}) = \min_{a \in A} \sum_{\text{alt}', \text{clim}'} P(\text{alt}' \mid \text{alt}, \text{clim}, a) P(\text{clim}' \mid \text{clim}) \bigl[ R\bigl((\text{alt},\text{clim}), a, (\text{alt}', \text{clim}')\bigr) + \gamma V(\text{alt}',\text{clim}')\bigr].$$
 
 La doble suma viene de la factorización: una sobre el siguiente clima, otra sobre la siguiente altitud. Fíjate que el segundo factor — $P(\text{clim}' \mid \text{clim})$ — **es** la matriz de transición del Módulo 19. La cadena de Markov vive *dentro* del MDP, como un componente del kernel.
 

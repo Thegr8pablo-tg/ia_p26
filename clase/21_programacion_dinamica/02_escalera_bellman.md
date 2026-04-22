@@ -42,13 +42,13 @@ Antes de pensar en grande, probemos la estrategia codiciosa: **en cada paso, eli
 - Desde **2**: puedes ir a 3 (costo 10) o a 4 (costo 1). Elige **4** (saltar 2).
 - Desde **4**: sube 1. Llegas a 5.
 
-Trayectoria codiciosa: **0 → 1 → 2 → 4 → 5**. Costo total: $3 + 2 + 5 + 1 + 0 = 11$.
+Trayectoria codiciosa: **0 → 1 → 2 → 4 → 5**. El costo es la suma de los escalones donde *aterrizas* (no cobramos el 0 porque ahí empezaste): $c_1 + c_2 + c_4 + c_5 = 2 + 5 + 1 + 0 = 8$.
 
 ![Codicioso vs. óptimo]({{ '/21_programacion_dinamica/images/02_greedy_vs_optimo.png' | url }})
 
-Ahora mira esta otra trayectoria — **0 → 2 → 4 → 5** — con costo $3 + 5 + 1 + 0 = 9$. ¡Más barata!
+Ahora mira esta otra trayectoria — **0 → 2 → 4 → 5** — con costo $c_2 + c_4 + c_5 = 5 + 1 + 0 = 6$. ¡Más barata!
 
-¿Por qué? Porque pasar por el escalón 1 es *inútil*: el codicioso paga su costo de 2, pero aterriza en el escalón 2 — el mismo al que habría llegado saltando directo desde 0. El desvío por 1 no compró nada, solo cobró. El codicioso, midiendo solo el siguiente escalón, no pudo verlo.
+¿Por qué? Porque pasar por el escalón 1 es *inútil*: el codicioso paga $c_1 = 2$ por aterrizar ahí, pero luego pasa al escalón 2 — el mismo al que habría llegado saltando directo desde 0. El desvío por 1 no compró nada, solo cobró $c_1 = 2$ de más. El codicioso, midiendo solo el siguiente escalón, no pudo verlo.
 
 Esa es la trampa: **una decisión locamente buena puede llevarte a un lugar donde las decisiones siguientes son iguales o peores que si hubieras elegido distinto**. No basta comparar escalón contra escalón — hay que pensar en *secuencias*.
 
@@ -62,7 +62,9 @@ El principio de optimalidad nos dice algo muy específico: para saber qué hacer
 
 Definamos, para cada escalón $i$:
 
-$$V(i) = \text{el costo mínimo total para llegar a la meta, empezando en } i.$$
+$$V(i) = \text{el costo mínimo total que todavía tienes que pagar para llegar a la meta, si ya estás en } i.$$
+
+Fíjate en el "*todavía*": $V(i)$ cuenta los costos **futuros** — lo que te falta pagar a partir de ahora. El costo de estar en $i$ no se cuenta: o ya lo pagaste al llegar, o si empiezas ahí, no tiene sentido "cobrártelo".
 
 Tu tarea: llenar la siguiente tabla, de derecha a izquierda.
 
@@ -75,40 +77,40 @@ Vamos a ir paso por paso.
 
 ### Paso 1 — ¿cuánto cuesta llegar a la meta desde la meta?
 
-Si ya estás en el escalón 5, pagas 0 (ya llegaste). Entonces:
+Si ya estás en el escalón 5, ya llegaste — no pagas nada más.
 
 $$V(5) = 0.$$
 
 ### Paso 2 — desde el escalón 4
 
-Desde 4 la única jugada es **subir 1** (saltar 2 te sacaría de la escalera). Pagas $c_4 = 1$ y llegas a 5, donde el costo restante es $V(5) = 0$:
+Desde 4 la única jugada es **subir 1** (saltar 2 te sacaría de la escalera). Al tomar esa acción pagas $c_5 = 0$ (el costo de aterrizar en 5) y el resto ya es $V(5) = 0$:
 
-$$V(4) = c_4 + V(5) = 1 + 0 = 1.$$
+$$V(4) = c_5 + V(5) = 0 + 0 = 0. \quad [\text{acción: subir 1}]$$
 
 ### Paso 3 — desde el escalón 3
 
-Desde 3 tienes dos opciones:
+Desde 3 tienes dos opciones. Al tomar una acción pagas el costo del escalón al que *aterrizas*, más el valor futuro desde ahí:
 
-- Subir 1 (vas a 4): pagas $c_3 + V(4) = 10 + 1 = 11$.
-- Saltar 2 (vas a 5): pagas $c_3 + V(5) = 10 + 0 = 10$.
+- Subir 1 (vas a 4): pagas $c_4 + V(4) = 1 + 0 = 1$.
+- Saltar 2 (vas a 5): pagas $c_5 + V(5) = 0 + 0 = 0$.
 
 Elegimos la más barata:
 
-$$V(3) = c_3 + \min\bigl(V(4),\; V(5)\bigr) = 10 + \min(1, 0) = 10. \quad [\text{acción: saltar 2}]$$
+$$V(3) = \min\bigl(c_4 + V(4), c_5 + V(5)\bigr) = \min(1, 0) = 0. \quad [\text{acción: saltar 2}]$$
 
 ### Paso 4 — desde el escalón 2
 
-- Subir 1 (vas a 3): $c_2 + V(3) = 5 + 10 = 15$.
-- Saltar 2 (vas a 4): $c_2 + V(4) = 5 + 1 = 6$.
+- Subir 1 (vas a 3): $c_3 + V(3) = 10 + 0 = 10$.
+- Saltar 2 (vas a 4): $c_4 + V(4) = 1 + 0 = 1$.
 
-$$V(2) = c_2 + \min\bigl(V(3),\; V(4)\bigr) = 5 + \min(10, 1) = 6. \quad [\text{acción: saltar 2}]$$
+$$V(2) = \min\bigl(c_3 + V(3), c_4 + V(4)\bigr) = \min(10, 1) = 1. \quad [\text{acción: saltar 2}]$$
 
 ### Paso 5 — desde el escalón 1
 
-- Subir 1 (vas a 2): $c_1 + V(2) = 2 + 6 = 8$.
-- Saltar 2 (vas a 3): $c_1 + V(3) = 2 + 10 = 12$.
+- Subir 1 (vas a 2): $c_2 + V(2) = 5 + 1 = 6$.
+- Saltar 2 (vas a 3): $c_3 + V(3) = 10 + 0 = 10$.
 
-$$V(1) = c_1 + \min\bigl(V(2),\; V(3)\bigr) = 2 + \min(6, 10) = 8. \quad [\text{acción: subir 1}]$$
+$$V(1) = \min\bigl(c_2 + V(2), c_3 + V(3)\bigr) = \min(6, 10) = 6. \quad [\text{acción: subir 1}]$$
 
 ---
 
@@ -116,30 +118,34 @@ $$V(1) = c_1 + \min\bigl(V(2),\; V(3)\bigr) = 2 + \min(6, 10) = 8. \quad [\text{
 
 Para: antes de terminar la tabla, mira lo que llevas escrito. En cada renglón has calculado algo de la forma:
 
-$$V(i) = c_i + \min\bigl(V(i+1),\; V(i+2)\bigr).$$
+$$V(i) = \min\bigl( c_{i+1} + V(i+1), c_{i+2} + V(i+2)\bigr).$$
 
-Eso es lo mismo tres veces — cambia solo el índice. Es una **fórmula recursiva**: el valor de cada escalón se expresa en términos de los valores de los escalones *posteriores*. Esto **es** el principio de optimalidad traducido a matemáticas.
+O, si quieres pensarlo en términos de "acciones":
+
+$$V(i) = \min_a \bigl( c(i, a) + V(T(i, a))\bigr)$$
+
+donde $c(i, a)$ es el costo de tomar la acción $a$ desde $i$ (aquí, el costo del escalón al que aterrizas), y $T(i, a)$ es el estado al que llegas. Esto **es** el principio de optimalidad traducido a matemáticas.
 
 No te preocupes, todavía no le ponemos nombre. Termina la tabla.
 
 ### Paso 6 — desde el escalón 0
 
-- Subir 1 (vas a 1): $c_0 + V(1) = 3 + 8 = 11$.
-- Saltar 2 (vas a 2): $c_0 + V(2) = 3 + 6 = 9$.
+- Subir 1 (vas a 1): $c_1 + V(1) = 2 + 6 = 8$.
+- Saltar 2 (vas a 2): $c_2 + V(2) = 5 + 1 = 6$.
 
-$$V(0) = c_0 + \min\bigl(V(1),\; V(2)\bigr) = 3 + \min(8, 6) = 9. \quad [\text{acción: saltar 2}]$$
+$$V(0) = \min\bigl(c_1 + V(1), c_2 + V(2)\bigr) = \min(8, 6) = 6. \quad [\text{acción: saltar 2}]$$
 
 ### La tabla, llena
 
 | Escalón $i$ | 0 | 1 | 2 | 3 | 4 | 5 |
 |:-----------:|:-:|:-:|:-:|:-:|:-:|:-:|
 | Costo $c_i$ | 3 | 2 | 5 | 10 | 1 | 0 |
-| Valor $V(i)$ | **9** | **8** | **6** | **10** | **1** | **0** |
+| Valor $V(i)$ | **6** | **6** | **1** | **0** | **0** | **0** |
 | Acción óptima | saltar 2 | subir 1 | saltar 2 | saltar 2 | subir 1 | — |
 
-**Política óptima:** desde 0 salta 2, desde 2 salta 2, desde 4 sube 1. **Trayectoria:** $0 \to 2 \to 4 \to 5$. **Costo total:** $3 + 5 + 1 + 0 = 9$. Coincide con $V(0) = 9$.
+**Política óptima:** desde 0 salta 2, desde 2 salta 2, desde 4 sube 1. **Trayectoria:** $0 \to 2 \to 4 \to 5$. **Costo total:** los costos de los escalones donde aterrizas son $c_2 + c_4 + c_5 = 5 + 1 + 0 = 6$. Coincide con $V(0) = 6$.
 
-Compara con el codicioso: **0 → 1 → 2 → 4 → 5** costaba 11. La política óptima ahorra 2 unidades de costo — y esa diferencia crece sin límite si la escalera es más grande, porque el codicioso vuelve a caer en trampas parecidas cada vez que haya un escalón *decoy* como el 1. Lo logró *saltando el escalón 1*, precisamente porque pensó en la secuencia completa en lugar del siguiente escalón.
+Compara con el codicioso: **0 → 1 → 2 → 4 → 5** pagaba $c_1 + c_2 + c_4 + c_5 = 2 + 5 + 1 + 0 = 8$. La política óptima ahorra exactamente $c_1 = 2$ — el costo del escalón *decoy* que el codicioso visitó sin necesidad. Lo logró *saltando el escalón 1*, precisamente porque pensó en la secuencia completa en lugar del siguiente escalón.
 
 ![Tabla de valores llena de derecha a izquierda]({{ '/21_programacion_dinamica/images/03_tabla_valores.png' | url }})
 
@@ -149,11 +155,11 @@ Compara con el codicioso: **0 → 1 → 2 → 4 → 5** costaba 11. La política
 
 Lo que acabas de escribir cinco veces es la fórmula más importante de la optimización dinámica. Se llama **la ecuación de Bellman**.
 
-En su forma general, para un problema con acciones $a$ y función de transición $T(i, a)$ (la acción $a$ desde el estado $i$ te lleva al estado $T(i, a)$):
+En su forma general, para un problema con acciones $a$, costo inmediato $c(s, a)$ de tomar la acción $a$ en el estado $s$, y función de transición $T(s, a)$ que te dice a qué estado llegas:
 
-$$\boxed{\, V(i) = c_i + \min_{a}\; V\!\bigl(T(i, a)\bigr) \,}$$
+$$\boxed{ V(s) = \min_{a} \Bigl\lbrace c(s, a) + V\bigl(T(s, a)\bigr)\Bigr\rbrace }$$
 
-Léela en palabras: *"el valor de estar en $i$ es el costo de estar en $i$ más el mejor valor que puedes obtener desde el estado al que te mueves".*
+Léela en palabras: *"el costo mínimo desde $s$ es el mejor, entre todas las acciones, de 'lo que pagas ahora por tomar esa acción, más lo que pagarás óptimamente desde donde aterrizas'".*
 
 No es un algoritmo. Es una **condición**: nos dice qué propiedad satisface una función de valor óptima. El algoritmo que la resuelve (la programación dinámica, bottom-up) lo vamos a ver explícitamente en la sección 21.4 — aunque en realidad, acabas de aplicarlo a mano.
 
@@ -166,62 +172,62 @@ Hasta ahora asumimos que cada acción hace exactamente lo que quieres. La realid
 - La acción **subir 1** siempre funciona (pasas al escalón siguiente).
 - La acción **saltar 2** **éxito** (llegas a $i+2$) con probabilidad $0.8$, pero **resbalas** (solo avanzas a $i+1$) con probabilidad $0.2$.
 
-Tu trayectoria ya no es determinista. Aún así, el principio de optimalidad se aplica — solo que ahora el costo que esperas pagar desde cualquier estado depende de dónde **esperas** aterrizar, no de dónde aterrizas con certeza.
+Tu trayectoria ya no es determinista. Aún así, el principio de optimalidad se aplica — solo que ahora el costo que esperas pagar depende de dónde **esperas** aterrizar, no de dónde aterrizas con certeza.
 
-La versión estocástica de la función de valor:
+La versión estocástica de la función de valor toma esperanza sobre el siguiente estado:
 
-$$V(i) = c_i + \min_{a}\; \mathbb{E}\bigl[\,V(\text{siguiente estado})\,\bigr]$$
+$$V(s) = \min_{a} \mathbb{E}_{s' \sim P(\cdot \mid s, a)}\bigl[ c(s, a, s') + V(s') \bigr]$$
 
-donde la esperanza es sobre las posibles siguientes estados bajo la acción $a$. Escrito con probabilidades explícitas:
+Para nuestra escalera, el costo de una acción depende solo del escalón donde aterrizas: $c(s, a, s') = c_{s'}$. Escribiendo la esperanza como suma con probabilidades explícitas:
 
-$$\boxed{\, V(s) = \min_{a}\; \Bigl\{\, c(s, a) + \sum_{s'} P(s' \mid s, a)\, V(s') \,\Bigr\} \,}$$
+$$\boxed{ V(s) = \min_{a} \sum_{s'} P(s' \mid s, a)\bigl[ c_{s'} + V(s')\bigr]}$$
 
-Esto **es** la ecuación de Bellman en su forma general. La suma es sobre todos los estados siguientes posibles, ponderada por la probabilidad de que efectivamente aterrices en cada uno.
+Esto **es** la ecuación de Bellman en su forma estocástica. La suma es sobre todos los estados siguientes posibles, ponderada por la probabilidad de aterrizar en cada uno.
 
 ### Rellenemos la tabla estocástica
 
-Desde el escalón 4 solo hay una acción (subir 1), igual que antes: $V(4) = 1$.
+Desde el escalón 4 solo hay una acción (subir 1, va a 5 con certeza): $V(4) = c_5 + V(5) = 0 + 0 = 0$.
 
 Desde el escalón 3:
 
-- Acción "subir 1" (determinista, va a 4): $c_3 + V(4) = 10 + 1 = 11$.
-- Acción "saltar 2" (va a 5 con prob. 0.8, a 4 con prob. 0.2): $c_3 + 0.8 \cdot V(5) + 0.2 \cdot V(4) = 10 + 0 + 0.2 = 10.2$.
+- Acción "subir 1" (determinista, va a 4): $c_4 + V(4) = 1 + 0 = 1$.
+- Acción "saltar 2" (va a 5 con prob. 0.8, a 4 con prob. 0.2): $0.8(c_5 + V(5)) + 0.2(c_4 + V(4)) = 0.8 \cdot 0 + 0.2 \cdot 1 = 0.2$.
 
-$$V(3) = \min(11,\, 10.2) = 10.2. \quad [\text{acción: saltar 2}]$$
+$$V(3) = \min(1, 0.2) = 0.2. \quad [\text{acción: saltar 2}]$$
 
 Desde el escalón 2:
 
-- "Subir 1" (va a 3): $c_2 + V(3) = 5 + 10.2 = 15.2$.
-- "Saltar 2" (va a 4 con prob. 0.8, a 3 con prob. 0.2): $c_2 + 0.8 \cdot V(4) + 0.2 \cdot V(3) = 5 + 0.8 + 2.04 = 7.84$.
+- "Subir 1" (va a 3): $c_3 + V(3) = 10 + 0.2 = 10.2$.
+- "Saltar 2" (va a 4 con prob. 0.8, a 3 con prob. 0.2): $0.8(c_4 + V(4)) + 0.2(c_3 + V(3)) = 0.8 \cdot 1 + 0.2 \cdot 10.2 = 0.8 + 2.04 = 2.84$.
 
-$$V(2) = \min(15.2,\, 7.84) = 7.84. \quad [\text{acción: saltar 2}]$$
+$$V(2) = \min(10.2, 2.84) = 2.84. \quad [\text{acción: saltar 2}]$$
 
 Desde el escalón 1:
 
-- "Subir 1" (va a 2): $2 + V(2) = 2 + 7.84 = 9.84$.
-- "Saltar 2" (va a 3 con prob. 0.8, a 2 con prob. 0.2): $2 + 0.8 \cdot V(3) + 0.2 \cdot V(2) = 2 + 8.16 + 1.568 = 11.728$.
+- "Subir 1" (va a 2): $c_2 + V(2) = 5 + 2.84 = 7.84$.
+- "Saltar 2" (va a 3 con prob. 0.8, a 2 con prob. 0.2): $0.8(c_3 + V(3)) + 0.2(c_2 + V(2)) = 0.8 \cdot 10.2 + 0.2 \cdot 7.84 = 8.16 + 1.568 = 9.728$.
 
-$$V(1) = \min(9.84,\, 11.728) = 9.84. \quad [\text{acción: subir 1}]$$
+$$V(1) = \min(7.84, 9.728) = 7.84. \quad [\text{acción: subir 1}]$$
 
 Desde el escalón 0:
 
-- "Subir 1" (va a 1): $3 + V(1) = 3 + 9.84 = 12.84$.
-- "Saltar 2" (va a 2 con prob. 0.8, a 1 con prob. 0.2): $3 + 0.8 \cdot V(2) + 0.2 \cdot V(1) = 3 + 6.272 + 1.968 = 11.24$.
+- "Subir 1" (va a 1): $c_1 + V(1) = 2 + 7.84 = 9.84$.
+- "Saltar 2" (va a 2 con prob. 0.8, a 1 con prob. 0.2): $0.8(c_2 + V(2)) + 0.2(c_1 + V(1)) = 0.8 \cdot 7.84 + 0.2 \cdot 9.84 = 6.272 + 1.968 = 8.24$.
 
-$$V(0) = \min(12.84,\, 11.24) = 11.24. \quad [\text{acción: saltar 2}]$$
+$$V(0) = \min(9.84, 8.24) = 8.24. \quad [\text{acción: saltar 2}]$$
 
 ### Tabla estocástica
 
 | Escalón $i$ | 0 | 1 | 2 | 3 | 4 | 5 |
 |:-----------:|:-:|:-:|:-:|:-:|:-:|:-:|
-| $V$ determinista | 9 | 8 | 6 | 10 | 1 | 0 |
-| $V$ estocástico | **11.24** | **9.84** | **7.84** | **10.2** | **1.0** | **0.0** |
+| $V$ determinista | 6 | 6 | 1 | 0 | 0 | 0 |
+| $V$ estocástico | **8.24** | **7.84** | **2.84** | **0.2** | **0** | **0** |
 
 ![Escalera estocástica]({{ '/21_programacion_dinamica/images/04_escalera_estocastica.png' | url }})
 
-**Observación clave.** El costo esperado desde el escalón 0 subió de **9** a **11.24**. La diferencia, **2.24**, es lo que te cuesta la incertidumbre. No estamos haciendo nada peor — estamos tomando las mismas decisiones inteligentes. Simplemente hay caminos donde el mundo no coopera. Ese 2.24 es **el precio de la incertidumbre**, y es un número que *ves*, no solo un concepto abstracto.
+**Observación clave.** El costo esperado desde el escalón 0 subió de **6** a **8.24**. La diferencia, **2.24**, es lo que te cuesta la incertidumbre. No estamos haciendo nada peor — estamos tomando las mismas decisiones inteligentes. Simplemente hay caminos donde el mundo no coopera. Ese 2.24 es **el precio de la incertidumbre**, y es un número que *ves*, no solo un concepto abstracto.
 
-La política óptima se mantiene en *casi* todos los escalones — solo cambia la intensidad con la que la seguiríamos si evaluáramos la varianza también. Lo importante: la misma ecuación, ahora con una suma esperada adentro, sigue guiando cada decisión.
+La política óptima se mantiene en *casi* todos los escalones — el orden relativo de las acciones sigue siendo el mismo. Lo importante: la misma ecuación, ahora con una esperanza adentro, sigue guiando cada decisión.
 
 ---
 
@@ -251,17 +257,20 @@ Las dos historias llegan al mismo lugar: $\gamma = 0.95$. Es el mismo número, c
 
 Ahora sí, la ecuación en su forma más general:
 
-$$\boxed{\, V(s) = \min_{a}\; \Bigl\{\, c(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, V(s') \,\Bigr\} \,}$$
+$$\boxed{ V(s) = \min_{a} \sum_{s'} P(s' \mid s, a)\bigl[ c(s, a, s') + \gamma V(s')\bigr]}$$
 
-Compárala con la forma anterior: solo apareció un $\gamma$ multiplicando a la esperanza. Toda la esperanza, todo el futuro, queda escalado por $\gamma$.
+El $\gamma$ multiplica solo al **valor futuro** $V(s')$ — el costo inmediato $c(s, a, s')$ se paga ahora, sin descuento. Así, costos cercanos pesan completo y costos lejanos se van desvaneciendo como $\gamma^t$.
 
-### Un paso concreto: $V(2)$ con $\gamma = 0.95$ (determinista)
+### Un paso concreto: $V(1)$ con $\gamma = 0.95$ (determinista)
 
-Desde el escalón 2, con la versión *determinista* para ver claramente el efecto:
+Desde el escalón 1, con la versión *determinista* para ver claramente el efecto de $\gamma$:
 
-$$V(2) = c_2 + \gamma \cdot \min\bigl(V(3),\; V(4)\bigr) = 5 + 0.95 \cdot \min(10,\; 1) = 5 + 0.95 \cdot 1 = 5.95.$$
+- Subir 1 (va a 2): $c_2 + \gamma \cdot V(2) = 5 + 0.95 \cdot 1 = 5.95$.
+- Saltar 2 (va a 3): $c_3 + \gamma \cdot V(3) = 10 + 0.95 \cdot 0 = 10$.
 
-Sin descuento ($\gamma = 1$) obtenías $V(2) = 6$. Con $\gamma = 0.95$ obtienes $V(2) = 5.95$ — el futuro pesa un poquito menos. Si $\gamma$ fuera más chico (digamos $0.5$), tendrías $V(2) = 5 + 0.5 = 5.5$: el presente domina y el futuro se desvanece.
+$$V(1) = \min(5.95, 10) = 5.95. \quad [\text{acción: subir 1}]$$
+
+Sin descuento ($\gamma = 1$) obtenías $V(1) = 6$. Con $\gamma = 0.95$ obtienes $V(1) = 5.95$ — el futuro $V(2) = 1$ se descontó a $0.95$. Si $\gamma$ fuera más chico (digamos $0.5$), tendrías $V(1) = 5 + 0.5 = 5.5$: el presente domina y el futuro se desvanece.
 
 ---
 
@@ -271,13 +280,13 @@ Tres formas de la ecuación de Bellman, todas con la misma estructura:
 
 | Caso | Ecuación |
 |------|----------|
-| Determinista | $V(i) = c_i + \min_a V(T(i, a))$ |
-| Estocástico | $V(s) = \min_a \bigl\{ c(s, a) + \sum_{s'} P(s' \mid s, a)\, V(s') \bigr\}$ |
-| Estocástico con descuento | $V(s) = \min_a \bigl\{ c(s, a) + \gamma \sum_{s'} P(s' \mid s, a)\, V(s') \bigr\}$ |
+| Determinista | $V(s) = \min_a \lbrace c(s, a) + V(T(s, a)) \rbrace$ |
+| Estocástico | $V(s) = \min_a \sum_{s'} P(s' \mid s, a)[ c(s, a, s') + V(s')]$ |
+| Estocástico con descuento | $V(s) = \min_a \sum_{s'} P(s' \mid s, a)[ c(s, a, s') + \gamma V(s')]$ |
 
-Cada versión dice *lo mismo*: **el valor de un estado es el costo inmediato más el mejor valor que puedes esperar desde el siguiente estado**. Lo único que cambia es qué tan exigentemente modelas la incertidumbre y el futuro.
+Cada versión dice *lo mismo*: **el valor futuro desde un estado es el mejor, entre todas las acciones, de '(lo que pagas por tomarla) + (lo que pagarás desde donde aterrices)'**. Lo único que cambia es qué tan exigentemente modelas la incertidumbre y el futuro.
 
-Maximizar también es posible (para problemas de recompensa en lugar de costo): simplemente intercambia $\min$ por $\max$ y llama a $c$ "recompensa $r$". La estructura es idéntica.
+Maximizar también es posible (para problemas de recompensa en lugar de costo): intercambia $\min$ por $\max$ y llama a $c$ "recompensa $r$". La estructura es idéntica — de hecho, es la ecuación que verás cuando lleguemos a aprendizaje por refuerzo.
 
 ---
 
