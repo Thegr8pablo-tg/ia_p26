@@ -114,4 +114,17 @@ Dependencias: `numpy`, `matplotlib` (ver `requirements.txt`).
 
 ---
 
+:::homework{id="21.1" title="Videos: repaso y puente a RL" due="2026-04-27" points="40"}
+
+Ver los siguientes cuatro videos antes del lunes 27 de abril:
+
+1. <https://www.youtube.com/watch?v=aPQY__2H3tE>
+2. <https://www.youtube.com/watch?v=sJIFUTITfBc>
+3. <https://www.youtube.com/watch?v=Gv9_4yMHFhI>
+4. <https://www.youtube.com/watch?v=PcbuKRNtCUc>
+
+:::
+
+---
+
 **Siguiente:** [El principio de optimalidad →](01_principio_optimalidad.md)
