@@ -222,14 +222,14 @@ En nuestra escalera:
 
 | $i$ | $V(i)$ | $\pi^*(i)$ |
 |:---:|:------:|:---------:|
-| 0 | 6 | subir 1 |
-| 1 | 3 | saltar 2 |
-| 2 | 8 | subir 1 |
-| 3 | 1 | saltar 2 |
-| 4 | 4 | subir 1 |
+| 0 | 9 | saltar 2 |
+| 1 | 8 | subir 1 |
+| 2 | 6 | saltar 2 |
+| 3 | 10 | saltar 2 |
+| 4 | 1 | subir 1 |
 | 5 | 0 | — (meta) |
 
-Siguiendo la política desde el estado 0: **0 → 1 → 3 → 5**, costo total **6**. La política te da el plan concreto; la función de valor te dice cuánto te va a costar ejecutarlo.
+Siguiendo la política desde el estado 0: **0 → 2 → 4 → 5**, costo total **9**. La política te da el plan concreto; la función de valor te dice cuánto te va a costar ejecutarlo.
 
 ---
 

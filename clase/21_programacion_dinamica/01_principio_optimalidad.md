@@ -19,9 +19,9 @@ Si decides **solo mirando el costo inmediato**, eliges A. Es más barata *ahora*
 
 Pero la opción A te lleva por un camino donde, 100 km más adelante, la única ruta viable pasa por una zona sin servicios y con cuotas altísimas. La opción B te cuesta un poco más al salir, pero te deja en una autopista que atraviesa todo el país con paradas económicas.
 
-Al final del viaje, A te costó &#36;2,400. B te habría costado &#36;1,800.
+Al final del viaje, A te costó 2,400 pesos. B te habría costado 1,800.
 
-¿Qué pasó? **La decisión de hoy cambió el menú de mañana.** Elegir A no fue solo pagar &#36;150 en lugar de &#36;200 ahora: fue *inscribirte* en una secuencia de decisiones peores que no estaban disponibles cuando elegiste B.
+¿Qué pasó? **La decisión de hoy cambió el menú de mañana.** Elegir A no fue solo pagar 150 pesos en lugar de 200 ahora: fue *inscribirte* en una secuencia de decisiones peores que no estaban disponibles cuando elegiste B.
 
 Este es el rasgo distintivo de las **decisiones secuenciales**. A diferencia de los problemas de un solo tiro que vimos en el Módulo 9, aquí:
 

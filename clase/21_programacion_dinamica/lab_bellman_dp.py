@@ -41,23 +41,25 @@ np.random.seed(42)
 
 # ── Running example — the staircase ────────────────────────────────────────────
 # States 0..5, costs per step. Action set: {subir 1, saltar 2}. Goal = state 5.
-COSTS       = np.array([3, 2, 7, 1, 4, 0])
+# Costs deliberately chosen so greedy (pick cheaper next state) *fails*:
+# greedy picks state 1 as a cheap decoy but ends up at state 2 anyway.
+COSTS       = np.array([3, 2, 5, 10, 1, 0])
 N_STATES    = len(COSTS)
 GOAL        = N_STATES - 1
 
 # ── Pre-verified deterministic values (see design doc D2) ──────────────────────
-V_DET       = np.array([6, 3, 8, 1, 4, 0])
-POLICY_DET  = ["subir 1", "saltar 2", "subir 1", "saltar 2", "subir 1", "—"]
-TRAJ_DET    = [0, 1, 3, 5]
-COST_DET    = 6
+V_DET       = np.array([9, 8, 6, 10, 1, 0])
+POLICY_DET  = ["saltar 2", "subir 1", "saltar 2", "saltar 2", "subir 1", "—"]
+TRAJ_DET    = [0, 2, 4, 5]
+COST_DET    = 9
 
 # ── Pre-verified stochastic values ─────────────────────────────────────────────
 # Action "saltar 2" lands at i+2 w.p. 0.8, slips to i+1 w.p. 0.2.
 # From state 4 only "subir 1" is available (i+2 > 5).
 P_SUCCESS   = 0.8
 P_SLIP      = 0.2
-V_STOCH     = np.array([8.2, 5.2, 8.8, 1.8, 4.0, 0.0])
-POLICY_STOCH = ["subir 1", "saltar 2", "subir 1", "saltar 2", "subir 1", "—"]
+V_STOCH     = np.array([11.24, 9.84, 7.84, 10.2, 1.0, 0.0])
+POLICY_STOCH = ["saltar 2", "subir 1", "saltar 2", "saltar 2", "subir 1", "—"]
 
 
 def _save(fig, name):
@@ -342,7 +344,7 @@ def plot_escalera_estocastica():
     ax.set_ylim(-0.2, N_STATES * 0.5 + 0.8)
     ax.set_aspect("equal")
     ax.set_axis_off()
-    ax.set_title("Determinista — $V(0) = 6$", color=COLORS["blue"], fontsize=12)
+    ax.set_title("Determinista — $V(0) = 9$", color=COLORS["blue"], fontsize=12)
 
     # Right panel — stochastic
     ax = axes[1]
@@ -358,18 +360,18 @@ def plot_escalera_estocastica():
         ax.text(x, y - 0.17, f"$V={V_STOCH[i]}$", ha="center", va="center",
                 fontsize=9.5, color=COLORS["red"], fontweight="bold")
 
-    # Branching transitions for "saltar 2" from state 1
-    sx = 1 * 1.1 + 1.1 / 2
-    sy = 1 * 0.5 + 0.5
-    # Success branch: lands at 3
-    tx = 3 * 1.1 + 1.1 / 2
-    ty = 3 * 0.5 + 0.5
+    # Branching transitions for "saltar 2" from state 2 (which takes saltar 2 optimally)
+    sx = 2 * 1.1 + 1.1 / 2
+    sy = 2 * 0.5 + 0.5
+    # Success branch: lands at 4
+    tx = 4 * 1.1 + 1.1 / 2
+    ty = 4 * 0.5 + 0.5
     _arrow(ax, sx, sy + 0.1, tx, ty + 0.1, color=COLORS["green"], width=1.8)
     ax.text((sx + tx) / 2, (sy + ty) / 2 + 0.55, "0.8",
             ha="center", color=COLORS["green"], fontsize=9.5, fontweight="bold")
-    # Slip branch: lands at 2
-    tx = 2 * 1.1 + 1.1 / 2
-    ty = 2 * 0.5 + 0.5
+    # Slip branch: lands at 3
+    tx = 3 * 1.1 + 1.1 / 2
+    ty = 3 * 0.5 + 0.5
     _arrow(ax, sx, sy + 0.1, tx, ty + 0.1, color=COLORS["red"], width=1.8,
            style="-|>")
     ax.text((sx + tx) / 2, (sy + ty) / 2 + 0.28, "0.2 (resbala)",
@@ -379,7 +381,7 @@ def plot_escalera_estocastica():
     ax.set_ylim(-0.2, N_STATES * 0.5 + 0.8)
     ax.set_aspect("equal")
     ax.set_axis_off()
-    ax.set_title("Estocástico — $V(0) = 8.2$\n(precio de la incertidumbre: $8.2 - 6 = 2.2$)",
+    ax.set_title("Estocástico — $V(0) = 11.24$\n(precio de la incertidumbre: $11.24 - 9 = 2.24$)",
                  color=COLORS["red"], fontsize=12)
 
     fig.suptitle("Misma escalera, con probabilidad de resbalar",
