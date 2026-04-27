@@ -102,3 +102,14 @@ python3 lab_markov.py
 ```
 
 Dependencias: `numpy`, `matplotlib` (ver `requirements.txt`).
+
+
+
+:::homework{id="19.1" title="Task Name" due="2026-04-15" points="10"}
+
+Ver los dos siguientes videos:
+https://www.youtube.com/watch?v=IqXdjdOgXPM 
+
+https://www.youtube.com/watch?v=9yl4XGp5OEg&t=1575s
+
+:::

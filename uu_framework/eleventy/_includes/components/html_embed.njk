@@ -1,0 +1,89 @@
+{# HTML Embed Viewer Component
+   Twin of pdf.njk but for external HTML URLs (no download affordance).
+   Usage:
+     {% from "components/html_embed.njk" import render as html_embed %}
+     {{ html_embed(url, "Optional Title") }}
+     {{ html_embed(url, "Optional Title", [{page: 2, label: "Ir a p.96"}, ...]) }}
+
+   jumpTargets: optional list of {page, label} objects. The `page` field is the
+   PDF page number (1-indexed, integer), which gets converted to pdf2htmlEX's
+   hex anchor format (#pfN). Clicking a button sets the iframe's src to
+   baseUrl + "#pf" + hex(page).
+#}
+{% macro render(url, title, jumpTargets) %}
+{% set slug = url | replace('/', '-') | replace(':', '-') | replace('.', '-') | replace('?', '-') | replace('=', '-') | replace('&', '-') | replace('#', '-') %}
+<div class="pdf-viewer-container my-6">
+  {% if title %}
+  <h3 class="text-xl font-bold mb-4">{{ title }}</h3>
+  {% endif %}
+
+  <div class="border border-border rounded-lg overflow-hidden bg-bg-secondary relative" id="html-embed-{{ slug }}">
+    <iframe
+      src="{{ url }}"
+      width="100%"
+      height="800px"
+      style="border: none;"
+      title="{{ title or 'HTML Embed' }}"
+      id="html-embed-iframe-{{ slug }}">
+    </iframe>
+  </div>
+
+  <div class="mt-4 flex gap-4 flex-wrap">
+    <a href="{{ url }}"
+       target="_blank"
+       rel="noopener"
+       class="inline-flex items-center px-4 py-2 bg-accent text-white rounded hover:opacity-90 transition-opacity">
+      🔗 Abrir en nueva pestaña
+    </a>
+    <button
+       onclick="htmlEmbedToggleFullscreen('html-embed-{{ slug }}')"
+       class="inline-flex items-center px-4 py-2 bg-bg-tertiary border border-accent text-accent rounded hover:bg-accent hover:text-white transition-colors">
+      ⛶ Pantalla completa
+    </button>
+    {%- if jumpTargets -%}
+      {%- for t in jumpTargets -%}
+      <button onclick="htmlEmbedJump('html-embed-iframe-{{ slug }}', '{{ url }}', {{ t.page }})" class="inline-flex items-center px-4 py-2 border border-border text-text-muted rounded hover:border-accent hover:text-accent transition-colors">📖 {{ t.label }}</button>
+      {%- endfor -%}
+    {%- endif -%}
+  </div>
+</div>
+
+<script>
+// Defined once per page load; safe to re-declare because <script> tags in
+// Nunjucks templates run in document order and the function body is identical.
+if (typeof window.htmlEmbedToggleFullscreen !== 'function') {
+  window.htmlEmbedToggleFullscreen = function(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    if (!document.fullscreenElement) {
+      container.requestFullscreen().catch(err => {
+        console.error('Error attempting to enable fullscreen:', err);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+}
+if (typeof window.htmlEmbedJump !== 'function') {
+  window.htmlEmbedJump = function(iframeId, baseUrl, pageNumber) {
+    const iframe = document.getElementById(iframeId);
+    if (!iframe) return;
+    const hexPage = Number(pageNumber).toString(16);
+    iframe.src = baseUrl + '#pf' + hexPage;
+  };
+}
+</script>
+
+<style>
+#html-embed-{{ slug }}:fullscreen {
+  background: black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#html-embed-{{ slug }}:fullscreen iframe {
+  width: 100%;
+  height: 100%;
+}
+</style>
+{% endmacro %}
