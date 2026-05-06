@@ -8,15 +8,29 @@ title: "Generalización"
 
 ---
 
-## A — Descomposición del error
+## A — Descomposición del error de generalización
 
-El exceso de riesgo sobre el predictor de Bayes $R^{∗}$ se descompone exactamente:
+El **error de generalización** $R(\hat{f})$ mide el desempeño del modelo sobre datos nuevos no vistos durante el entrenamiento. Para entender de dónde viene el exceso de error, introducimos un elemento de referencia.
+
+**El oráculo $f\_{\mathcal{H}}^{∗}$.** Dentro de la clase de hipótesis $\mathcal{H}$, existe un predictor ideal: el que minimizaría el error de generalización si conociéramos $p_{\text{data}}$:
+
+$$
+f\_{\mathcal{H}}^{∗} = \arg\min_{f \in \mathcal{H}} R(f)
+$$
+
+Este oráculo es **inalcanzable en la práctica** (requiere conocer $p_{\text{data}}$), pero sirve como pivote teórico para separar dos causas de error completamente distintas.
+
+**Derivación.** Partimos del exceso $R(\hat{f}) - R^{∗}$ y sumamos y restamos $R(f\_{\mathcal{H}}^{∗})$ — un cero algebraico:
+
+$$
+R(\hat{f}) - R^{∗} = \bigl[R(f\_{\mathcal{H}}^{∗}) - R^{∗}\bigr] + \bigl[R(\hat{f}) - R(f\_{\mathcal{H}}^{∗})\bigr]
+$$
+
+Nombrar cada brecha da la descomposición exacta:
 
 $$
 \boxed{R(\hat{f}) - R^{∗} = \underbrace{(R(f\_{\mathcal{H}}^{∗}) - R^{∗})}\_{\varepsilon\_{\text{approx}}} + \underbrace{(R(\hat{f}) - R(f\_{\mathcal{H}}^{∗}))}\_{\varepsilon\_{\text{estim}}}}
 $$
-
-donde $f\_{\mathcal{H}}^{∗} = \arg\min_{f \in \mathcal{H}} R(f)$ es el mejor elemento de $\mathcal{H}$ bajo el riesgo verdadero.
 
 | Componente | Qué mide | Controlado por |
 |------------|----------|---------------|
@@ -54,7 +68,7 @@ $$
 \boxed{R(\hat{f}) \leq \hat{R}(\hat{f}; \mathcal{D}) + C \sqrt{\frac{d_{\text{VC}}}{m}}}
 $$
 
-La cota dice: el riesgo verdadero no puede superar el riesgo empírico más un **término de penalización de complejidad** que crece con $d_{\text{VC}}$ y decrece con $m$.
+La cota dice: el error de generalización no puede superar el error empírico más un **término de penalización de complejidad** que crece con $d_{\text{VC}}$ y decrece con $m$.
 
 ![Penalización de complejidad $\sqrt{d_\text{VC}/m}$ vs. tamaño de muestra $m$]({{ '/22_machine_learning/images/06_generalization_bound.png' | url }})
 

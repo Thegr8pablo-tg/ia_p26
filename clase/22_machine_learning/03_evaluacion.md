@@ -4,7 +4,7 @@ title: "Evaluación y selección de modelos"
 
 # 22.3 — Evaluación y selección de modelos
 
-> *"El error de entrenamiento es una estimación sesgada del error verdadero. Siempre."*
+> *"El error de entrenamiento es una estimación sesgada del error de generalización. Siempre."*
 
 ---
 
@@ -30,7 +30,7 @@ $$
 
 el último paso usa que $f_0$ no depende de $\mathcal{D}$, así que la esperanza del riesgo empírico es el riesgo verdadero. Como esto vale para cualquier $f_0$, también vale para $\hat{f}\_0 = \arg\min R(f)$, y en particular $\mathbb{E}[\hat{R}(\hat{f}; \mathcal{D}\_{\text{train}})] \leq R(\hat{f})$. $\square$
 
-Consecuencia: **el error de entrenamiento sistemáticamente subestima el error verdadero**. El grado de sesgo crece con la capacidad de $\mathcal{H}$ — con $d_{\text{VC}}$ grande, el optimizador puede hacer $\hat{R}$ arbitrariamente pequeño aunque $R$ permanezca grande.
+Consecuencia: **el error de entrenamiento sistemáticamente subestima el error de generalización**. El grado de sesgo crece con la capacidad de $\mathcal{H}$ — con $d_{\text{VC}}$ grande, el optimizador puede hacer $\hat{R}$ arbitrariamente pequeño aunque $R$ permanezca grande.
 
 ![Optimismo del entrenamiento: distribuciones de error train vs. test]({{ '/22_machine_learning/images/08_optimismo_entrenamiento.png' | url }})
 

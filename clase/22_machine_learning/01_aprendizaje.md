@@ -20,15 +20,15 @@ $$
 
 El objetivo es aprender una función $f: \mathcal{X} \to \mathcal{Y}$ que prediga bien. "Bien" lo mide una **función de pérdida** $L: \mathcal{Y} \times \mathcal{Y} \to \mathbb{R}_{\geq 0}$.
 
-### El riesgo verdadero
+### El error de generalización
 
-El **riesgo verdadero** (o error de generalización) de una función $f$ es:
+El **error de generalización** de una función $f$ mide cuánto falla en promedio sobre datos nuevos generados desde $p_{\text{data}}$:
 
 $$
 \boxed{R(f) = \mathbb{E}\_{(x,y) \sim p\_{\text{data}}}[L(f(x), y)]}
 $$
 
-Este es el objeto que queremos minimizar. El problema: $p_{\text{data}}$ es desconocida. No podemos computar $R(f)$ directamente.
+Este es el objeto que queremos minimizar — no el error sobre los datos de entrenamiento, sino el error esperado sobre **datos no vistos**. El problema: $p_{\text{data}}$ es desconocida. No podemos computar $R(f)$ directamente.
 
 ### El predictor de Bayes
 
@@ -40,9 +40,9 @@ $$
 
 Para MSE: $f^{∗}(x) = \mathbb{E}[y \mid x]$. Para 0-1 loss: $f^{∗}(x) = \arg\max_c P(y=c \mid x)$. El error de Bayes $R^{∗} > 0$ cuando $y$ tiene ruido irreducible dado $x$ — no hay modelo que lo elimine.
 
-### El riesgo empírico
+### El error empírico
 
-Solo tenemos un conjunto de entrenamiento $\mathcal{D} = \{(x^{(i)}, y^{(i)})\}\_{i=1}^m$, i.i.d. de $p\_{\text{data}}$. Definimos el **riesgo empírico**:
+Solo tenemos un conjunto de entrenamiento $\mathcal{D} = \{(x^{(i)}, y^{(i)})\}\_{i=1}^m$, i.i.d. de $p\_{\text{data}}$. Definimos el **error empírico** (o riesgo empírico):
 
 $$
 \boxed{\hat{R}(f; \mathcal{D}) = \frac{1}{m} \sum_{i=1}^{m} L(f(x^{(i)}), y^{(i)})}
@@ -122,18 +122,24 @@ La definición es útil porque **P se mide sobre datos no vistos** — no sobre 
 
 ---
 
-## El riesgo como hoja de ruta
+## El error de generalización como hoja de ruta
 
-Todo el módulo gira en torno a una pregunta: ¿cuánto se aleja $R(\hat{f})$ de $R^{∗}$?
+Todo el módulo gira en torno a una pregunta: ¿cuánto se aleja el error de generalización de $\hat{f}$ del mínimo posible $R^{∗}$?
 
-Podemos descomponer el exceso de riesgo en dos componentes (detalle completo en 22.2):
+Para responderla necesitamos un pivote teórico: el **oráculo** $f\_{\mathcal{H}}^{∗}$, el mejor predictor dentro de $\mathcal{H}$ si tuviéramos acceso a $p_{\text{data}}$:
+
+$$
+f\_{\mathcal{H}}^{∗} = \arg\min_{f \in \mathcal{H}} R(f)
+$$
+
+Sumando y restando $R(f\_{\mathcal{H}}^{∗})$, el exceso de error de generalización se parte en dos brechas (detalle completo en 22.2):
 
 $$
 R(\hat{f}) - R^{∗} = \underbrace{(R(f\_{\mathcal{H}}^{∗}) - R^{∗})}\_{\varepsilon\_{\text{approx}}} + \underbrace{(R(\hat{f}) - R(f\_{\mathcal{H}}^{∗}))}\_{\varepsilon\_{\text{estim}}}
 $$
 
-- **$\varepsilon_{\text{approx}}$** (error de aproximación): ¿qué tan bien puede $\mathcal{H}$ representar a $f^{∗}$? Controlado por la capacidad de $\mathcal{H}$.
-- **$\varepsilon_{\text{estim}}$** (error de estimación): dado que usamos datos finitos, ¿cuánto se aleja $\hat{f}$ del mejor de $\mathcal{H}$? Controlado por $m$ y la complejidad de $\mathcal{H}$.
+- **$\varepsilon_{\text{approx}}$** (error de aproximación): brecha entre el predictor de Bayes $f^{∗}$ y el mejor posible dentro de $\mathcal{H}$. Controlado por la capacidad de $\mathcal{H}$.
+- **$\varepsilon_{\text{estim}}$** (error de estimación): brecha entre el oráculo $f\_{\mathcal{H}}^{∗}$ y lo que realmente obtenemos $\hat{f}$ con datos finitos. Controlado por $m$ y la complejidad de $\mathcal{H}$.
 
 Esta tensión — más capacidad reduce $\varepsilon_{\text{approx}}$ pero aumenta $\varepsilon_{\text{estim}}$ — es el **dilema fundamental** del aprendizaje automático.
 
