@@ -64,7 +64,7 @@ En cada paso $t$:
 1. El agente observa el estado actual $s_t$.
 2. Elige una acción $a_t$ según su política.
 3. El ambiente — que sí conoce $T$ y $R$, pero no los revela — transiciona a $s_{t+1} \sim T(\cdot \mid s_t, a_t)$ y devuelve $r_{t+1} = R(s_t, a_t, s_{t+1})$.
-4. El agente observa $(r_{t+1},\, s_{t+1})$ y actualiza su conocimiento.
+4. El agente observa $(r_{t+1}, s_{t+1})$ y actualiza su conocimiento.
 
 ![Bucle agente-ambiente]({{ '/23_reinforcement_learning/images/01_agent_env_loop.png' | url }})
 
@@ -78,7 +78,7 @@ $$\tau = (s_0, a_0, r_1, s_1,\ a_1, r_2, s_2,\ \ldots,\ s_T)$$
 
 El **retorno** desde el paso $t$ es la suma de recompensas futuras descontadas:
 
-$$\boxed{G_t = r_{t+1} + \gamma\, r_{t+2} + \gamma^2 r_{t+3} + \cdots = \sum_{k=0}^{\infty} \gamma^k\, r_{t+k+1}}$$
+$$\boxed{G_t = r_{t+1} + \gamma r_{t+2} + \gamma^2 r_{t+3} + \cdots = \sum_{k=0}^{\infty} \gamma^k r_{t+k+1}}$$
 
 Cada símbolo nuevo:
 
@@ -100,7 +100,7 @@ $\gamma = 0$ significa miope (solo importa la próxima recompensa); $\gamma = 1$
 | 1 | $s=2$ | $+2$ | $s=4$ | $r_2 = -1$ |
 | 2 | $s=4$ | $+1$ | $s=5$ | $r_3 = 0$ |
 
-$$G_0 = r_1 + \gamma\, r_2 + \gamma^2 r_3 = -5 + (-1) + 0 = -6$$
+$$G_0 = r_1 + \gamma r_2 + \gamma^2 r_3 = -5 + (-1) + 0 = -6$$
 
 Este es el retorno que encontramos en el módulo 21 como el coste óptimo (con signo invertido).
 
@@ -118,7 +118,7 @@ Donde $\mathbb{E}_\pi[\cdot]$ es la esperanza matemática sobre las trayectorias
 
 ### Función de valor acción-estado bajo política $\pi$
 
-$$Q^\pi(s, a) = \mathbb{E}_\pi\left[G_t \mid s_t = s,\, a_t = a\right]$$
+$$Q^\pi(s, a) = \mathbb{E}_\pi\left[G_t \mid s_t = s, a_t = a\right]$$
 
 **Lectura:** "El retorno esperado si en $s$ tomo *primero* la acción $a$ y *después* sigo $\pi$."
 
@@ -137,7 +137,7 @@ Conocer $Q^{∗}$ es suficiente para actuar de manera óptima.
 
 $Q^\pi$ y $Q^{∗}$ satisfacen ecuaciones de Bellman (recursivas):
 
-$$Q^\pi(s,a) = \mathbb{E}_{s' \sim T,\, a' \sim \pi}\left[r + \gamma\, Q^\pi(s', a')\right]$$
+$$Q^\pi(s,a) = \mathbb{E}_{s' \sim T, a' \sim \pi}\left[r + \gamma Q^\pi(s', a')\right]$$
 
 $$Q^{∗}(s,a) = \mathbb{E}_{s' \sim T}\left[r + \gamma \max_{a'} Q^{∗}(s', a')\right]$$
 
@@ -149,11 +149,11 @@ La única diferencia es cómo se elige la siguiente acción: bajo $\pi$ para $Q^
 
 Con $V^{∗}$ podrías actuar greedy... pero necesitarías $T$:
 
-$$a^{∗}(s) = \arg\max_{a} \sum_{s'} T(s' \mid s, a)\,\left[R(s,a,s') + \gamma\, V^{∗}(s')\right]$$
+$$a^{∗}(s) = \arg\max_{a} \sum_{s'} T(s' \mid s, a)\left[R(s,a,s') + \gamma V^{∗}(s')\right]$$
 
 Con $Q^{∗}$ no necesitas $T$ para nada:
 
-$$\boxed{a^{∗}(s) = \arg\max_{a}\, Q^{∗}(s, a)}$$
+$$\boxed{a^{∗}(s) = \arg\max_{a} Q^{∗}(s, a)}$$
 
 Solo lees la fila $s$ de tu tabla $Q$ y tomas el máximo.
 Esa es la razón por la que RL se centra en aprender $Q^{∗}$ en lugar de $V^{∗}$.
@@ -193,11 +193,11 @@ En episodios largos (o entornos continuos sin fin), eso puede ser muy costoso.
 
 En vez del retorno real $G_t = r + \gamma r' + \gamma^2 r'' + \cdots$, usamos solo *un paso real* y *la propia tabla $Q$ para el resto*:
 
-$$\underbrace{r + \gamma\, Q(s', ?)}_{\text{estimación TD del retorno}} \approx G_t$$
+$$\underbrace{r + \gamma Q(s', ?)}_{\text{estimación TD del retorno}} \approx G_t$$
 
 La actualización completa es:
 
-$$Q(s,a) \leftarrow Q(s,a) + \alpha\,\underbrace{\bigl[r + \gamma\, Q(s', ?) - Q(s,a)\bigr]}_{\delta_t = \text{ error TD}}$$
+$$Q(s,a) \leftarrow Q(s,a) + \alpha\underbrace{\bigl[r + \gamma Q(s', ?) - Q(s,a)\bigr]}_{\delta_t = \text{ error TD}}$$
 
 | Símbolo | Significado |
 |---------|-------------|

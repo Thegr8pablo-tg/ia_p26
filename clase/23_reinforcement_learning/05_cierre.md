@@ -62,13 +62,13 @@ En espacios de estados grandes o continuos, **no es posible mantener una celda p
 
 La solución: en lugar de una tabla, usa una **función paramétrica**:
 
-$$Q(s,a) \;\approx\; f_\theta(s,a)$$
+$$Q(s,a) \approx f_\theta(s,a)$$
 
 donde $\theta$ son los parámetros (por ejemplo, los pesos de una red neuronal).
 
 La regla de actualización TD sigue siendo la misma — solo que en vez de actualizar una celda, hacemos un paso de gradiente sobre $\theta$:
 
-$$\theta \;\leftarrow\; \theta + \alpha\,\delta_t\,\nabla_\theta f_\theta(s,a)$$
+$$\theta \leftarrow \theta + \alpha\delta_t\nabla_\theta f_\theta(s,a)$$
 
 Esto da lugar a dos familias de algoritmos modernos:
 

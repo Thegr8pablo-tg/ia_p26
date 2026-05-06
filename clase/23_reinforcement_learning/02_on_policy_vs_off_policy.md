@@ -15,7 +15,7 @@ Al principio no sabemos nada, así que inicializamos todo en cero:
 ![Tabla Q vacía]({{ '/23_reinforcement_learning/images/03_q_table_empty.png' | url }})
 
 Para la escalera: 5 filas (estados 0–4; el estado 5 es terminal y no necesita acciones) y 2 columnas ($+1$ y $+2$).
-La celda $(s=4,\; +2)$ está marcada como no disponible porque desde $s=4$ la única acción posible es $+1$.
+La celda $(s=4, +2)$ está marcada como no disponible porque desde $s=4$ la única acción posible es $+1$.
 
 Con cada episodio que juega el agente, algunas celdas se actualizan.
 Después de suficientes episodios, la tabla converge a $Q^{∗}$.
@@ -24,27 +24,39 @@ Después de suficientes episodios, la tabla converge a $Q^{∗}$.
 
 ## El esqueleto de la actualización TD
 
-La **actualización de diferencia temporal (TD)** tiene esta forma:
+La idea central de TD es simple: **compara lo que esperabas con lo que realmente pasó, y ajusta**.
 
-$$Q(s,a) \;\leftarrow\; Q(s,a) \;+\; \alpha \Bigl[\underbrace{r + \gamma \cdot \textbf{?} - Q(s,a)}_{\delta_t}\Bigr]$$
+Formalmente, la actualización tiene esta estructura:
 
-Componentes:
-- $\alpha \in (0,1]$ — tasa de aprendizaje: qué fracción del error corregimos en cada paso.
-- $r$ — recompensa observada al tomar $a$ en $s$.
-- $\gamma$ — factor de descuento.
-- **`?`** — estimación del valor futuro a partir de $s'$. **Esta elección es la que distingue a SARSA de Q-learning.**
+$$Q(s,a) \leftarrow Q(s,a) + \alpha \cdot \underbrace{\bigl[r + \gamma \cdot \textbf{?} - Q(s,a)\bigr]}_{\delta_t \text{ — error TD}}$$
 
-### El error TD $\delta_t$
+Piezas de la fórmula:
 
-$$\boxed{\delta_t \;=\; r + \gamma \cdot \textbf{?} - Q(s,a)}$$
+| Símbolo | Nombre | Intuición |
+|---------|--------|-----------|
+| $Q(s,a)$ | Estimación actual | "Antes de ejecutar $a$, creía que valía $Q(s,a)$" |
+| $r$ | Recompensa observada | Lo que el ambiente devolvió al hacer $a$ en $s$ |
+| $\gamma \cdot \textbf{?}$ | Estimación del futuro | Cuánto más se puede ganar desde $s'$ en adelante |
+| $r + \gamma \cdot \textbf{?}$ | Target TD | Nueva estimación del retorno total — con un paso real |
+| $\alpha$ | Tasa de aprendizaje | Cuánto actualizamos: 0 = no aprendes, 1 = reemplazas todo |
+| $\delta_t$ | Error TD | Diferencia entre lo nuevo y lo viejo: la "sorpresa" |
 
-Interpreta $\delta_t$ como sorpresa respecto a lo esperado:
+**`?`** es la pieza que falta: estimación del valor en $s'$. **Esta elección distingue SARSA de Q-learning.**
 
-| Caso | Significado | Efecto en $Q(s,a)$ |
-|------|-------------|---------------------|
-| $\delta_t > 0$ | La nueva estimación es **mayor** que $Q(s,a)$ → la acción fue mejor de lo previsto | Subimos $Q(s,a)$ |
-| $\delta_t < 0$ | La nueva estimación es **menor** que $Q(s,a)$ → la acción fue peor de lo previsto | Bajamos $Q(s,a)$ |
-| $\delta_t = 0$ | Estimación consistente — ya no hay nada que corregir | Sin cambio |
+### El error TD $\delta_t$: intuición
+
+$$\boxed{\delta_t = \underbrace{r + \gamma \cdot \textbf{?}}_{\text{nueva estimación}} - \underbrace{Q(s,a)}_{\text{estimación anterior}}}$$
+
+Piénsalo como un sistema de aprendizaje por retroalimentación:
+
+| Caso | Lectura | Efecto |
+|------|---------|--------|
+| $\delta_t > 0$ | "La acción fue **mejor** de lo que pensaba" — el target supera a $Q(s,a)$ | Subimos $Q(s,a)$ |
+| $\delta_t < 0$ | "La acción fue **peor** de lo que pensaba" — el target está por debajo de $Q(s,a)$ | Bajamos $Q(s,a)$ |
+| $\delta_t = 0$ | "Exactamente lo que esperaba" — no hay nueva información | $Q(s,a)$ no cambia |
+
+El algoritmo empuja $Q(s,a)$ hacia el target `r + γ·?` en pequeños pasos de tamaño $\alpha$.
+Con suficientes episodios, $Q$ converge al punto donde $\delta_t = 0$ para todos los pares $(s,a)$ — que es exactamente la ecuación de Bellman.
 
 La pregunta que queda abierta: ¿qué ponemos en el `?`?
 
@@ -54,7 +66,7 @@ La pregunta que queda abierta: ¿qué ponemos en el `?`?
 
 Del módulo 21 y de la página anterior, recordamos:
 
-$$Q^\pi(s,a) = \mathbb{E}_{\substack{s' \sim T \\ a' \sim \pi}}\bigl[r + \gamma\, Q^\pi(s', a')\bigr] \tag{Eq. 1}$$
+$$Q^\pi(s,a) = \mathbb{E}_{\substack{s' \sim T \\ a' \sim \pi}}\bigl[r + \gamma Q^\pi(s', a')\bigr] \tag{Eq. 1}$$
 
 $$Q^{∗}(s,a) = \mathbb{E}_{s' \sim T}\bigl[r + \gamma \max_{a'} Q^{∗}(s', a')\bigr] \tag{Eq. 2}$$
 
@@ -168,7 +180,7 @@ Ahora viene la bifurcación:
 
 **Q-learning** toma el máximo — no importa qué acción se ejecutará realmente:
 
-$$\textbf{?} = \max_{a'} Q(2, a') = \max(0,\; -0.5) = 0$$
+$$\textbf{?} = \max_{a'} Q(2, a') = \max(0, -0.5) = 0$$
 
 $$\delta_{\text{QL}} = -5 + 1 \cdot 0 - (-2.5) = \mathbf{-2.5}$$
 

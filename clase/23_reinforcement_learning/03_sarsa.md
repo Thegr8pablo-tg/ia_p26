@@ -7,7 +7,7 @@ summary: "El quíntuple (S,A,R,S',A'), la regla de actualización on-policy, tra
 
 SARSA se llama así porque su actualización usa exactamente cinco elementos en orden:
 
-$$(\underbrace{S}_{\text{estado}},\; \underbrace{A}_{\text{acción}},\; \underbrace{R}_{\text{recompensa}},\; \underbrace{S'}_{\text{sig. estado}},\; \underbrace{A'}_{\text{sig. acción}})$$
+$$(\underbrace{S}_{\text{estado}}, \underbrace{A}_{\text{acción}}, \underbrace{R}_{\text{recompensa}}, \underbrace{S'}_{\text{sig. estado}}, \underbrace{A'}_{\text{sig. acción}})$$
 
 La diferencia clave respecto a Q-learning: la **siguiente acción $A'$ se elige *antes* de hacer la actualización**, usando la misma política $\varepsilon$-greedy que generó $A$.
 El agente aprende el valor de la política que *realmente ejecuta*.
@@ -16,7 +16,7 @@ El agente aprende el valor de la política que *realmente ejecuta*.
 
 ## Regla de actualización
 
-$$\boxed{Q(s,a) \;\leftarrow\; Q(s,a) + \alpha\,\bigl[r + \gamma\, Q(s', a') - Q(s,a)\bigr]}$$
+$$\boxed{Q(s,a) \leftarrow Q(s,a) + \alpha\bigl[r + \gamma Q(s', a') - Q(s,a)\bigr]}$$
 
 donde $a' \sim \pi_\varepsilon(s')$ — la siguiente acción está muestreada de la política $\varepsilon$-greedy.
 

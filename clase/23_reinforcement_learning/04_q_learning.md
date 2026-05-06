@@ -9,7 +9,7 @@ Q-learning y SARSA son idénticos excepto por **un símbolo** en la regla de act
 
 | | SARSA | Q-learning |
 |--|-------|------------|
-| Actualización | $Q(s,a) \leftarrow Q(s,a) + \alpha\bigl[r + \gamma\, \mathbf{Q(s', a')} - Q(s,a)\bigr]$ | $Q(s,a) \leftarrow Q(s,a) + \alpha\bigl[r + \gamma\, \mathbf{\max_{a'} Q(s', a')} - Q(s,a)\bigr]$ |
+| Actualización | $Q(s,a) \leftarrow Q(s,a) + \alpha\bigl[r + \gamma \mathbf{Q(s', a')} - Q(s,a)\bigr]$ | $Q(s,a) \leftarrow Q(s,a) + \alpha\bigl[r + \gamma \mathbf{\max_{a'} Q(s', a')} - Q(s,a)\bigr]$ |
 | Siguiente valor | $Q(s', a')$ donde $a' \sim \pi_\varepsilon$ | $\max_{a'} Q(s', a')$ |
 | Datos necesarios | Quíntuple $(S, A, R, S', A')$ | Cuádruplo $(S, A, R, S')$ |
 
@@ -20,7 +20,7 @@ Eso lo hace **off-policy**: no importa qué acción ejecute el agente en $s'$, s
 
 ## Regla de actualización
 
-$$\boxed{Q(s,a) \;\leftarrow\; Q(s,a) + \alpha\,\bigl[r + \gamma \max_{a'} Q(s', a') - Q(s,a)\bigr]}$$
+$$\boxed{Q(s,a) \leftarrow Q(s,a) + \alpha\bigl[r + \gamma \max_{a'} Q(s', a') - Q(s,a)\bigr]}$$
 
 ---
 
@@ -80,7 +80,7 @@ Desde $s=0$, $\varepsilon$-greedy elige $a=+2$ (exploración).
 El ambiente devuelve $s'=2$, $r=-5$.
 
 **Q-learning** toma el máximo sobre $s'=2$:
-$$\max_{a'} Q(2, a') = \max(Q(2,+1),\, Q(2,+2)) = \max(0,\, -0.5) = 0$$
+$$\max_{a'} Q(2, a') = \max(Q(2,+1), Q(2,+2)) = \max(0, -0.5) = 0$$
 $$\delta_{\text{QL}} = -5 + 0 - (-2.5) = -2.5$$
 $$Q(0,+2) \leftarrow -2.5 + 0.5 \cdot (-2.5) = -3.75$$
 
