@@ -34,6 +34,13 @@ Comparado con el esqueleto TD de la sección anterior, el `?` se llena con $Q(s'
 
 ## Pseudocódigo
 
+**Antes de ver el código, la idea en palabras:**
+Al inicio de cada episodio, el agente observa el estado $s$ y ya elige la primera acción $a$ con $\varepsilon$-greedy — esto es clave en SARSA.
+Luego entra al bucle: ejecuta $a$, recibe la recompensa $r$ y llega a $s'$.
+Ahora, *antes* de actualizar $Q$, elige la siguiente acción $a'$ usando la misma política $\varepsilon$-greedy.
+Con los cinco elementos $(s, a, r, s', a')$ en mano, aplica la regla de actualización y avanza: $s$ pasa a ser $s'$ y $a$ pasa a ser $a'$.
+El ciclo se repite hasta llegar al estado terminal.
+
 ```
 SARSA(α, γ, ε, num_episodios):
   Inicializa Q[s, a] ← 0 para todo (s, a)

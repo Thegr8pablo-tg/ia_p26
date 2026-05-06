@@ -371,8 +371,13 @@ def plot_q_table_empty():
 
     cw, rh = 1.2, 0.85          # cell width, cell height (data units)
     x0 = 0.30                    # x-center of column 0
-    y0 = 4.75                    # y-center of row 0
+    header_h = 0.44              # height of column header band
+    y0 = 4.25                    # y-center of row 0 (positioned below header)
     grid_cx = x0 + 0.5 * cw     # horizontal center of the two-column grid
+
+    # header sits above row 0 with a small gap
+    header_bot = y0 + rh * 0.5 + 0.08
+    header_cy  = header_bot + header_h / 2
 
     ax.set_xlim(-1.2, 4.2)
     ax.set_ylim(-1.5, 6.4)
@@ -393,11 +398,11 @@ def plot_q_table_empty():
     for j, cl in enumerate(col_labels):
         hx = x0 + j * cw
         rect = plt.Rectangle(
-            (hx - cw / 2 + 0.05, y0 + 0.06), cw - 0.10, 0.44,
+            (hx - cw / 2 + 0.05, header_bot), cw - 0.10, header_h,
             facecolor=COLORS["blue"], edgecolor="white", linewidth=0.5, zorder=2)
         ax.add_patch(rect)
-        ax.text(hx, y0 + 0.28, cl, ha="center", va="center",
-                fontsize=10, color="white", fontweight="bold")
+        ax.text(hx, header_cy, cl, ha="center", va="center",
+                fontsize=10, color="white", fontweight="bold", zorder=3)
 
     # Rows: label + cells
     for i in range(5):
