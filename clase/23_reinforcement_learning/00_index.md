@@ -31,7 +31,11 @@ Al terminar este módulo podrás:
 5. Distinguir política de comportamiento (μ) y política objetivo (π), y clasificar un algoritmo como *on-policy* u *off-policy*.
 6. Implementar SARSA y Q-learning sobre un ambiente tabular y rastrear la evolución de la tabla $Q$ episodio a episodio.
 7. Predecir a qué converge cada algoritmo con $\varepsilon$ fijo y con $\varepsilon \to 0$.
-8. Identificar el límite de escalabilidad de la tabla $Q$ y el paso hacia la aproximación de funciones (DQN, PPO).
+8. Identificar el límite de escalabilidad de la tabla $Q$ y el paso hacia la aproximación de funciones.
+9. Explicar los dos problemas que DQN resuelve (muestras correlacionadas, blanco móvil) y cómo los resuelve (experience replay, red objetivo).
+10. Describir la función de pérdida MSE de DQN, señalando la diferencia entre $\theta$ y $\theta^-$.
+11. Contrastar el gradiente de política (REINFORCE, PPO) con los métodos basados en valor, e identificar cuándo cada familia es preferible.
+12. Ejecutar el demo interactivo de CartPole y leer las curvas de convergencia para los cuatro métodos (Q-tabla, SARSA, Q-learning, DQN).
 
 ---
 
@@ -43,7 +47,10 @@ Al terminar este módulo podrás:
 | 02 | [On-policy vs Off-policy](./02_on_policy_vs_off_policy.md) | La tabla $Q$ como objeto concreto; el error TD $\delta_t$; las dos ecuaciones de Bellman; la bifurcación SARSA / Q-learning |
 | 03 | [SARSA](./03_sarsa.md) | El quintuple $(S,A,R,S',A')$; traza sobre la escalera; convergencia a $Q^{\pi_\varepsilon}$ |
 | 04 | [Q-learning](./04_q_learning.md) | Un símbolo de diferencia; convergencia a $Q^∗$; el círculo completo con módulo 21 |
-| 05 | [Cierre](./05_cierre.md) | Tabla comparativa; límites tabulares; hacia DQN y PPO |
+| 05 | [Cierre tabular](./05_cierre.md) | Tabla comparativa SARSA / Q-learning; límites de la tabla $Q$ |
+| 06 | [De la tabla a las redes](./06_de_la_tabla_a_las_redes.md) | CartPole; la sustitución $Q[s,a] \to Q_\theta(s,a)$; experience replay; red objetivo; función de pérdida DQN |
+| 07 | [Gradiente de política](./07_gradiente_de_politica.md) | REINFORCE; Actor-Critic; PPO con clipping; RLHF y ChatGPT |
+| 08 | [Laboratorio aplicado](./08_laboratorio_aplicado.md) | Demo en vivo de 4 métodos en CartPole; setup del entorno; comparación de convergencia |
 
 ---
 

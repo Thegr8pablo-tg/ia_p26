@@ -58,56 +58,6 @@ En espacios de estados grandes o continuos, **no es posible mantener una celda p
 
 ---
 
-## Hacia la aproximación de funciones
-
-La solución: en lugar de una tabla, usa una **función paramétrica**:
-
-$$Q(s,a) \approx f_\theta(s,a)$$
-
-donde $\theta$ son los parámetros (por ejemplo, los pesos de una red neuronal).
-
-La regla de actualización TD sigue siendo la misma — solo que en vez de actualizar una celda, hacemos un paso de gradiente sobre $\theta$:
-
-$$\theta \leftarrow \theta + \alpha\delta_t\nabla_\theta f_\theta(s,a)$$
-
-Esto da lugar a dos familias de algoritmos modernos:
-
-**Off-policy + función aprox.** → **DQN (Deep Q-Network)**
-- Usa una red neuronal para $f_\theta(s,a)$.
-- Mismo principio que Q-learning: el target usa $\max_b$.
-- Novedades: experience replay (rompe correlaciones entre muestras) y red objetivo congelada (estabiliza el target).
-- Logró rendimiento humano en 49 juegos de Atari (DeepMind, 2015).
-
-**On-policy + gradiente de política** → **PPO, A3C (Policy Gradient)**
-- En vez de aprender $Q$, aprende directamente una política $\pi_\theta(a \mid s)$.
-- El gradiente de política (Policy Gradient Theorem) dirige $\theta$ hacia acciones con retorno alto.
-- PPO (Proximal Policy Optimization) añade un clipping que estabiliza el entrenamiento.
-- Base de ChatGPT (RLHF usa PPO), robótica, Alpha Go.
-
----
-
-## El paisaje del RL
-
-![Paisaje del RL]({{ '/23_reinforcement_learning/images/07_rl_landscape.png' | url }})
-
-```mermaid
-flowchart TD
-    TAB["RL Tabular\nSARSA / Q-learning\n(este módulo)"]
-    FA["Aproximación de funciones\nQ(s,a) ≈ f_θ(s,a)\ncuando |S||A| explota"]
-    OFF["Off-policy\nQ-learning → DQN"]
-    ON["On-policy\nSARSA → PPO / A3C"]
-    DQN["DQN / Rainbow\nAtari, juegos"]
-    PPO["PPO / A3C\nRobótica, NLP, RLHF"]
-
-    TAB -->|"off-policy"| OFF
-    TAB -->|"on-policy"| ON
-    TAB --> FA
-    OFF --> DQN
-    ON --> PPO
-```
-
----
-
 ## Lo que aprendimos en este módulo
 
 Empezamos con la pregunta que quedó sin respuesta en el módulo 21:
@@ -120,4 +70,5 @@ La diferencia entre SARSA y Q-learning se reduce a un símbolo: $Q(s',a')$ vs $\
 Ese símbolo determina si el algoritmo aprende el valor de lo que hace (on-policy, SARSA) o el valor de lo que podría hacer óptimamente (off-policy, Q-learning).
 
 Ambos convergen a $Q^∗$ con suficiente experiencia y $\varepsilon \to 0$.
-Y cuando la tabla ya no cabe — que es casi siempre en problemas reales — la misma idea de bootstrapping TD sobrevive intacta dentro de redes neuronales profundas.
+
+La página siguiente — [De la tabla a las redes](./06_de_la_tabla_a_las_redes.md) — da exactamente ese paso: cuando la tabla ya no cabe (y en problemas reales casi nunca cabe), cómo sobrevive la misma idea de bootstrapping TD dentro de una red neuronal.
