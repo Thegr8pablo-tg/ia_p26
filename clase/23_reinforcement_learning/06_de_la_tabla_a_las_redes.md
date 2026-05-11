@@ -78,21 +78,85 @@ La única diferencia es que ahora $Q_\theta$ es una red neuronal en vez de una t
 
 ## Problema 1: muestras correlacionadas
 
-La idea más directa sería aplicar descenso de gradiente directamente sobre cada transición $(s_t, a_t, r_t, s_{t+1})$ a medida que ocurre.
-El problema: las transiciones consecutivas dentro de un episodio son altamente correlacionadas — $s_{t+1}$ es el estado que sigue a $s_t$ en la misma trayectoria, no una muestra independiente del problema.
+### El problema
 
-SGD asume que las muestras son i.i.d. (independientes e idénticamente distribuidas).
-Si los gradientes consecutivos apuntan todos en la misma dirección (porque vienen del mismo episodio), la red puede sobreajustarse a esa trayectoria y "olvidar" experiencias anteriores.
+La idea más directa para entrenar la red sería aplicar un paso de gradiente cada vez que ocurre una transición $(s_t, a_t, r_t, s_{t+1})$:
 
-**Solución: repetición de experiencia (experience replay)**
+1. El agente ejecuta una acción y observa el resultado.
+2. Calcula el error TD: $\delta_t = r_t + \gamma \max_b Q_\theta(s_{t+1}, b) - Q_\theta(s_t, a_t)$.
+3. Hace un paso de gradiente para reducir ese error.
+4. Avanza al siguiente paso y repite.
 
-Se mantiene un buffer $D$ con las últimas $N$ transiciones (típicamente $N = 10{,}000$).
-En cada paso, en lugar de usar solo la transición más reciente, se muestrea aleatoriamente un mini-lote de 64 transiciones del buffer.
+El problema no es el algoritmo — es el orden en que llegan los datos.
+
+Dentro de un episodio, las transiciones forman una cadena:
+
+$$s_0 \xrightarrow{a_0} s_1 \xrightarrow{a_1} s_2 \xrightarrow{a_2} s_3 \xrightarrow{a_3} \cdots$$
+
+Cada estado surge directamente del anterior. Si el carro se está inclinando a la derecha en $s_t$, es casi seguro que también se incline a la derecha en $s_{t+1}$ y $s_{t+2}$ — son variaciones del mismo momento físico, no observaciones independientes del espacio de estados.
+
+**Por qué esto rompe SGD:**
+El descenso de gradiente estocástico asume que cada muestra es independiente de las anteriores — así, cada gradiente apunta en una dirección distinta y la media de muchos pasos converge al gradiente verdadero.
+Si todas las muestras de un mini-lote provienen del mismo episodio (y por tanto del mismo fragmento de trayectoria), los gradientes son casi paralelos.
+La red recibe el mismo "empuje" repetido muchas veces seguidas y sobreajusta a esa trayectoria particular, olvidando lo aprendido en episodios anteriores.
+
+> **Lectura:** Es como intentar aprender a manejar entrenando exclusivamente en la misma calle, en la misma dirección, durante horas seguidas. Técnicamente estás acumulando pasos de gradiente, pero todos describen la misma situación. La primera vez que enfrentes una curva hacia la izquierda, habrás "olvidado" cómo hacerlo.
+
+---
+
+### La solución: el replay buffer
+
+En lugar de entrenar con cada transición en el momento en que ocurre, se almacenan todas en un buffer $\mathcal{D}$ y se muestrea aleatoriamente de él.
+
+**Estructura del buffer:**
+
+El buffer es una cola FIFO (primero en entrar, primero en salir) con capacidad fija $N$:
+
+```
+Buffer D  [capacidad N = 10 000]
+
+  posición  │  transición almacenada
+  ──────────┼──────────────────────────────────────────
+       0    │  (s₀,  a₀,  r₁,  s₁,  done=False)   ← más antigua
+       1    │  (s₁,  a₁,  r₂,  s₂,  done=False)
+       2    │  (s₂,  a₂,  r₃,  s₃,  done=True )   ← fin episodio 1
+       3    │  (s₀', a₀', r₁', s₁', done=False)   ← inicio episodio 2
+       4    │  (s₁', a₁', r₂', s₂', done=False)
+      ...   │  ...
+    9 999   │  (sₙ,  aₙ,  rₙ,  sₙ', done=?)       ← más reciente
+```
+
+Cuando el buffer se llena, la transición más antigua se descarta para hacer lugar a la nueva.
+Así el buffer siempre contiene las últimas $N$ experiencias del agente, mezclando transiciones de muchos episodios distintos.
+
+**El ciclo de entrenamiento con replay:**
+
+En cada paso del entorno:
+
+```
+1. Actúa: ejecuta a_t con ε-greedy, observa (r_t, s_{t+1})
+2. Almacena: agrega (s_t, a_t, r_t, s_{t+1}, done) al buffer D
+3. Muestrea: si |D| ≥ 64, extrae un mini-lote de 64 transiciones al AZAR de D
+4. Actualiza: calcula el error TD sobre ese mini-lote y hace un paso de gradiente
+```
+
+El paso 3 es la clave: las 64 transiciones del mini-lote vienen de momentos y episodios distintos — algunas pueden ser de hace 5 000 pasos, otras de hace 3 pasos.
+Sus gradientes ya no apuntan en la misma dirección, y la media vuelve a ser una estimación útil del gradiente verdadero.
+
+**¿Por qué esperar a que el buffer tenga al menos 64 entradas?**
+Con pocas transiciones, todas son recientes y altamente correlacionadas — exactamente el problema que queremos evitar. Se entrena solo cuando el buffer tiene suficiente diversidad.
 
 ![Repetición de experiencia]({{ '/23_reinforcement_learning/images/09_experience_replay.png' | url }})
 
-El muestreo aleatorio rompe la correlación temporal: cada mini-lote mezcla transiciones de distintos momentos y distintos episodios.
-Además, cada transición almacenada puede reutilizarse múltiples veces, mejorando la eficiencia de datos.
+**Dos beneficios en uno:**
+
+| Beneficio | Por qué ocurre |
+|-----------|----------------|
+| Rompe la correlación temporal | El muestreo aleatorio mezcla episodios y momentos distintos |
+| Mayor eficiencia de datos | Cada transición puede ser muestreada y usada múltiples veces, no solo una |
+
+Sin replay, cada transición se usa exactamente una vez y se descarta.
+Con replay, una transición útil (por ejemplo, la primera vez que el agente recuperó el equilibrio) puede influir en decenas de pasos de gradiente a lo largo del entrenamiento.
 
 ---
 
